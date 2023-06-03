@@ -1,0 +1,43 @@
+; TRUE COLOR AND MAINTAIN BACKING STORE
+;DEVICE, true_color = 24
+DEVICE, retain = 2
+
+;Set compiler options
+COMPILE_OPT IDL2
+;User’s directory for IDL programs
+!PATH = !PATH + ':' + EXPAND_PATH('+/home/isaac/geomstorm/rutidl/') +':'+$
+                      EXPAND_PATH('+/home/isaac/geomstorm/rutpy')  
+;Have IDL provide backing store
+DEVICE, RETAIN = 2
+;Path to example programs and data
+;DEFSYSV, '!Bowman', $\
+;(FILE_SEARCH('/home/isaac/geomstorm/idl', /FULLY_QUALIFY_PATH, /MARK_DIRECTORY))[0]
+
+;Double precision degrees to radians
+DEFSYSV, '!DDTOR', !DPI/180.0D0, 1
+
+;Double precision radians to degrees
+DEFSYSV, '!DRADEG', 180.0D0/!DPI, 1
+
+;Speed of light in vacuum (m s^−1)
+DEFSYSV, '!Speed_of_light', 299792458.0D0, 1
+
+;Planck constant (J s)
+DEFSYSV, '!Planck', 6.62606876D-34, 1
+
+;Universal gas constant (J K^−1 kmolˆ−1)
+DEFSYSV, '!Universal_gas', 8314.4720D0, 1
+
+;Stefan−Boltzman constant (W m^−2 K^−4)
+DEFSYSV, '!Stefan_Boltzmann', 5.670400D-08, 1
+
+;Avogadro’s number (molecules kmol^−1)
+DEFSYSV, '!Avogadro', 6.02214199D+26, 1
+
+;Gravitational constant (J K^−1)
+DEFSYSV, '!Gravitation', 6.673D-11, 1
+
+;Boltzmann’s constant (N m^2 kg^−2)
+DEFSYSV, '!Boltzmann', 1.3806503D-23, 1
+
+print, 'STARTUP.pro executed'

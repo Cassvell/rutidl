@@ -1,0 +1,145 @@
+;print figures
+    time = FINDGEN(file_number *24)/24.0
+        Device_bak = !D.Name 
+        SET_PLOT, 'Z'
+
+        
+        Xsize=fix(1600)
+        Ysize=250
+        DEVICE, SET_RESOLUTION = [Xsize,Ysize]
+        DEVICE, z_buffering=O
+        DEVICE, set_character_size = [10, 12]
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;definición de color
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-        
+        chr_size1 = 0.9
+        chr_thick1= 1.0
+        space     = 0.015
+        rojo      = 248
+        naranja   = 220
+        amarillo  = 198
+        verde     = 160
+        negro     = 0
+        gris_o    = 100
+        blanco    = 255
+        gris      = 130
+        morado    = 248
+                     
+    TVLCT, R_bak, G_bak, B_bak, /GET        
+    LOADCT, 39, /SILENT
+
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = mh_i      
+;##############################################################################
+;Declaración de fechas
+;##############################################################################                     
+;mes del primer día quieto
+
+;###############################################################################
+;mes del segundo día quieto
+ 
+;###############################################################################
+;fecha del primer dia quieto seleccionado
+                
+;###############################################################################
+                     
+;###############################################################################  
+;###############################################################################
+    sigma = TeXtoIDL('\sigmaH')
+    dH    = TeXtoIDL('\DeltaH')
+   ; time_title = 'Desviacion estandar de '+dH+' para '+ time_title
+;###############################################################################    
+    down0 = min(H_IQR*n)   
+    up0   = max(H_IQR*n)  
+    
+    plot, time, H_IQR*n, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
+    CHARSIZE = 1.0, CHARTHICK=chr_thick1, POSITION=[0.05,0.15,0.95,0.90], $
+    XSTYLE = 5, XTICKNAME=REPLICATE(' ', file_number+1), XRANGE=[0, file_number], $
+    ySTYLE = 6, YRANGE=[down0,up0], THICK=3         
+;###############################################################################    
+                                                                   
+;###############################################################################    
+    ;días quietos seleccionados
+         
+;###############################################################################           
+;días quietos    
+       
+;###############################################################################       
+;días quietos seleccionados              
+                                                             
+;###############################################################################       
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 1.0, $
+                         xtitle='',$
+                         CHARTHICK=2
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         XTICKNAME=REPLICATE(' ', file_number+1), $
+                         COLOR=negro, $
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down0,up0],$
+                         Ystyle=2, $
+                         COLOR=negro, $
+                         CHARSIZE = 1.0, $
+                         CHARTHICK=1.5;, $
+
+        AXIS, YAXIS = 1, YRANGE=[down0,up0],$
+                         Ystyle=2, $
+                         COLOR=negro, $
+                         CHARSIZE = 1.0, $
+                         CHARTHICK=1.5;, $
+;###############################################################################                         
+   y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
+   XYOUTS, 0.02, y, sigma+' [nT]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90, CHARTHICK=1.5                             
+;###############################################################################
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.92   
+   XYOUTS, X, y, '', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65, CHARTHICK=2 
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.02   
+   XYOUTS, X, y, 'UT [days]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.0, CHARTHICK=1.0
+;###############################################################################                     
+    Image=TVRD() 
+    TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!
+    
+    TVLCT, R_bak, G_bak, B_bak
+        
+    SET_PLOT, Device_bak
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+; open the post stript device
+    path = '../rutidl/output/article1events/H_IQR/'
+    fecha = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, FORMAT = '(I4,I02,I02,"_",I4,I02,I02)')
+        IF keyword_set(jpeg) THEN BEGIN
+                info = size(Image)
+                nx = info[1]
+                ny = info[2]
+                true_image = bytarr(3,nx,ny)
+                true_image[0,*,*] = reds[image]
+                true_image[1,*,*] = greens[image]
+                true_image[2,*,*] = blues[image]
+                write_jpeg, path+'DH_IQR'+fecha+'.jpg', True_Image, true=1
+        ENDIF ELSE BEGIN
+                IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN PRINT, '        Setting PNG as default file type.'
+                WRITE_PNG, path+'DH_IQR'+fecha+'.png', Image, reds,greens,blues
+        ENDELSE
+
+        IF NOT keyword_set(quiet) THEN BEGIN
+                PRINT, '        Saving: '+path+'DH_IQR'+fecha
+                PRINT, ''
+        ENDIF
+        RETURN   
+
+
+
+

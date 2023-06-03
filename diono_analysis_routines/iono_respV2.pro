@@ -1,0 +1,1107 @@
+;Name:
+;	iono_respV2.pro
+;purpose:
+;   plot geomagnetic and ionospheric response due to Dst and Ddyn magnetic trace
+;   
+;author:
+;	Carlos Isaac Castellanos Velazco
+;	Estudiante de Maestría en Ciencias de la Tierra
+;	Instituto de Geofísica, Unidad Michoacan
+;	UNAM
+;	ccastellanos@igeofisica.unam.mx
+;
+;category:
+;   data analysis
+;
+;calling sequence:
+;   .r iono_resp
+;   iono_resp, idate, fdate, PNG='png', PS='ps'
+;parameters:
+;   idate/fdate: format ([yyyy,mm,dd])
+;
+;dependencies:
+;
+;
+;input files
+;   Dst files, H obs, Bsq baseline, TEC data files
+;
+;output files:
+;   .PNG figure
+;   imported to /output/eventos_tgm/iono_resp_V9_yyyy-mm-dd.png
+;
+;version
+;   apr, 2023
+;
+;note
+;   in order to run this routine, it is necessary, first to:
+;       1. having Bsq data files (run the Bsq routines)
+;       2. having the H clean data files (H_filmaker.pro)
+;
+
+PRO iono_respV2, date_i, date_f, PNG = png, PS=ps 
+
+	On_error, 2
+	COMPILE_OPT idl2, HIDDEN
+
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= date_i[2]	
+
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
+;###############################################################################
+    idate0 = string(yr_i, mh_i, format='(I4,I02)')
+    TGM_n = event_case([yr_i,mh_i,dy_i])  
+;###############################################################################   
+    time= findgen(file_number*1440)/1440.0
+    ;time_h = findgen(file_number*24)/24.0    
+    Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
+;###############################################################################
+; Generate the time series variables 
+; define H variables                  
+  ;  dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
+    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+ 
+; define Bsq 
+    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])  
+;###############################################################################      
+; IP data
+    Bz   = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'Bz')
+    B    = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'B_vec')
+    Bz   = add_nan(Bz, 999.90, 'equal') ;declare certain values as NAN  
+    B    = add_nan(B, 999.90, 'equal') 
+    
+    v_p = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'v_p')
+    v_p = add_nan(v_p, 9999.0, 'equal') ;declare certain values as NAN
+    
+    p_dyn = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'p_dyn')
+    Ey = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'E')    
+    p_dyn = add_nan(p_dyn, 99.990, 'equal');declare certain values as NAN   
+    Ey    = add_nan(Ey, 999.990, 'equal') 
+    
+    density_p = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'density_p')
+    density_p = add_nan(density_p, 9999.0, 'equal') ;declare certain values as NAN
+
+    Temp = ip_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'Temp')
+    Temp = add_nan(Temp, 9999.0, 'equal') ;declare certain values as NAN
+   
+   ; P_t = p_therm(density_p, Temp)
+   ; PRINT, P_t                 
+;###############################################################################
+;identifying NAN percentage values in the Time Series
+    H = nanpc(H, 999999.0, 'equal')
+    H = nanpc(H, 100.0, 'greater')    
+;Identifying the NAN values        
+;    tec = add_nan(tec, 999.0, 'equal')            
+;    med = add_nan(med, 999.0, 'equal')                
+    H = add_nan(H, 999999.0, 'equal')
+    H = add_nan(H, 99999.0, 'equal')                   
+;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
+    H = fillnan(H)
+   ; PRINT, N_ELEMENTS(H), N_ELEMENTS(Bsq)
+;###############################################################################    
+    new_dst = FLTARR(N_ELEMENTS(time))     	    
+    tmp_dst  = INTERPOL(dst, N_ELEMENTS(time))
+    new_dst = tmp_dst 
+    
+    new_H = FLTARR(N_ELEMENTS(time))     	    
+    tmp_H  = INTERPOL(H, N_ELEMENTS(time))
+    new_H = tmp_H       
+;###############################################################################      
+    new_B = FLTARR(N_ELEMENTS(time))     	    
+    tmp_B  = INTERPOL(B, N_ELEMENTS(time))
+    new_B = tmp_B 
+    
+    new_Ey = FLTARR(N_ELEMENTS(time))     	    
+    tmp_Ey  = INTERPOL(Ey, N_ELEMENTS(time))
+    new_Ey = tmp_Ey
+    
+    new_vp = FLTARR(N_ELEMENTS(time))     	    
+    tmp_vp  = INTERPOL(v_p, N_ELEMENTS(time))
+    new_vp = tmp_vp  
+    
+    new_pdyn = FLTARR(N_ELEMENTS(time))     	    
+    tmp_pdyn  = INTERPOL(p_dyn, N_ELEMENTS(time))
+    new_pdyn = tmp_pdyn 
+    
+   ; new_pt = FLTARR(N_ELEMENTS(time))     	    
+   ; tmp_pt  = INTERPOL(P_t, N_ELEMENTS(time))
+   ; new_pt = tmp_pt              
+;###############################################################################
+; Import the structure of diono generated variables   
+    dionstr = gen_diono(dst, H, Bsq, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
+    ;PRINT, Bsq
+; compute frequencies 
+    f_k   = dionstr.f_k
+    fn    = dionstr.fn
+
+; compute and define Power Spectrum
+    pws = dionstr.pws
+
+; compute diono variables    
+    diono = dionstr.diono
+    dp2   = dionstr.dp2
+    ddyn  = dionstr.ddyn
+    ;print, dp2
+;############################################################################### 
+    i_diff = diono
+    new_idiff = FLTARR(N_ELEMENTS(time))     	    
+    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(time))
+    new_idiff = tmp_idiff      
+;###############################################################################      
+    new_ddyn = FLTARR(N_ELEMENTS(time))     	    
+    tmp_ddyn  = INTERPOL(ddyn, N_ELEMENTS(time))
+    new_ddyn = tmp_ddyn           
+;############################################################################### 
+    new_dp2 = FLTARR(N_ELEMENTS(time))     	    
+    tmp_dp2  = INTERPOL(dp2, N_ELEMENTS(time))
+    new_dp2 = tmp_dp2
+;###############################################################################    
+    dst_min = MIN(dst,i)    
+    t0 = 0
+    CASE TGM_n of
+        1   :   t0 = 18
+        2   :   t0 = 38
+        3   :   t0 = 14
+        4   :   t0 = 124
+        5   :   t0 = 36
+        6   :   t0 = 20
+        7   :   t0 = 11
+        8   :   t0 = 18
+        9   :   t0 = 14
+        10  :   t0 = 10
+        11  :   t0 = 17
+        12  :   t0 = 18
+        13  :   t0 = 17
+        14  :   t0 = 26
+        15  :   t0 = 35
+        16  :   t0 = 30
+        17  :   t0 = 22
+        18  :   t0 = 18
+        19  :   t0 = 5
+        20  :   t0 = 19        
+        ELSE: PRINT, 'evento no disponible'   
+    ENDCASE
+    tf = 0
+    CASE TGM_n of
+        1   :   tf = 183
+        2   :   tf = 186
+        3   :   tf = 52
+        4   :   tf = 36
+        5   :   tf = 70
+        6   :   tf = 66
+        7   :   tf = 60
+        8   :   tf = 123
+        9   :   tf = 38
+        10  :   tf = 146
+        11  :   tf = 82
+        12  :   tf = 34
+        13  :   tf = 71
+        14  :   tf = 60
+        15  :   tf = 42
+        16  :   tf = 120
+        17  :   tf = 144
+        18  :   tf = 19
+        19  :   tf = 34
+        20  :   tf = 22        
+        ELSE: PRINT, 'evento no disponible'   
+    ENDCASE
+
+    SG_beg = i-t0
+    IF tf NE 0 THEN BEGIN
+    SG_end = i+tf
+    ENDIF ELSE BEGIN
+    SG_end = N_ELEMENTS(dH)-10
+    ENDELSE 
+;###############################################################################    
+    med_ddyn = MEDIAN(new_ddyn)
+   ; std_ddyn = STDDEV(new_ddyn, /NAN)
+    
+    IQR = PERCENTILES(new_ddyn, CONFLIMIT=0.5) 
+    IQR_n = (IQR[1]-IQR[0])*1
+    
+ ;   ddyn_out = WHERE(new_ddyn GE med_ddyn+IQR_n OR new_ddyn LE med_ddyn-IQR_n)
+ ;   ddyn_in  = WHERE(new_ddyn LE med_ddyn+IQR_n AND new_ddyn GE med_ddyn-IQR_n)
+    
+ ;   ddyn_diff_out = new_ddyn
+ ;   ddyn_diff_out[ddyn_in]=!Values.F_NAN
+    
+ ;   ddyn_diff_in  = new_ddyn
+ ;   ddyn_diff_in[ddyn_out]=!Values.F_NAN    
+;###############################################################################
+    med_dp2 = MEDIAN(new_dp2)                       
+;###############################################################################
+; define device and color parameters 
+;###############################################################################
+;    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+;    old_month = month_name(mh_i, 'english')
+    
+;    PLOT, time, new_pt, THICK=2, YSTYLE=5, XSTYLE=5
+
+;        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+;                         XTICKS=file_number, $
+ ;                        XTITLE=time_title, $                         
+ ;                        XMINOR=8, $
+  ;                       XTICKNAME=X_label, $
+  ;                       COLOR=negro, $
+   ;                     CHARSIZE = 1.6,$
+    ;                     CHARTHICK=1.8
+                             
+     ;   AXIS, YAXIS = 0, YTITLE = 'Thermal pressure [nPa]', $
+      ;                   ystyle=1,$                          
+                        ; COLOR=negro, $
+                         ;/ylog,$
+       ;                  CHARSIZE = 1.6,$
+        ;                 CHARTHICK=1.8
+
+    IF keyword_set(ps) THEN BEGIN
+    make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, $
+        SG_beg, SG_end, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
+    ENDIF
+
+    IF keyword_set(png) THEN BEGIN        
+    make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, $
+        SG_beg, SG_end, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]               
+    ENDIF 
+
+
+END
+
+PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, $
+        SG_beg, SG_end, date_i, date_f
+
+	On_error, 2
+	COMPILE_OPT idl2, HIDDEN
+	
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= date_i[2]	
+
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
+    TGM_n = event_case([yr_i,mh_i,dy_i])    	
+;############################################################################### 
+    time_title = ' UT [days]'
+    window_title = 'SGS-'+ STRING(TGM_n, FORMAT='(I02)')
+    Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
+
+    path = '../rutidl/output/article1events/diono_ev/'
+    psfile =  path+'iono_PI_'+Date+'.eps' 
+
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english')    
+   ; LOADCT, 39
+    
+    cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
+    /nomatch, XSize=16, YSize=10
+
+    periodo = 'Period [h]'        
+;###############################################################################               
+    cgPLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.07,0.1,0.95,0.9],$
+    BACKGROUND = blanco, COLOR='black', $
+    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.95   
+   XYOUTS, X, y, window_title, /NORMAL, $
+   ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5               
+;###############################################################################               
+    freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0)]
+    
+    i = WHERE(f_k GE freqs[0])
+    fny=WHERE(f_k EQ fn)
+    
+    ;PRINT, MIN(i), MIN(f_k), freqs[0]
+    ysup = MAX(pws[MIN(i):fny])+1
+    yinf = MIN(pws[MIN(i):fny]);-0.0001
+               
+    periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
+    
+    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.1,0.42,0.9],$
+    YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
+    CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA,$
+    /NOERASE
+
+    passband_l = freq_band(TGM_n, 'passband_l')
+    passband_u = freq_band(TGM_n, 'passband_u')
+    highpass_l = freq_band(TGM_n, 'highpass_l')
+    
+    cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
+
+    cgPolygon, [highpass_l, fn, fn, highpass_l], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
+    cgOPLOT, f_k, pws, COLOR='black', THICK=5   
+;###############################################################################    
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
+                         /XLOG,$
+                         XSTYLE=1,$
+                         xTITLE = 'Frequence [Hz]',$
+                        ; COLOR=negro, $
+                         CHARSIZE = 1.4, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.5
+                                           
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
+                         /XLOG,$
+                         XTICKS=6,$
+                         XMINOR=4,$
+                         XTICKV=freqs,$                         
+                         XTICKN=STRING(periods, FORMAT='(F4.1)'),$
+                         XSTYLE=1,$
+                         CHARSIZE = 1.4,$
+                       ;  COLOR=negro, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.5                     
+
+        AXIS, YAXIS = 0, yrange=[yinf, ysup], $
+                         YTITLE = '', $
+                         ystyle=1,$                          
+                        ; COLOR=negro, $
+                         /ylog,$
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.5
+                        
+        AXIS, YAXIS = 1, yrange=[yinf, ysup], $
+                        ; COLOR=negro, $
+                         /ylog,$
+                         ystyle=1, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.5
+
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOUTS, X, 0.94, periodo, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, CHARTHICK=1.5   
+   
+   y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
+   XYOUTS, 0.02, y, 'Spectral component [nT]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90, CHARTHICK=1.5        
+;###############################################################################       
+     dH = TeXtoIDL('\DeltaH') 
+;###############################################################################      
+     up_B = MAX(new_B+5) 
+    down_B = MIN(new_B-5) 
+
+    up_E = MAX(new_Ey+5) 
+    down_E = MIN(new_Ey-5)
+        
+    cgPLOT, time, new_B, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR='black',$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.7,0.95,0.9], $
+     XSTYLE = 5, XRANGE=[0, file_number],  XTICKNAME=REPLICATE(' ', file_number+1), YSTYLE = 5,$
+     YRANGE=[down_B, up_B], THICK=1, /NOERASE  
+
+ 	cgOPLOT, time[SG_beg*60:SG_end*60], new_B[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR='black'  
+
+    cgPLOT, time, new_Ey, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR='black',$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.7,0.95,0.9], $
+     XSTYLE = 5, XRANGE=[0, file_number],  XTICKNAME=REPLICATE(' ', file_number+1), YSTYLE = 5,$
+     YRANGE=[down_E,up_E], THICK=1, /NOERASE, /NODATA 
+    
+    cgOPLOT, time, new_Ey, LINESTYLE=0, THICK=1, COLOR='blue'
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_Ey[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR='blue' 
+    
+       
+    cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR='black'
+    
+    cgOPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR='black' 
+               
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         ;XTITLE='UT [days]', $                           
+                         XMINOR=8, $
+                         XTICKFORMAT='(A1)',$ 
+                        ; COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                     ;    COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_B, up_B], $
+                         YSTYLE=1, $  
+                         YTITLE = 'B [nT]', $                          
+                       ;  COLOR=negro, $
+                         CHARTHICK=1.5,$
+                         CHARSIZE = 1.4;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_E,up_E], $
+                         YSTYLE=1, $  
+                         YTITLE = 'Ey [mV]', $                          
+                       ;  COLOR=negro, $
+                         CHARSIZE = 1.4, $
+                         CHARTHICK=1.5                          
+;###############################################################################
+;###############################################################################    
+    up_p    = MAX(new_pdyn)
+    down_p  = MIN(new_pdyn) 
+    
+    up_v    = MAX(new_vp)
+    down_v  = MIN(new_vp)
+
+     cgPLOT, time, new_vp, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, COLOR='black',$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.5,0.95,0.69], $
+     XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_v,up_v], $
+     XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 5, /NOERASE, THICK=3, /NODATA
+     
+    cgOPLOT, time, new_vp, LINESTYLE=0, THICK=1, COLOR='blue' 
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_vp[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR='blue'     
+
+     cgPLOT, time, new_pdyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, COLOR='black',$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.5,0.95,0.69], $
+     XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_p,up_p], $
+     XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 5, /NOERASE, THICK=3, /NODATA
+    
+    cgOPLOT, time, new_pdyn, LINESTYLE=0, THICK=1, COLOR='black' 
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_pdyn[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR='black'
+    
+  
+    cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+    
+    cgOPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+      
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         ;XTITLE='UT [days]', $                           
+                         XMINOR=8, $
+                         XTICKFORMAT='(A1)',$
+                      ;   COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                    ;     COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_v, up_v], $
+                         YSTYLE=1, $  
+                         YTITLE = 'V [m s!U-1!N]', $                          
+                      ;   COLOR=negro, $
+                         CHARTHICK=1.5,$
+                         CHARSIZE = 1.4;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_p,up_p], $
+                         YSTYLE=1, $  
+                         YTITLE = 'P [nPa]', $                          
+                       ;  COLOR=negro, $
+                         CHARSIZE = 1.4, $
+                         CHARTHICK=1.5                               
+;###############################################################################                                  
+;############################################################################### 
+     up_diono=max(new_idiff)
+     down_diono=min(new_idiff)          
+     cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
+     POSITION=[0.55,0.3,0.95,0.49], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
+     THICK=2, /NODATA   
+
+    cgOPLOT, time, new_idiff, THICK=1, LINESTYLE=0, COLOR='black'     
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_idiff[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='black' 
+     
+    cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR='black'
+    
+    cgOPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR='black'  
+
+    ppi = TexToIDL('D_{I}')        
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XTITLE='', $                         
+                         XMINOR=8, $
+                         XTICKFORMAT='(A1)',$
+               ;          COLOR=negro, $
+                         CHARSIZE = 1.6, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$                     
+                      ;   COLOR=negro, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+
+        AXIS, YAXIS = 0, YRANGE=[down_diono,up_diono], $
+                         YTICKS=4, $
+                         YTITLE = ppi+' [nT]', $                          
+                   ;      COLOR=negro, $
+                         YSTYLE=2, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $
+                         YTICKS=4, $      
+                     ;    COLOR=negro, $
+                         YSTYLE=2, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6                
+;###############################################################################                
+    IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn) ELSE up = max(new_dp2)
+    IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn) ELSE down = min(new_dp2)
+;###############################################################################
+   ; IF upddyn GT updp2 THEN up = upddyn ELSE up=updp2 
+    ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
+                               
+     cgPLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
+     POSITION=[0.55,0.1,0.95,0.29], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
+    
+    cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR='black'
+    
+    cgOPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR='black'
+
+    cgOPLOT, time, new_ddyn, COLOR='black' , LINESTYLE=0, THICK=1
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_ddyn[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='black'    
+  
+;###############################################################################     
+    cgOPLOT, time, new_dp2, COLOR='red', THICK=1
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_dp2[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='red'       
+    
+    cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0], LINESTYLE=1, THICK=4,COLOR='black'
+;###############################################################################
+    med_dp2 = MEDIAN(new_dp2)     
+;###############################################################################
+
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XTITLE=time_title, $                         
+                         XMINOR=8, $
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 1.6, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+                         
+                                                 
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                         CHARSIZE = 0.8, $                                                
+                    ;     COLOR=negro, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+
+        AXIS, YAXIS = 0, yrange=[down,up], $ 
+                         ystyle=2, $  
+                         YTITLE = 'DP2 & Ddyn [nT]', $                          
+                    ;     COLOR=negro, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6
+                        
+        AXIS, YAXIS = 1, yrange=[down,up], $ 
+                         ystyle=2, $ 
+                  ;       COLOR=negro, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6                                                      
+;###############################################################################      
+
+   XYOuts, 0.93, 0.85, '(a)', /Normal, $
+    Alignment=0.5, Charsize=1.4, CHARTHICK= 3   
+   
+   XYOuts, 0.93, 0.65, '(b)', /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 3  
+   
+   XYOuts, 0.93, 0.45, '(c)', /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 3  
+   
+   XYOuts, 0.11, 0.14, '(d)', /Normal, $
+   Alignment=0.5, Charsize=2.4, CHARTHICK= 3   
+   
+   XYOuts, 0.93, 0.25, '(e)', /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 3      
+;###############################################################################   
+
+    cgPS_Close, density = 300, width = 1600 , /PNG  
+    RETURN  
+END 
+
+PRO make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, $
+    SG_beg, SG_end, date_i, date_f
+
+	On_error, 2
+	COMPILE_OPT idl2, HIDDEN
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= date_i[2]	
+
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
+    TGM_n = event_case([yr_i,mh_i,dy_i])    	
+;############################################################################### 
+    time_title = ' UT [days]'
+    window_title = 'SGS-'+ STRING(TGM_n, FORMAT='(I02)')
+    Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)') 
+                
+        Device_bak2 = !D.Name         
+        SET_PLOT, 'Z'      
+        
+        Xsize=fix(1600)
+        Ysize=1000
+        DEVICE, SET_RESOLUTION = [Xsize,Ysize],Set_Pixel_Depth=24, DECOMPOSED=1  
+        DEVICE, z_buffer=4
+        DEVICE, set_character_size = [10, 12] 
+        
+        chr_size1 = 0.9
+        chr_thick1= 1.5
+        space     = 0.015
+        rojo      = 248
+        amarillo  = 190
+        verde     = 150
+        negro     = 0
+        azul      = 70
+        blanco    = 255
+        gris      = 110
+        morado    = 16
+        naranja  = 220
+                
+    TVLCT, R_bak, G_bak, B_bak, /GET
+        
+    LOADCT, 39, /SILENT
+
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english')
+;Function to convert month from mm format to string              
+;###############################################################################   
+;############################################################################### 
+    time_title = ' UT ['+textoidl("days")+' of '+old_month+'].'
+    window_title = 'SGS'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+                    STRING(old_month, yr_i, FORMAT='(A, X, I4)')
+    
+    periodo = 'Period [h]'        
+;###############################################################################               
+    PLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.07,0.1,0.95,0.9],$
+    BACKGROUND = blanco, COLOR=negro, $
+    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.95   
+   XYOUTS, X, y, window_title, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5               
+;###############################################################################               
+    freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0)]
+    
+    i = WHERE(f_k GE freqs[0])
+    fny=WHERE(f_k EQ fn)
+    
+    ;PRINT, MIN(i), MIN(f_k), freqs[0]
+    ysup = MAX(pws[MIN(i):fny])+1
+    yinf = MIN(pws[MIN(i):fny]);-0.0001
+               
+    periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
+    
+    PLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.1,0.42,0.9],$
+    YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR=negro, $
+    CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA,$
+    /NOERASE
+
+    passband_l = freq_band(TGM_n, 'passband_l')
+    passband_u = freq_band(TGM_n, 'passband_u')
+    highpass_l = freq_band(TGM_n, 'highpass_l')
+    
+    POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=amarillo
+
+    POLYFILL, [highpass_l, fn, fn, highpass_l], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=amarillo
+    OPLOT, f_k, pws, COLOR=negro, THICK=5   
+;###############################################################################    
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
+                         /XLOG,$
+                         XSTYLE=1,$
+                         xTITLE = 'Frequence [Hz]',$
+                         COLOR=negro, $
+                         CHARSIZE = 1.4, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.5
+                                           
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
+                         /XLOG,$
+                         XTICKS=6,$
+                         XMINOR=4,$
+                         XTICKV=freqs,$                         
+                         XTICKN=STRING(periods, FORMAT='(F4.1)'),$
+                         XSTYLE=1,$
+                         CHARSIZE = 1.4,$
+                         COLOR=negro, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.5                     
+
+        AXIS, YAXIS = 0, yrange=[yinf, ysup], $
+                         YTITLE = '', $
+                         ystyle=1,$                          
+                         COLOR=negro, $
+                         /ylog,$
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.5
+                        
+        AXIS, YAXIS = 1, yrange=[yinf, ysup], $
+                         COLOR=negro, $
+                         /ylog,$
+                         ystyle=1, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.5
+
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOUTS, X, 0.94, periodo, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, CHARTHICK=1.5   
+   
+   y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
+   XYOUTS, 0.02, y, 'Spectral component [nT]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90, CHARTHICK=1.5        
+;###############################################################################       
+     dH = TeXtoIDL('\DeltaH') 
+;###############################################################################      
+     up_B = MAX(new_Bz+5) 
+    down_B = MIN(new_Bz-5) 
+
+    up_E = MAX(new_Ey+5) 
+    down_E = MIN(new_Ey-5)
+        
+    PLOT, time, new_Bz, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.7,0.95,0.9], $
+     XSTYLE = 5, XRANGE=[0, file_number],  XTICKNAME=REPLICATE(' ', file_number+1), YSTYLE = 5,$
+     YRANGE=[down_B, up_B], THICK=1, /NOERASE  
+
+ 	OPLOT, time[SG_beg*60:SG_end*60], new_Bz[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR=negro  
+    
+    OPLOT, time, new_Ey, LINESTYLE=0, THICK=1, COLOR=azul
+    OPLOT, time[SG_beg*60:SG_end*60], new_Ey[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR=azul 
+    
+       
+    OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+    
+    OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro 
+               
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         ;XTITLE='UT [days]', $                           
+                         XMINOR=8, $
+                         XTICKFORMAT='(A1)',$ 
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_B, up_B], $
+                         YSTYLE=1, $  
+                         YTITLE = 'Bz [nT] & Ey [mV]', $                          
+                         COLOR=negro, $
+                         CHARTHICK=1.5,$
+                         CHARSIZE = 1.4;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_E,up_E], $
+                         YSTYLE=1, $  
+                         ;YTITLE = '', $                          
+                         COLOR=negro, $
+                         CHARSIZE = 1.4, $
+                         CHARTHICK=1.5                          
+;###############################################################################
+;###############################################################################    
+    up_p    = MAX(new_pdyn)
+    down_p  = MIN(new_pdyn) 
+    
+    up_v    = MAX(new_vp)
+    down_v  = MIN(new_vp)
+
+     PLOT, time, new_vp, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, COLOR=negro,$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.5,0.95,0.69], $
+     XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_v,up_v], $
+     XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 5, /NOERASE, THICK=3, /NODATA
+     
+    OPLOT, time, new_vp, LINESTYLE=0, THICK=1, COLOR=azul 
+    OPLOT, time[SG_beg*60:SG_end*60], new_vp[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR=azul     
+
+     PLOT, time, new_pdyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, COLOR=negro,$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.5,0.95,0.69], $
+     XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_p,up_p], $
+     XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 5, /NOERASE, THICK=3, /NODATA
+    
+    OPLOT, time, new_pdyn, LINESTYLE=0, THICK=1, COLOR=negro 
+    OPLOT, time[SG_beg*60:SG_end*60], new_pdyn[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR=negro
+    
+  
+    OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+    
+    OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+      
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         ;XTITLE='UT [days]', $                           
+                         XMINOR=8, $
+                         XTICKFORMAT='(A1)',$
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_v, up_v], $
+                         YSTYLE=1, $  
+                         YTITLE = 'V [m s!U-1!N]', $                          
+                         COLOR=negro, $
+                         CHARTHICK=1.5,$
+                         CHARSIZE = 1.4;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_p,up_p], $
+                         YSTYLE=1, $  
+                         YTITLE = 'P [nPa]', $                          
+                         COLOR=negro, $
+                         CHARSIZE = 1.4, $
+                         CHARTHICK=1.5                               
+;###############################################################################                                  
+;############################################################################### 
+     up_diono=max(new_idiff)
+     down_diono=min(new_idiff)          
+     PLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
+     POSITION=[0.55,0.3,0.95,0.49], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
+     THICK=2, /NODATA   
+
+    OPLOT, time, new_idiff, THICK=1, LINESTYLE=0, COLOR=negro     
+    OPLOT, time[SG_beg*60:SG_end*60], new_idiff[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro 
+     
+    OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+    
+    OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro  
+
+    ppi = TexToIDL('D_{I}')        
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XTITLE='', $                         
+                         XMINOR=8, $
+                         XTICKFORMAT='(A1)',$
+                         COLOR=negro, $
+                         CHARSIZE = 1.6, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$                     
+                         COLOR=negro, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+
+        AXIS, YAXIS = 0, YRANGE=[down_diono,up_diono], $
+                         YTICKS=4, $
+                         YTITLE = ppi+' [nT]', $                          
+                         COLOR=negro, $
+                         YSTYLE=2, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $
+                         YTICKS=4, $      
+                         COLOR=negro, $
+                         YSTYLE=2, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6                
+;###############################################################################                
+    IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn) ELSE up = max(new_dp2)
+    IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn) ELSE down = min(new_dp2)
+;###############################################################################
+   ; IF upddyn GT updp2 THEN up = upddyn ELSE up=updp2 
+    ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
+                               
+     PLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
+     POSITION=[0.55,0.1,0.95,0.29], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
+    
+    OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+    
+    OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+    THICK=2, COLOR=negro
+
+    OPLOT, time, new_ddyn, COLOR=negro, LINESTYLE=0, THICK=1
+    OPLOT, time[SG_beg*60:SG_end*60], new_ddyn[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro    
+  
+;###############################################################################     
+    OPLOT, time, new_dp2, COLOR=rojo, THICK=1
+    OPLOT, time[SG_beg*60:SG_end*60], new_dp2[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=rojo       
+    
+    OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0], LINESTYLE=1, THICK=4,COLOR=negro
+;###############################################################################
+    med_dp2 = MEDIAN(new_dp2)     
+;###############################################################################
+
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XTITLE=time_title, $                         
+                         XMINOR=8, $
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 1.6, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+                         
+                                                 
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                         CHARSIZE = 0.8, $                                                
+                         COLOR=negro, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.6
+
+        AXIS, YAXIS = 0, yrange=[down,up], $ 
+                         ystyle=2, $  
+                         YTITLE = 'DP2 & Ddyn [nT]', $                          
+                         COLOR=negro, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6
+                        
+        AXIS, YAXIS = 1, yrange=[down,up], $ 
+                         ystyle=2, $ 
+                         COLOR=negro, $
+                         CHARSIZE = 1.4,$
+                         CHARTHICK=1.6                                                      
+;###############################################################################      
+
+   XYOuts, 0.93, 0.85, '(a)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.4, CHARTHICK= 3   
+   
+   XYOuts, 0.93, 0.65, '(b)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.4, CHARTHICK= 3  
+   
+   XYOuts, 0.93, 0.45, '(c)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.4, CHARTHICK= 3  
+   
+   XYOuts, 0.11, 0.14, '(d)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=2.4, CHARTHICK= 3   
+   
+   XYOuts, 0.93, 0.25, '(e)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.4, CHARTHICK= 3      
+;###############################################################################   
+ ;  y = (0.66 - 0.34) / 2. + 0.34 
+ ;  XYOUTS, 0.51, y, 'DP2 and Ddyn [nT]', /NORMAL, $
+ ;  COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90, CHARTHICK=1.5   
+
+
+ ;  y = (0.9 - 0.73) / 2. + 0.73 
+ ;  XYOUTS, 0.51, y, ppi+' [nT]', /NORMAL, $
+ ;  COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90, CHARTHICK=1.5                
+;###############################################################################                      
+;second panel legend
+     ;   POLYFILL, [0.88,0.91,0.91,0.88], [0.405,0.405,0.407,0.407], color = rojo, /NORMAL
+    ;    POLYFILL, [0.88,0.91,0.91,0.88], [0.375,0.375,0.377,0.377], color = negro, /NORMAL        
+
+  ;      XYOUTS, 0.91, 0.4 , /NORMAL, $
+  ;              ' DP2', COLOR=negro, $
+   ;             CHARSIZE = chr_size1, $
+    ;            CHARTHICK=chr_thick1 
+
+     ;   XYOUTS, 0.91, 0.37 , /NORMAL, $
+      ;          ' Ddyn', COLOR=negro, $
+       ;         CHARSIZE = chr_size1, $
+        ;        CHARTHICK=chr_thick1                                    
+;###############################################################################
+; saving png
+;###############################################################################     
+     Image=TVRD() 
+    TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!    
+    TVLCT, R_bak, G_bak, B_bak, /get  
+        
+    ;DEVICE, /CLOSE
+    SET_PLOT, Device_bak2  
+    path = '../rutidl/output/article1events/diono_ev/'
+
+    WRITE_PNG, path+'iono_resp_'+Date+'.png', Image, R_bak, G_bak, B_bak
+
+    print, '        Saving: '+path+'iono_resp_'+Date+'.png'
+    print, ''
+        RETURN 	
+END	

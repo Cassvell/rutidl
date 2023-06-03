@@ -1,0 +1,22 @@
+Fechas      Kp   Dst
+1998-05-04  9   -205
+1999-10-22  8   -237
+2000-04-07  9   -288
+2000-07-15  9   -289    *dos dias
+2000-08-12  8   -235
+2001-03-31  9   -387    
+2001-04-12  8   -271    *dos dias
+2001-11-06  9   -292
+2001-11-24  8   -221
+2003-10-30  9   -383    *tres dias
+2003-11-20  9   -422    *dos dias
+2004-11-08  9   -374    *tres dias
+2005-05-15  8   -247    
+2015-03-17  8   -222
+2015-06-23  8   -204
+2017-05-27  7   -110
+2017-09-08  8   -124
+
+notas:
+* ocasiones cuando se presentaron eventos múltiples de gran intensidad también incluyen 
+ocasiones cuando los índices se mantuvieron en un máximo o mínimo a lo largo de dos días. 
