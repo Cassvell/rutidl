@@ -312,7 +312,7 @@ PRO list_dh, date_i, date_f
     H_idx    = H_min[idx]
     hr_idx   = hr_min[idx]
     
-    outfile='/home/c-isaac/Escritorio/proyecto/master_thesis/rutidl/output/DH_list_TGM.dat'
+    outfile='/home/isaac/geomstorm/rutidl/output/DH_list_TGM.dat'
      ;   OPENW, lun, outfile, /GET_LUN, /append
         
     PRINT, '###################################################################'

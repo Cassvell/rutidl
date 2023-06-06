@@ -51,7 +51,7 @@ END
 ;###############################################################################
 PRO corr_plot;, idate, fdate
 
-        input_dir  = '/home/isaac/geomstorm/datos/tgm/article_events/'
+        input_dir  = '/home/isaac/MEGAsync/datos/tgm/article_events/'
         path       = input_dir				
 
        ; header = 1      ; Defining number of lines of the header 

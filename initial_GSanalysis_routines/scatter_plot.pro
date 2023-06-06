@@ -55,7 +55,7 @@
 
 PRO scatter_plot, PNG=png, PS=ps
 
-        input_dir  = '/home/isaac/geomstorm/datos/tgm/article_events/'
+        input_dir  = '/home/isaac/MEGAsync/datos/tgm/article_events/'
         path       = input_dir
 
 	;iyr	= idate[0]

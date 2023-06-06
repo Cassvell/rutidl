@@ -43,7 +43,7 @@ FUNCTION teo, date
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')
        ; sts  = string(stats, format = '(A5)')
-		data_dir = '/home/isaac/geomstorm/datos/'
+		data_dir = '/home/isaac/MEGAsync/datos/'
 		file_name = data_dir+'teoloyucan/hourly/'+'teo_'+date+'h23.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -81,7 +81,7 @@ FUNCTION coe_min, date
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')
        ; sts  = string(stats, format = '(A5)')
-		data_dir = '/home/isaac/geomstorm/datos/'
+		data_dir = '/home/isaac/MEGAsync/datos/'
 		file_name = data_dir+'coeneo/min/'+'coe_'+date+'m23.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -119,7 +119,7 @@ FUNCTION teo_min, date
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')
        ; sts  = string(stats, format = '(A5)')
-		data_dir = '/home/isaac/geomstorm/datos/'
+		data_dir = '/home/isaac/MEGAsync/datos/'
 		file_name = data_dir+'teoloyucan/min/'+'teo_'+date+'m23.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -164,7 +164,7 @@ FUNCTION H_array, date_i, date_f, HELP=help
         string_date        = STRARR(file_number)               
         data_file_name_h  = STRARR(file_number)                        
         
-     data_path = '/home/isaac/geomstorm/datos'                         
+     data_path = '/home/isaac/MEGAsync/datos'                         
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -231,7 +231,7 @@ FUNCTION H_array_min, date_i, date_f, HELP=help
         string_date        = STRARR(file_number)               
         data_file_name_h  = STRARR(file_number)                        
         
-     data_path = '/home/isaac/geomstorm/datos'                         
+     data_path = '/home/isaac/MEGAsync/datos'                         
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0

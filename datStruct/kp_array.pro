@@ -46,7 +46,7 @@ FUNCTION kp_data, date
 ;###############################################################################
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4,"-",I02,"-",I02)')
-        path='/home/isaac/geomstorm/datos'
+        path='/home/isaac/MEGAsync/datos'
 		file_name = path+'/kp/daily/kp_'+date+'.txt'
         header = 1             ; Defining number of lines of the header 
 ;###############################################################################
@@ -87,7 +87,7 @@ FUNCTION kp_array, date_i, date_f, variable, HELP=help
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/geomstorm/datos'
+        data_path='/home/isaac/MEGAsync/datos'
         data_file_name_kp  = strarr(file_number)                         
         string_date_2    = strarr(file_number)
              

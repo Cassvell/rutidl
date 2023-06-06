@@ -253,7 +253,7 @@ FOR i=0, file_number-1 DO BEGIN
     CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
     string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
                 
-    outfile[i] = '/home/isaac/geomstorm/datos/Kmex/new_kmex/'+string_date[i]+'.dat'
+    outfile[i] = '/home/isaac/MEGAsync/datos/Kmex/new_kmex/'+string_date[i]+'.dat'
     OPENW, LUN, outfile[i], /GET_LUN
     PRINTF, LUN, n_km1[i*8:(i+1)*8-1], FORMAT='(8(I02,X))'
     PRINTF, LUN, n_km2[i*8:(i+1)*8-1], FORMAT='(8(I02,X))' 

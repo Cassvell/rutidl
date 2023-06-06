@@ -10,7 +10,7 @@ FUNCTION coe, date
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')
        ; sts  = string(stats, format = '(A5)')
-		data_dir = '/home/c-isaac/geomstorm/datos/'
+		data_dir = '/home/isaac/MEGAsync/datos/'
 		file_name = data_dir+'coeneo/min/'+'coe_'+date+'m23.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)

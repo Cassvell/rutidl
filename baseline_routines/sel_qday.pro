@@ -69,6 +69,12 @@ PRO sel_qday, date_i, date_f
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
                 data_file_name[i] = '../rutidl/teoloyucan/teoloyucan/'+'teo_'+string_date[i]+'.clean.dat'
+                
+		        data_file_name = FILE_SEARCH(data_file_name[i], COUNT=opened_files)
+		        		        
+	            IF opened_files NE N_ELEMENTS(data_file_name) THEN begin
+	                data_file_name[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'    
+	            ENDIF                
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)

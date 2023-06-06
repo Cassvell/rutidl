@@ -58,7 +58,7 @@ FUNCTION rawH, date, station
 		ENDCASE
 		
 		
-		data_dir = '/home/isaac/geomstorm/datos/'+station+'/'+station+'/'
+		data_dir = '/home/isaac/MEGAsync/datos/'+station+'/'+station+'/'
 		file_name = data_dir+station_code+'_'+date+'.clean.dat'
        ; print, file_name
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -110,7 +110,7 @@ FUNCTION rawH_array, date_i, date_f, station
 		'teoloyucan'   : station_code = 'teo'
 		ENDCASE
 		        
-       dir = '/home/isaac/geomstorm/datos/'+station+'/'+station+'/'
+       dir = '/home/isaac/MEGAsync/datos/'+station+'/'+station+'/'
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -250,11 +250,11 @@ PRO H_filemaker, date_i, date_f
         tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')                
-        outfile[i] = '/home/isaac/geomstorm/datos/coeneo/hourly/coe_'+string_date[i]+'h23.dat'    
-        OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN    
+        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/hourly/coe_'+string_date[i]+'h23.dat'    
+     ;   OPENW, LUN, outfile[i], /GET_LUN        
+    ;    PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
+   ;     CLOSE, LUN
+  ;      FREE_LUN, LUN    
     ENDFOR     
 
     FOR i=0, file_number-1 DO BEGIN
@@ -265,11 +265,11 @@ PRO H_filemaker, date_i, date_f
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/geomstorm/datos/coeneo/min/coe_'+string_date[i]+'m23.dat'    
-        OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F10.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN    
+        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/min/coe_'+string_date[i]+'m23.dat'    
+     ;   OPENW, LUN, outfile[i], /GET_LUN        
+    ;    PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F10.4)'
+   ;     CLOSE, LUN
+  ;      FREE_LUN, LUN    
     ENDFOR      
 
 

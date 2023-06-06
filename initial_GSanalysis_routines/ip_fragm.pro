@@ -45,7 +45,7 @@ FUNCTION ip_data, date
 ;###############################################################################
 ;reading data files
         date = string(year, month, day, format = '(I4, "-", I02, "-", I02)')
-        path='/home/c-isaac/geomstorm/datos'				
+        path='/home/isaac/MEGAsync/datos'				
 		file_name = path+'/ip/'+date+'.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -157,7 +157,7 @@ string_date     = STRARR(N_ELEMENTS(ip_d.DOY)/24)
 outfile         = STRARR(N_ELEMENTS(n_days))
 
 
-path='/home/c-isaac/geomstorm/datos'
+path='/home/isaac/MEGAsync/datos'
 
 FOR i=0, N_ELEMENTS(n_days)-1 DO BEGIN
     tmp_year    = 0

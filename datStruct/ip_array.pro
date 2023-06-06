@@ -46,7 +46,7 @@ FUNCTION ip_dat, date
 ;reading data files
         date = string(year, month, day, format = '(I4, I02, I02)')
 
-        path='/home/isaac/geomstorm/datos'		
+        path='/home/isaac/MEGAsync/datos'		
 		file_name = path+'/ip/daily/'+'ip_'+date+'h.dat'
 
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -190,7 +190,7 @@ FUNCTION ip_array, date_i, date_f, variable, HELP=help
 
 ;###############################################################################
 ; define array structure
-        data_path='/home/isaac/geomstorm/datos'
+        data_path='/home/isaac/MEGAsync/datos'
         file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
         string_date        = STRARR(file_number)               
         data_file_name  = STRARR(file_number) 

@@ -45,7 +45,7 @@ FUNCTION new_kmex_data, date
 ;###############################################################################
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
-		path='/home/isaac/geomstorm/datos'
+		path='/home/isaac/MEGAsync/datos'
 		
 		name = +date+'.dat'
 		
@@ -90,7 +90,7 @@ FUNCTION new_kmex_array, date_i, date_f, variable, HELP=help
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/geomstorm/datos/Kmex/new_kmex/'
+        data_path='/home/isaac/MEGAsync/datos/Kmex/new_kmex/'
         data_file_name_kmn = STRARR(file_number)                                                             
         string_date        = STRARR(file_number)
               

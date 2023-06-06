@@ -71,7 +71,7 @@ PRO tgm_file, date_i, date_f
     H = add_nan(H, 999999.0, 'equal')
     H = add_nan(H, 99999.0, 'equal')    
 ;############################################################################################################
-    outfile= data_path+'/tgm/article_events/list1.1/tgmdata'+idate+'_'+fdate+'.txt'
+    outfile= 'home/isaac/MEGAsync/datos/tgm/article_events/list1.1/tgmdata'+idate+'_'+fdate+'.txt'
     OPENW, lun, outfile, /GET_LUN
 
     PRINTF, lun, 'DOY', 'hora', 'Dst', 'DH', FORMAT = '(3A,6A,6A,6A)'

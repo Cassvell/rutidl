@@ -109,7 +109,7 @@ FUNCTION SQbaseline_array, date_i, date_f, HELP=help
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/geomstorm/datos'
+        data_path='/home/isaac/MEGAsync/datos'
         data_file_name_bsq = STRARR(file_number) 
         string_date        = STRARR(file_number) 
               
@@ -168,7 +168,7 @@ FUNCTION SQbaseline_array_min, date_i, date_f, HELP=help
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/geomstorm/datos'
+        data_path='/home/isaac/MEGAsync/datos'
         data_file_name_bsq = STRARR(file_number) 
         string_date        = STRARR(file_number) 
               

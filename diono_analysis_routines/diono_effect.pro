@@ -198,7 +198,7 @@ PRO diono_effect, date_i, date_f, JPEG = jpeg
 
 ;PRINT, doy       
 ;###############################################################################      
-    data_path = '/home/isaac/geomstorm/datos/'
+    data_path = '/home/isaac/MEGAsync/datos/'
     
     idate    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4,I02,I02)')
     fdate    = STRING(yr_f, mh_f, dy_f, FORMAT='(I4,I02,I02)')

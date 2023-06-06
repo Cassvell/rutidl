@@ -51,7 +51,7 @@ FUNCTION kmex, date
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
 		
 		name = 'teo_'+date+'.index.'
-		path='/home/isaac/geomstorm/datos'
+		path='/home/isaac/MEGAsync/datos'
 		file_name = path+'/Kmex/'+name+'final'		
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -104,7 +104,7 @@ FUNCTION kmex_array, date_i, date_f, variable, HELP=help
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/geomstorm/datos'
+        data_path='/home/isaac/MEGAsync/datos'
         
         string_date        = strarr(file_number)
                

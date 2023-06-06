@@ -45,7 +45,7 @@ FUNCTION DH_teo, date
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
 
-        path='/home/isaac/geomstorm/datos'		
+        path='/home/isaac/MEGAsync/datos'		
 		file_name = path+'/dH_teo/'+'teo_'+date+'.dst.early'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -85,7 +85,7 @@ FUNCTION dh_array, date_i, date_f, variable, HELP=help
 ;###############################################################################    
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 ; define DH variables
-        data_path='/home/isaac/geomstorm/datos'
+        data_path='/home/isaac/MEGAsync/datos'
         
         string_date        = STRARR(file_number)
         string_date_2      = STRARR(file_number)

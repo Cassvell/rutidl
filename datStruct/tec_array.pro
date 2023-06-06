@@ -44,7 +44,7 @@ FUNCTION tec_data, idate
 	iday 	= idate[2]		
 
         header = 1      ; Defining number of lines of the header 
-        path='/home/isaac/geomstorm/datos'
+        path='/home/isaac/MEGAsync/datos'
         idate = string(iyear, imonth, iday, format = '(I4, "-", I02, "-", I02)')
 		file_name = path+'/tec/'+'tec_'+idate+'.txt'
 		
@@ -86,7 +86,7 @@ FUNCTION tec_array , date_i, date_f, variable, HELP=help
         data_file_name_tec  = STRARR(file_number)        
         string_date_2        = STRARR(file_number)
         
-     data_path = '/home/isaac/geomstorm/datos'                         
+     data_path = '/home/isaac/MEGAsync/datos'                         
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
