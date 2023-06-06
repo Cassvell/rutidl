@@ -137,7 +137,7 @@ FUNCTION rawH_array, date_i, date_f, station
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        dat = rawH([tmp_year, tmp_month, tmp_day], 'coeneo')
+                        dat = rawH([tmp_year, tmp_month, tmp_day], station)
                         
                         H[i*1440:(i+1)*1440-1] = dat.H[*]                                                
                 ENDIF ELSE BEGIN
@@ -150,7 +150,7 @@ FUNCTION rawH_array, date_i, date_f, station
 END
 
 
-PRO H_filemaker, date_i, date_f
+PRO H_filemaker, date_i, date_f, station
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -165,10 +165,16 @@ PRO H_filemaker, date_i, date_f
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
     tot_days= FINDGEN(file_number*24)/24.0    
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
+
+    	tation_code = STRARR(3)
+		CASE station of
+		'coeneo'       : station_code = 'coe'
+		'teoloyucan'   : station_code = 'teo'
+		ENDCASE
     
 ; Generate the time series variables 
 ; define H variables                  
-    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'coeneo')
+    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station)
 
     H = add_nan(H, 999999.0, 'equal')        
     H = add_nan(H, 99999.0, 'equal')           
@@ -250,7 +256,7 @@ PRO H_filemaker, date_i, date_f
         tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')                
-        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/hourly/coe_'+string_date[i]+'h23.dat'    
+        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/hourly/'+station_code+'_'+string_date[i]+'h23.dat'    
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
    ;     CLOSE, LUN
@@ -265,7 +271,7 @@ PRO H_filemaker, date_i, date_f
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/min/coe_'+string_date[i]+'m23.dat'    
+        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/min/'+station_code+'_'+string_date[i]+'m23.dat'    
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F10.4)'
    ;     CLOSE, LUN
