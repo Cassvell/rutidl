@@ -154,6 +154,11 @@ PRO H_filemaker, date_i, date_f, station
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up
+        print, set_var.MEGA_dir
+
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -166,7 +171,7 @@ PRO H_filemaker, date_i, date_f, station
     tot_days= FINDGEN(file_number*24)/24.0    
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-    	tation_code = STRARR(3)
+    	station_code = STRARR(3)
 		CASE station of
 		'coeneo'       : station_code = 'coe'
 		'teoloyucan'   : station_code = 'teo'
@@ -191,7 +196,7 @@ PRO H_filemaker, date_i, date_f, station
     index_out = WHERE(H_24h GE MEDIAN(H_24h)+IQR_n OR H_24h LE MEDIAN(H_24h)-IQR_n[0])
     ;index_in  = WHERE(H_24h LE QR3 AND H_24h GE QR1)      
     time = FINDGEN(N_ELEMENTS(H))/1440
-    PRINT, N_ELEMENTS(index_out)
+   ; PRINT, N_ELEMENTS(index_out)
     IF MIN(index_out) NE -1 THEN BEGIN
         H_24h[index_out] = !Values.F_NAN
     ENDIF    
@@ -279,6 +284,7 @@ PRO H_filemaker, date_i, date_f, station
     ENDFOR      
 
 
+
    ; PRINT, MIN(dif_Hdet, /NAN)
 
     DEVICE    
@@ -317,5 +323,6 @@ PRO H_filemaker, date_i, date_f, station
       PRINT, y    
     ENDWHILE 
  
+
  ;jgewlgfwergipowerjrnwgjbwerjghberjgbjher
 END
