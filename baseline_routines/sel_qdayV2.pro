@@ -62,7 +62,7 @@ PRO sel_qdayV2, date_i, date_f
        
 ; Generate the time series variables 
 ; define H variables                  
-    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'coeneo')
+    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'teoloyucan')
     PRINT, '#######################################################################'
     H = nanpc(H, 99999.0, 'gequal')
     H = add_nan(H, 999999.0, 'equal')        

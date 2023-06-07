@@ -6,18 +6,18 @@ PRO eps_fig
     x = data.x0
     y = data.y0
     
-    dir_name = '/home/c-isaac/geomstorm/rutidl/test.eps'	
-    
+    dir_name = '/home/isaac/geomstorm/rutidl/test.eps'	
+   ; print, y
+    RETURN
+    ;SET_PLOT, 'PS'
+    ;DEVICE, /ENCAPSULATED, FILENAME = dir_name
 
-    SET_PLOT, 'Z'
-   ; DEVICE, /ENCAPSULATED, FILENAME = dir_name
-
-   ; cgDisplay, 1750, 500, Title='Filled Area Under a Curve'
-    Plot, x, y, Color='yellow', Thick=2, XRANGE=[0,2000], YRANGE=[-20,20]
+    ;cgDisplay, 1750, 500, Title='Filled Area Under a Curve'
+    ;CGPlot, x, y, Color='yellow', Thick=2, XRANGE=[0,2000], YRANGE=[-20,20]
     
     
-    write_png,'test.png',tvrd() 
- ;   DEVICE, /CLOSE
+   ; write_png,'test.png',tvrd() 
+  ;  DEVICE, /CLOSE
     
 END
 

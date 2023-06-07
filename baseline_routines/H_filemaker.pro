@@ -45,20 +45,17 @@ FUNCTION rawH, date, station
 
 	year	= date[0]
 	month	= date[1]
-	day 	= date[2]	
+	day 	= date[2]
+        @set_up_commons
+        set_up		
 ;###############################################################################
 ;reading data files
 ;###############################################################################
-        date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
-		
-		station_code = STRARR(3)
-		CASE station of
-		'coeneo'       : station_code = 'coe'
-		'teoloyucan'   : station_code = 'teo'
-		ENDCASE
+        date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')		
+        station_code    = set_var.gms_code[0]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 		
 		
-		data_dir = '/home/isaac/MEGAsync/datos/'+station+'/'+station+'/'
+		data_dir = set_var.Mega_dir+station+'/'+station+'/'
 		file_name = data_dir+station_code+'_'+date+'.clean.dat'
        ; print, file_name
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -99,18 +96,16 @@ FUNCTION rawH_array, date_i, date_f, station
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
 
+        @set_up_commons
+        set_up
+        
         file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
         data_file_name = STRARR(file_number)
         string_date     = STRARR(file_number)
 
-
-		station_code = STRARR(3)
-		CASE station of
-		'coeneo'       : station_code = 'coe'
-		'teoloyucan'   : station_code = 'teo'
-		ENDCASE
+        station_code    = set_var.gms_code[0]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 		        
-       dir = '/home/isaac/MEGAsync/datos/'+station+'/'+station+'/'
+       dir = set_var.Mega_dir+station+'/'+station+'/'
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -150,14 +145,13 @@ FUNCTION rawH_array, date_i, date_f, station
 END
 
 
-PRO H_filemaker, date_i, date_f, station
+PRO H_filemaker, date_i, date_f
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
  ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
         @set_up_commons
         set_up
-        print, set_var.MEGA_dir
 
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
@@ -165,17 +159,15 @@ PRO H_filemaker, date_i, date_f, station
 
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
-	dy_f 	= date_f[2]     
+	dy_f 	= date_f[2]
+	
 ;###############################################################################    
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
     tot_days= FINDGEN(file_number*24)/24.0    
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-    	station_code = STRARR(3)
-		CASE station of
-		'coeneo'       : station_code = 'coe'
-		'teoloyucan'   : station_code = 'teo'
-		ENDCASE
+    station         = set_var.gms[0]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[0]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
     
 ; Generate the time series variables 
 ; define H variables                  
@@ -252,8 +244,10 @@ PRO H_filemaker, date_i, date_f, station
     outfile = STRARR(file_number)
     
 ;Generación de archivo en muestreo de horas 
-        string_date     = STRARR(file_number)
-          
+    string_date     = STRARR(file_number)
+
+	str_year = STRMID(STRING(yr_i), 2, 2) 
+	print,    STRING(yr_i), str_year
     FOR i=0, file_number-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0
@@ -261,13 +255,13 @@ PRO H_filemaker, date_i, date_f, station
         tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')                
-        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/hourly/'+station_code+'_'+string_date[i]+'h23.dat'    
+        outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h23.dat'
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
    ;     CLOSE, LUN
   ;      FREE_LUN, LUN    
     ENDFOR     
-
+    
     FOR i=0, file_number-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0
@@ -276,7 +270,7 @@ PRO H_filemaker, date_i, date_f, station
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/MEGAsync/datos/coeneo/min/'+station_code+'_'+string_date[i]+'m23.dat'    
+        outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m23.dat'    
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F10.4)'
    ;     CLOSE, LUN
@@ -309,11 +303,6 @@ PRO H_filemaker, date_i, date_f, station
     WINDOW, 1, XSIZE=800, YSIZE=400, TITLE='H detrending'
     PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1
 
-    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
-    PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
-    
-
-    
     PRINT, 'MIN Value within the time window'
     PRINT, MIN(H_det, /NAN)
     
@@ -322,7 +311,8 @@ PRO H_filemaker, date_i, date_f, station
       CURSOR, x, y, /DOWN, /DATA
       PRINT, y    
     ENDWHILE 
- 
 
- ;jgewlgfwergipowerjrnwgjbwerjghberjgbjher
+    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
+    PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
+    
 END
