@@ -268,7 +268,7 @@ PRO H_filemaker, date_i, date_f
 
     station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
     station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
-    print, station
+    
 ; Generate the time series variables 
 ; define H variables                  
     H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
