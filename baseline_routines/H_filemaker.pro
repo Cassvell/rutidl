@@ -52,11 +52,50 @@ FUNCTION rawH, date, station
 ;reading data files
 ;###############################################################################
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')		
-        station_code    = set_var.gms_code[0]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+        str_year = STRING(year, FORMAT = '(I4)')	
+        station_code    = set_var.gms_code[2]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+
+
+    CASE station_code of
+        'coe'   : gms_net = 'regmex'
+        'teo'   : gms_net = 'regmex'
+        'tuc'   : gms_net = 'intermagnet'
+        'bsl'   : gms_net = 'intermagnet'
+        ELSE : PRINT, 'non avaiable gms data'
+    ENDCASE
+
 		
-		
+    IF gms_net EQ 'regmex' THEN BEGIN 		
 		data_dir = set_var.Mega_dir+station+'/'+station+'/'
 		file_name = data_dir+station_code+'_'+date+'.clean.dat'
+       ; print, file_name
+		file = FILE_SEARCH(file_name, COUNT=opened_files)
+		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
+
+		number_of_lines = FILE_LINES(file)
+		data = STRARR(number_of_lines)
+
+		OPENR, LUN, file, /GET_LUN, ERROR=err
+		READF, LUN, data, FORMAT = '(A)'
+		CLOSE, LUN
+		FREE_LUN, LUN
+;###############################################################################
+;extracting data and denfining an structure data
+;###############################################################################
+        DStruct = {year:0, month:0, day:0, hour:0, minutes:0, DOY:0, $ 
+                     X:0., Y:0., Z:0., F:0.}
+
+		teo_mag = REPLICATE(DStruct, number_of_lines)	
+        header = 0             ; Defining number of lines of the header 
+
+		READS, data[header:number_of_lines-1], teo_mag, $
+		FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,8X,I03,F12,F10,F10,F10)'
+    ENDIF
+    
+    IF gms_net EQ 'intermagnet' THEN BEGIN
+
+		data_dir = set_var.gic_dir+str_year+'/'+STRUPCASE(station_code)+'/daily/'
+		file_name = data_dir+station_code+date+'qmin.min.out'
        ; print, file_name
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -78,8 +117,9 @@ FUNCTION rawH, date, station
         header = 0             ; Defining number of lines of the header 
 
 		READS, data[header:number_of_lines-1], teo_mag, $
-		FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,8X,I03,F12,F10,F10,F10)'
-
+		FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,8X,I03,F13,F10,F10,F10)'
+    
+    ENDIF
 		RETURN, teo_mag		
 END
 
@@ -246,16 +286,21 @@ PRO H_filemaker, date_i, date_f
 ;Generación de archivo en muestreo de horas 
     string_date     = STRARR(file_number)
 
-	str_year = STRMID(STRING(yr_i), 2, 2) 
-	print,    STRING(yr_i), str_year
+	str_year = STRMID(STRING(yr_i, format='(I4)'),2,2)
+	print,   str_year
     FOR i=0, file_number-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0
         tmp_day     = 0
+        string_year = 0
         tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+        
+        str_year = STRMID(STRING(tmp_year, format='(I4)'),2,2)
+        
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')                
-        outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h23.dat'
+        outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h'+str_year+'.dat'
+        print, outfile[i]
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
    ;     CLOSE, LUN
@@ -291,16 +336,9 @@ PRO H_filemaker, date_i, date_f
     OPLOT, time, l_sup, LINESTYLE=1, THICK=2
     OPLOT, time, l_inf, LINESTYLE=1, THICK=2    
    ; PRINT, H_t
- 
-    
-   WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='H day to day trending baseline'
-    PLOT, time,H_trend, YRANGE=[MIN(H, /NAN),MAX(H,/NAN)], XSTYLE=1, COLOR=255
-    OPLOT, time, H_t, LINESTYLE=2      
-    OPLOT, time, l_sup, LINESTYLE=1, THICK=2
-    OPLOT, time, l_inf, LINESTYLE=1, THICK=2 
 
       
-    WINDOW, 1, XSIZE=800, YSIZE=400, TITLE='H detrending'
+    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='H detrending'
     PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1
 
     PRINT, 'MIN Value within the time window'
@@ -312,7 +350,7 @@ PRO H_filemaker, date_i, date_f
       PRINT, y    
     ENDWHILE 
 
-    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
+    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
     PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
     
 END
