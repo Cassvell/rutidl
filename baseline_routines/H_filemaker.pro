@@ -83,7 +83,7 @@ FUNCTION rawH, date, station
 ;extracting data and denfining an structure data
 ;###############################################################################
         DStruct = {year:0, month:0, day:0, hour:0, minutes:0, DOY:0, $ 
-                     X:0., Y:0., Z:0., F:0.}
+                   D:0., H:0., Z:0., F:0.}
 
 		teo_mag = REPLICATE(DStruct, number_of_lines)	
         header = 0             ; Defining number of lines of the header 
@@ -111,7 +111,7 @@ FUNCTION rawH, date, station
 ;extracting data and denfining an structure data
 ;###############################################################################
         DStruct = {year:0, month:0, day:0, hour:0, minuntes:0, DOY:0, $ 
-                     D:0., H:0., Z:0., F:0.}
+                   X:0., Y:0., Z:0., F:0.}
 
 		teo_mag = REPLICATE(DStruct, number_of_lines)	
         header = 0             ; Defining number of lines of the header 
@@ -142,8 +142,18 @@ FUNCTION rawH_array, date_i, date_f, station
         file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
         data_file_name = STRARR(file_number)
         string_date     = STRARR(file_number)
+        str_year = STRING(yr_i, FORMAT = '(I4)')
+        station_code    = set_var.gms_code[2]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 
-        station_code    = set_var.gms_code[0]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+    CASE station_code of
+        'coe'   : gms_net = 'regmex'
+        'teo'   : gms_net = 'regmex'
+        'tuc'   : gms_net = 'intermagnet'
+        'bsl'   : gms_net = 'intermagnet'
+        ELSE : PRINT, 'non avaiable gms data'
+    ENDCASE
+    	
+    IF gms_net EQ 'regmex' THEN BEGIN 
 		        
        dir = set_var.Mega_dir+station+'/'+station+'/'
         FOR i=0ll, file_number-1 DO BEGIN
@@ -162,7 +172,7 @@ FUNCTION rawH_array, date_i, date_f, station
 
         IF capable_to_plot NE N_ELEMENTS(data_file_name) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
-                PRINT, FORMAT="('                missing GMS_YYYYMMDD.k_index.',A,' impossible to plot all data.')"              
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.H data.',A,' impossible to plot all data.')"              
         ENDIF
 
         H    = FLTARR(file_number*1440)                               
@@ -176,11 +186,58 @@ FUNCTION rawH_array, date_i, date_f, station
                         
                         H[i*1440:(i+1)*1440-1] = dat.H[*]                                                
                 ENDIF ELSE BEGIN
-                         H[i*1440:(i+1)*1440-1] = 999999.0
-                  ;       H_STDESV[i*1440:(i+1)*1440-1] = 999999.0                        
+                         H[i*1440:(i+1)*1440-1] = 999999.0                       
                 ENDELSE                
         ENDFOR
+    ENDIF
+    
+    IF gms_net EQ 'intermagnet' THEN BEGIN 
+       dir = set_var.gic_dir+str_year+'/'+STRUPCASE(station_code)+'/daily/'
+        FOR i=0ll, file_number-1 DO BEGIN
+                tmp_year    = 0
+                tmp_month   = 0
+                tmp_day     = 0
+                tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
+                CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+                string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
+                data_file_name[i] = dir+station_code+string_date[i]+'qmin.min.out'
+                ;print, data_file_name[i]
+        ENDFOR
+
+        exist_data_file   = FILE_TEST(data_file_name)
+        capable_to_plot   = N_ELEMENTS(WHERE(exist_data_file EQ 1))
+
+        IF capable_to_plot NE N_ELEMENTS(data_file_name) THEN BEGIN 
+                PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.H data.',A,' impossible to plot all data.')"              
+        ENDIF
+
+        H    = FLTARR(file_number*1440)                               
+        X    = FLTARR(file_number*1440) 
+        Y    = FLTARR(file_number*1440)                          
+        FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
+                IF exist_data_file[i] EQ 1 THEN BEGIN
+                        tmp_year    = 0
+                        tmp_month   = 0
+                        tmp_day     = 0
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
+                        dat = rawH([tmp_year, tmp_month, tmp_day], station)
+                        
+                        X[i*1440:(i+1)*1440-1] = dat.X[*]  
+                        Y[i*1440:(i+1)*1440-1] = dat.Y[*]                                              
+                ENDIF ELSE BEGIN
+                        X[i*1440:(i+1)*1440-1] = 99999.0
+                        Y[i*1440:(i+1)*1440-1] = 99999.0                     
+                ENDELSE                
+        ENDFOR
+        X = add_nan(X, 99999.0, 'equal')        
+        Y = add_nan(Y, 99999.0, 'equal')
+        H = SQRT((X)^2 + (Y)^2)
+       ; PRINT, X
+    ENDIF
+    
+    
     RETURN, H
 END
 
@@ -206,8 +263,8 @@ PRO H_filemaker, date_i, date_f
     tot_days= FINDGEN(file_number*24)/24.0    
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-    station         = set_var.gms[0]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[0]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+    station         = set_var.gms[2]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[2]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
     
 ; Generate the time series variables 
 ; define H variables                  
@@ -215,7 +272,7 @@ PRO H_filemaker, date_i, date_f
 
     H = add_nan(H, 999999.0, 'equal')        
     H = add_nan(H, 99999.0, 'equal')           
-   ; PRINT, H
+  ;  PRINT, H
 ;Applying a detrend function
     H_24h=FINDGEN(N_ELEMENTS(H)/1440)   
     FOR i=0, N_ELEMENTS(H_24h)-1 DO BEGIN
@@ -229,12 +286,13 @@ PRO H_filemaker, date_i, date_f
     ;index_in  = WHERE(H_24h LE QR3 AND H_24h GE QR1)      
     time = FINDGEN(N_ELEMENTS(H))/1440
    ; PRINT, N_ELEMENTS(index_out)
+   
     IF MIN(index_out) NE -1 THEN BEGIN
         H_24h[index_out] = !Values.F_NAN
+        H_24h = fillnan(H_24h)
     ENDIF    
     PRINT, '#######################################################################'     
-   ; PRINT, H_24h   
-    H_24h = fillnan(H_24h)
+    PRINT, H_24h   
     ;PRINT, H_24h   
     PRINT, '#######################################################################'     
  
@@ -285,9 +343,6 @@ PRO H_filemaker, date_i, date_f
     
 ;Generación de archivo en muestreo de horas 
     string_date     = STRARR(file_number)
-
-	str_year = STRMID(STRING(yr_i, format='(I4)'),2,2)
-	print,   str_year
     FOR i=0, file_number-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0
@@ -299,8 +354,8 @@ PRO H_filemaker, date_i, date_f
         str_year = STRMID(STRING(tmp_year, format='(I4)'),2,2)
         
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')                
-        outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h'+str_year+'.dat'
-        print, outfile[i]
+        outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h'+'.dat'
+        ;print, outfile[i]
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
    ;     CLOSE, LUN
@@ -315,7 +370,7 @@ PRO H_filemaker, date_i, date_f
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m23.dat'    
+        outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m.dat'    
      ;   OPENW, LUN, outfile[i], /GET_LUN        
     ;    PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F10.4)'
    ;     CLOSE, LUN
