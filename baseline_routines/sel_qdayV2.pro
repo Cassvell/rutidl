@@ -56,13 +56,24 @@ PRO sel_qdayV2, date_i, date_f
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
 
+
+        @set_up_commons
+        set_up
+
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+        
         file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
         data_file_name = STRARR(file_number)
         string_date     = STRARR(file_number) 
        
 ; Generate the time series variables 
 ; define H variables                  
-    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'teoloyucan')
+    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx)
     PRINT, '#######################################################################'
     H = nanpc(H, 99999.0, 'gequal')
     H = add_nan(H, 999999.0, 'equal')        
