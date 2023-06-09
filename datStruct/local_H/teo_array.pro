@@ -145,7 +145,7 @@ FUNCTION teo_min, date
 		RETURN, teo_mag		
 END
 
-FUNCTION H_array, date_i, date_f, HELP=help
+FUNCTION teo_array, date_i, date_f, HELP=help
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN 
 

@@ -38,7 +38,7 @@
 ;   For following analysis, this routine has to be run to create clean H obs data
 ;
 
-FUNCTION rawH, date, station
+FUNCTION rawH, date, station, idx
 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
@@ -53,7 +53,7 @@ FUNCTION rawH, date, station
 ;###############################################################################
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')		
         str_year = STRING(year, FORMAT = '(I4)')	
-        station_code    = set_var.gms_code[2]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+        station_code    = set_var.gms_code[idx]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 
 
     CASE station_code of
@@ -96,8 +96,20 @@ FUNCTION rawH, date, station
 
 		data_dir = set_var.gic_dir+str_year+'/'+STRUPCASE(station_code)+'/daily/'
 		file_name = data_dir+station_code+date+'qmin.min.out'
-       ; print, file_name
+
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
+		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+		    file_name = data_dir+station_code+date+'pmin.min.out'
+		    file = FILE_SEARCH(file_name, COUNT=opened_files)
+		ENDIF 
+		
+		
+		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+		    file_name = data_dir+station_code+date+'dmin.min.out'
+		    file = FILE_SEARCH(file_name, COUNT=opened_files)		
+        ENDIF
+
+		
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
@@ -124,7 +136,7 @@ FUNCTION rawH, date, station
 END
 
 
-FUNCTION rawH_array, date_i, date_f, station
+FUNCTION rawH_array, date_i, date_f, station, idx
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 	
@@ -143,7 +155,7 @@ FUNCTION rawH_array, date_i, date_f, station
         data_file_name = STRARR(file_number)
         string_date     = STRARR(file_number)
         str_year = STRING(yr_i, FORMAT = '(I4)')
-        station_code    = set_var.gms_code[2]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+        station_code    = set_var.gms_code[idx]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 
     CASE station_code of
         'coe'   : gms_net = 'regmex'
@@ -182,7 +194,7 @@ FUNCTION rawH_array, date_i, date_f, station
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        dat = rawH([tmp_year, tmp_month, tmp_day], station)
+                        dat = rawH([tmp_year, tmp_month, tmp_day], station, idx)
                         
                         H[i*1440:(i+1)*1440-1] = dat.H[*]                                                
                 ENDIF ELSE BEGIN
@@ -203,6 +215,16 @@ FUNCTION rawH_array, date_i, date_f, station
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
                 data_file_name[i] = dir+station_code+string_date[i]+'qmin.min.out'
                 ;print, data_file_name[i]
+                file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)
+	            IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+	                data_file_name[i] = dir+station_code+string_date[i]+'pmin.min.out'
+	                file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)  
+	            ENDIF; 
+	             IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+	                data_file_name[i] = dir+station_code+string_date[i]+'dmin.min.out'
+	                file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)
+	            ENDIF
+	            ;PRINT, data_file_name[i]           
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)
@@ -222,7 +244,7 @@ FUNCTION rawH_array, date_i, date_f, station
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        dat = rawH([tmp_year, tmp_month, tmp_day], station)
+                        dat = rawH([tmp_year, tmp_month, tmp_day], station, idx)
                         
                         X[i*1440:(i+1)*1440-1] = dat.X[*]  
                         Y[i*1440:(i+1)*1440-1] = dat.Y[*]                                              
@@ -258,17 +280,20 @@ PRO H_filemaker, date_i, date_f
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
 	
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
 ;###############################################################################    
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
     tot_days= FINDGEN(file_number*24)/24.0    
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-    station         = set_var.gms[2]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[2]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
     
 ; Generate the time series variables 
 ; define H variables                  
-    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station)
+    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
 
     H = add_nan(H, 999999.0, 'equal')        
     H = add_nan(H, 99999.0, 'equal')           
@@ -292,7 +317,7 @@ PRO H_filemaker, date_i, date_f
         H_24h = fillnan(H_24h)
     ENDIF    
     PRINT, '#######################################################################'     
-    PRINT, H_24h   
+   ; PRINT, H_24h   
     ;PRINT, H_24h   
     PRINT, '#######################################################################'     
  

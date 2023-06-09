@@ -57,5 +57,7 @@ PRO set_up
     set_var.gms     = stations[*]
     set_var.gms_code= stat_code[*]
 
+
+
     RETURN
 END
