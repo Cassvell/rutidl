@@ -264,7 +264,7 @@ FUNCTION rawH_array, date_i, date_f, station, idx
 END
 
 
-PRO H_filemaker, date_i, date_f
+PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -364,8 +364,42 @@ PRO H_filemaker, date_i, date_f
         H_hr[i] = MEDIAN(H_det[i*60:(i+1)*60-1])
           
     ENDFOR    
-    outfile = STRARR(file_number)
     
+   ; PRINT, MIN(dif_Hdet, /NAN)
+
+    DEVICE    
+
+   ; set_plot, 'x'    
+   WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='H raw data'
+    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+    OPLOT, time, H_trend, LINESTYLE=2, THICK=2
+ ;   OPLOT, time, H_t, LINESTYLE=2, THICK=1
+    OPLOT, time, l_sup, LINESTYLE=1, THICK=2
+    OPLOT, time, l_inf, LINESTYLE=1, THICK=2    
+   ; PRINT, H_t
+
+
+    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
+    PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
+      
+    PRINT, 'MIN Value within the time window'
+    PRINT, MIN(H_det, /NAN)
+
+    PRINT, 'Press click to get H_det value in a certain point until right mouse button is pressed'
+
+    
+    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='H detrending'
+    PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1
+
+    WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
+      CURSOR, x, y, /DOWN, /DATA
+      PRINT, y    
+    ENDWHILE 
+    
+
+
+IF KEYWORD_SET(make_file) THEN BEGIN    
+    outfile = STRARR(file_number)    
 ;Generación de archivo en muestreo de horas 
     string_date     = STRARR(file_number)
     FOR i=0, file_number-1 DO BEGIN
@@ -382,7 +416,7 @@ PRO H_filemaker, date_i, date_f
         outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h'+'.dat'
         ;print, outfile[i]
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F10.4)'
+        PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F8.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR     
@@ -397,40 +431,11 @@ PRO H_filemaker, date_i, date_f
 
         outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m.dat'    
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F10.4)'
+        PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F8.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR      
-
-
-
-   ; PRINT, MIN(dif_Hdet, /NAN)
-
-    DEVICE    
-
-   ; set_plot, 'x'    
-   WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
-    OPLOT, time, H_trend, LINESTYLE=2, THICK=2
- ;   OPLOT, time, H_t, LINESTYLE=2, THICK=1
-    OPLOT, time, l_sup, LINESTYLE=1, THICK=2
-    OPLOT, time, l_inf, LINESTYLE=1, THICK=2    
-   ; PRINT, H_t
-
-      
-    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='H detrending'
-    PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1
-
-    PRINT, 'MIN Value within the time window'
-    PRINT, MIN(H_det, /NAN)
-    
-    PRINT, 'Press click to get H_det value in a certain point until right mouse button is pressed'
-    WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
-      CURSOR, x, y, /DOWN, /DATA
-      PRINT, y    
-    ENDWHILE 
-
-    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
-    PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
+ENDIF
+RETURN
     
 END
