@@ -96,8 +96,20 @@ FUNCTION rawH, date, station, idx
 
 		data_dir = set_var.gic_dir+str_year+'/'+STRUPCASE(station_code)+'/daily/'
 		file_name = data_dir+station_code+date+'qmin.min.out'
-       ; print, file_name
+
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
+		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+		    file_name = data_dir+station_code+date+'pmin.min.out'
+		    file = FILE_SEARCH(file_name, COUNT=opened_files)
+		ENDIF 
+		
+		
+		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+		    file_name = data_dir+station_code+date+'dmin.min.out'
+		    file = FILE_SEARCH(file_name, COUNT=opened_files)		
+        ENDIF
+
+		
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
@@ -203,6 +215,16 @@ FUNCTION rawH_array, date_i, date_f, station, idx
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
                 data_file_name[i] = dir+station_code+string_date[i]+'qmin.min.out'
                 ;print, data_file_name[i]
+                file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)
+	            IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+	                data_file_name[i] = dir+station_code+string_date[i]+'pmin.min.out'
+	                file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)  
+	            ENDIF; 
+	             IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+	                data_file_name[i] = dir+station_code+string_date[i]+'dmin.min.out'
+	                file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)
+	            ENDIF
+	            ;PRINT, data_file_name[i]           
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)
@@ -259,7 +281,7 @@ PRO H_filemaker, date_i, date_f
 	dy_f 	= date_f[2]
 	
 	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:teo, 1:coe, 2:tuc, 3:bsl, 4:itu'
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
 	READ, station_idx, PROMPT = '> '
 ;###############################################################################    
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
