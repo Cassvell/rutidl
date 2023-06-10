@@ -44,7 +44,7 @@ END
 
 
 
-PRO coe_array, date_i, date_f, station
+FUNCTION coe_array, date_i, date_f, station
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
         @set_up_commons
@@ -63,7 +63,7 @@ PRO coe_array, date_i, date_f, station
 	READ, station_idx, PROMPT = '> '
 ;############################################################################### 
 
-
+	RETURN, H
 END
 
 
