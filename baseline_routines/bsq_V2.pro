@@ -143,7 +143,8 @@ PRO bsq_V2, date_i, date_f
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'h23.dat'    
+        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'h.dat'
+        PRINT, Bsq_H[i*24:(i+1)*24-1]     
         OPENW, LUN, outfile[i], /GET_LUN        
         PRINTF, LUN, Bsq_H[i*24:(i+1)*24-1], format='(F10.4)'
         CLOSE, LUN
@@ -159,7 +160,7 @@ PRO bsq_V2, date_i, date_f
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'m23.dat'    
+        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'m.dat'    
         OPENW, LUN, outfile[i], /GET_LUN        
         PRINTF, LUN, Bsq[i*1440:(i+1)*1440-1], format='(F10.4)'
         CLOSE, LUN
