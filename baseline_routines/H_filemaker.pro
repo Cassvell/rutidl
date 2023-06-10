@@ -416,7 +416,7 @@ IF KEYWORD_SET(make_file) THEN BEGIN
         outfile[i] = set_var.Mega_dir+station+'/hourly/'+station_code+'_'+string_date[i]+'h'+'.dat'
         ;print, outfile[i]
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F8.4)'
+        PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F9.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR     
@@ -431,7 +431,7 @@ IF KEYWORD_SET(make_file) THEN BEGIN
 
         outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m.dat'    
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F8.4)'
+        PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F9.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR      
