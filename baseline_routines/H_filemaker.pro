@@ -2,7 +2,7 @@
 ;Name:
 ;	H_filemaker.pro
 ;purpose:
-;	derivación de las líneas base de variación diurna o Bsq
+;	derivación de las líneas base de dia a dia a partir de archivos raw
 ;author:
 ;	Carlos Isaac Castellanos Velazco
 ;	Estudiante de Maestría en Ciencias de la Tierra
@@ -15,24 +15,24 @@
 ;
 ;calling sequence:
 ;   .r H_filmaker
-;   H_filmaker, idate[yyyy,mm,dd], fdate[yyyy,mm,dd]
+;   H_filmaker, idate[yyyy,mm,dd], fdate[yyyy,mm,dd], MAKE_FILE=make_file
 ;parameters:
-;
+;   KEYWORD = make_file. Set this keyword to generate H data files in minute and hourly resolution
 ;
 ;dependencies:
 ;
 ;
 ;input files
-;   geomagnetic field measurements from a certain observatory or geomagnetic station.
+;   geomagnetic field raw measurements from a certain observatory or geomagnetic station.
 ;
 ;output files:
-;   .txt file of diurnal base line and SQ files in 24 h resolution based on two selected
-;   Q days for each GS event.
+;   .dat file of H data with no day to day variation
 ;
 ;   imported to: 
 ;version
 ;   Dec, 2022
 ;   Feb, 2023
+;   Jun, 2023
 ;
 ;note
 ;   For following analysis, this routine has to be run to create clean H obs data
