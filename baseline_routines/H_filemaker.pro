@@ -435,7 +435,6 @@ IF KEYWORD_SET(make_file) THEN BEGIN
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR      
-<<<<<<< HEAD
 
 
 
@@ -464,17 +463,15 @@ IF KEYWORD_SET(make_file) THEN BEGIN
       CURSOR, x, y, /DOWN, /DATA
       PRINT, y    
     ENDWHILE 
-<<<<<<< HEAD
+
  
 
-=======
+
 
     WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
     PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
-=======
+
 ENDIF
 RETURN
->>>>>>> main
-    
->>>>>>> main
+
 END

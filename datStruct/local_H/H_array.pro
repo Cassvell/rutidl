@@ -61,7 +61,7 @@ FUNCTION struct_H, date, station, idx, resolution
         
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')		
         str_year = STRING(year, FORMAT = '(I4)')	
-        station_code    = set_var.gms_code[idx]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu		
+        station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu		
 
 
     IF resolution EQ 'min' THEN BEGIN     
@@ -135,7 +135,7 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
 	
-	station_code    = set_var.gms_code[idx]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+	station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 ;############################################################################### 
 
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
@@ -182,7 +182,7 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, idx, resolution)
+                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, FIX(idx), resolution)
                         
                         H[i*1440:(i+1)*1440-1] = d_h.H[*]
                                                                                                                        
@@ -231,7 +231,7 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, idx, resolution)
+                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, FIX(idx), resolution)
                         
                         H[i*24:(i+1)*24-1] = d_h.H[*]
                                                                                                                        

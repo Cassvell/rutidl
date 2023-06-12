@@ -46,7 +46,7 @@
 ;
 
 
-PRO bsq_V2, date_i, date_f
+PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -57,11 +57,22 @@ PRO bsq_V2, date_i, date_f
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
-;###############################################################################	
-	dat1    = coe([yr_i, mh_i, dy_i])	
+;###############################################################################
+        @set_up_commons
+        set_up
+        
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+
+
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
+		
+	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_code, 'min')	
 	H1      = dat1.H
 
-    dat2    = coe([yr_f, mh_f, dy_f])
+    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_code, 'min')
     H2      = dat2.H
     
     ndays   = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
@@ -87,7 +98,21 @@ PRO bsq_V2, date_i, date_f
     H2_tmp   = H2
     H2_exist = WHERE(finite(H2_tmp), ngooddata2, complement=baddata2, $
     ncomplement=nbaddata2)
-       
+    
+    H = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_code, 'min')
+    H_h = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_code, 'H')    
+;###############################################################################                        
+;identifying NAN percentage values in the Time Series    
+    H = nanpc(H, 99999.0, 'gequal')
+    H = add_nan(H, 99999.0, 'gequal') 
+
+    H_h = nanpc(H_h, 99999.0, 'gequal')
+    H_h = add_nan(H_h, 99999.0, 'gequal') 
+;###############################################################################        
+    ;implementar una función de interpolación en caso de que el porcentaje de 
+    ;nan sea muy bajo       
+    H = fillnan(H)
+    H_h = fillnan(H_h)       
     ; interpolate at the locations of the bad data using the good data    
     IF nbaddata1 GT 0 THEN H1_tmp[baddata1] = INTERPOL(H1_tmp[H1_exist], $
     H1_exist, baddata1, /QUADRATIC)
@@ -117,9 +142,13 @@ PRO bsq_V2, date_i, date_f
     ENDFOR
     x = FINDGEN(N_ELEMENTS(Bsq))/1440
 
-;plotting to check data    
-  ;  Bsq_trend = INTERPOLATE(Bsq_24h, x, CUBIC=-0.5,  /GRID)
-  ;  Bsq_det =  Bsq-Bsq_trend                               
+;plotting to check data
+    Bsq_det = FLTARR(N_ELEMENTS(Bsq))
+    coeff =  DETREND(Bsq, Bsq_det); remove linear trend.
+    
+    Bsq_trend = INTERPOLATE(Bsq_24h, x, CUBIC=-0.5,  /GRID)
+    Bsq_det2 =  Bsq-Bsq_trend 
+                                    
 ;###############################################################################
     ;Generate a QD file in days
     outfile = STRARR(ndays) 
@@ -134,7 +163,39 @@ PRO bsq_V2, date_i, date_f
         Bsq_H[i] = MEDIAN(Bsq[i*60:(i+1)*60-1]) 
     ENDFOR
 
-;Generación de archivo en muestreo de horas     
+      
+    time = FINDGEN(N_ELEMENTS(Bsq_H))
+
+    Bsq_trendH = INTERPOLATE(Bsq_24h, time, CUBIC=-0.5,  /GRID)
+    Bsq_detH =  Bsq_H-Bsq_trend  
+    
+    WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='Bsq [m]'
+    PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, COLOR=255
+    OPLOT, x, Bsq_det, LINESTYLE=0
+    OPLOT, x, Bsq_det2, LINESTYLE=2
+    
+    WINDOW, 1, XSIZE=800, YSIZE=400, TITLE='H Bsq(trended) [m]' 
+    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+  ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
+    OPLOT, x, H-Bsq, LINESTYLE=0 
+
+    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='Bsq [H]' 
+    PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1
+
+
+    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='H [m]'
+    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+  ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
+    OPLOT, x, H-Bsq_det2, LINESTYLE=0    
+
+    WINDOW, 4, XSIZE=800, YSIZE=400, TITLE='H [H]'
+    PLOT, time, H_h, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+  ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
+    OPLOT, time, H_h-Bsq_detH, LINESTYLE=0
+
+IF KEYWORD_SET(make_file) THEN BEGIN
+;Generación de archivo en muestreo de horas  
+
     FOR i=0, ndays-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0
@@ -144,13 +205,15 @@ PRO bsq_V2, date_i, date_f
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
         outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'h.dat'
-        PRINT, Bsq_H[i*24:(i+1)*24-1]     
+        ;PRINT, Bsq_H[i*24:(i+1)*24-1]     
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, Bsq_H[i*24:(i+1)*24-1], format='(F10.4)'
+        PRINTF, LUN, Bsq_H[i*24:(i+1)*24-1], format='(F9.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR 
 
+
+   
     ;archivo en muestreo de minutos
     FOR i=0, ndays-1 DO BEGIN
         tmp_year    = 0
@@ -162,20 +225,13 @@ PRO bsq_V2, date_i, date_f
 
         outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'m.dat'    
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, Bsq[i*1440:(i+1)*1440-1], format='(F10.4)'
+        PRINTF, LUN, Bsq[i*1440:(i+1)*1440-1], format='(F9.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
-    ENDFOR    
-    time = FINDGEN(N_ELEMENTS(Bsq_H))
-    
-    WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='Bsq with trending [m]'
-    PLOT, x,Bsq, YRANGE=[MIN(Bsq, /NAN),MAX(Bsq, /NAN)], XSTYLE=1, COLOR=255
-  ;  OPLOT, x, Bsq_trend, LINESTYLE=2
-    
-  ;  WINDOW, 1, XSIZE=800, YSIZE=400, TITLE='Bsq detrended [m]' 
-  ;  PLOT, x,Bsq-Bsq_trend, YRANGE=[MIN(Bsq-Bsq_trend, /NAN),MAX(Bsq-Bsq_trend, /NAN)], XSTYLE=1
+    ENDFOR 
+   
+    PRINT, 'Se generaron archivos BSQ'
+ENDIF 
 
-    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='Bsq detrending [H]' 
-    PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1
 
 END
