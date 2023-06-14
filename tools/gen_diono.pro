@@ -92,11 +92,12 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
     w_ss = (TOTAL((hann_w)^2))/n
         
     y        = FFT(Bdiono*hann_w)            ; Compute Fast Fourie Transform from diono time series
-    
+ ;   y        = FFT(Bdiono)
 
     
     
     power_s = (ABS(y[0:n/2])^2)/w_ss
+  ;  power_s = (ABS(y[0:n/2])^2)
    ; pws_s   = SMOOTH(pws, 1)
 
     fk     = (1+FINDGEN(n))/(n*time)
@@ -112,7 +113,7 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
 
     IF KEYWORD_SET(dig_filter) THEN BEGIN
 ; define filtering 
-        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, 18)
+        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, 18*(1))
         coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, 1.0, 50, 4)
 
 ; define disturbing effects 

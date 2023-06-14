@@ -43,6 +43,9 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
+        @set_up_commons
+        set_up    
+
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -50,6 +53,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
+	
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
 ;###############################################################################
     idate0 = string(yr_i, mh_i, format='(I4,I02)')
@@ -59,11 +63,17 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     ;time_h = findgen(file_number*24)/24.0    
     Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)] 
 ; Generate the time series variables 
 ; define H variables                  
   ;  dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx), 'H')
  
 ; define Bsq 
     Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])  
@@ -143,9 +153,9 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 
 ; compute diono variables    
     diono = dionstr.diono
+ ;   PRINT, H
     dp2   = dionstr.dp2
     ddyn  = dionstr.ddyn
-    ;print, dp2
 ;############################################################################### 
     i_diff = diono
     new_idiff = FLTARR(N_ELEMENTS(time))     	    
@@ -323,7 +333,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
                
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
     
-    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.1,0.42,0.9],$
+    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[1], fn], POSITION=[0.07,0.1,0.4,0.9],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA,$
     /NOERASE
@@ -339,7 +349,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
     cgOPLOT, f_k, pws, COLOR='black', THICK=5   
 ;###############################################################################    
-        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
+        AXIS, XAXIS = 0, XRANGE=[freqs[1], fn], $
                          /XLOG,$
                          XSTYLE=1,$
                          xTITLE = 'Frequence [Hz]',$
@@ -348,7 +358,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[freqs[1], fn], $;.0/(!X.CRANGE), $
                          /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
@@ -371,6 +381,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
         AXIS, YAXIS = 1, yrange=[yinf, ysup], $
                         ; COLOR=negro, $
                          /ylog,$
+                         YTICKFORMAT='(A1)',$ 
                          ystyle=1, $
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
@@ -393,14 +404,14 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
     down_E = MIN(new_Ey-5)
         
     cgPLOT, time, new_B, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR='black',$
-     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.7,0.95,0.9], $
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.5,0.7,0.95,0.9], $
      XSTYLE = 5, XRANGE=[0, file_number],  XTICKNAME=REPLICATE(' ', file_number+1), YSTYLE = 5,$
      YRANGE=[down_B, up_B], THICK=1, /NOERASE  
 
  	cgOPLOT, time[SG_beg*60:SG_end*60], new_B[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR='black'  
 
     cgPLOT, time, new_Ey, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR='black',$
-     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.7,0.95,0.9], $
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.5,0.7,0.95,0.9], $
      XSTYLE = 5, XRANGE=[0, file_number],  XTICKNAME=REPLICATE(' ', file_number+1), YSTYLE = 5,$
      YRANGE=[down_E,up_E], THICK=1, /NOERASE, /NODATA 
     
@@ -459,7 +470,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
     down_v  = MIN(new_vp)
 
      cgPLOT, time, new_vp, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, COLOR='black',$
-     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.5,0.95,0.69], $
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.5,0.5,0.95,0.69], $
      XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_v,up_v], $
      XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 5, /NOERASE, THICK=3, /NODATA
      
@@ -467,7 +478,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
     cgOPLOT, time[SG_beg*60:SG_end*60], new_vp[SG_beg*60:SG_end*60], LINESTYLE=0, THICK=3, COLOR='blue'     
 
      cgPLOT, time, new_pdyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, COLOR='black',$
-     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.55,0.5,0.95,0.69], $
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.5,0.5,0.95,0.69], $
      XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_p,up_p], $
      XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 5, /NOERASE, THICK=3, /NODATA
     
@@ -523,20 +534,27 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
      down_diono=min(new_idiff)          
      cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.55,0.3,0.95,0.49], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
+     POSITION=[0.5,0.3,0.95,0.49], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
      THICK=2, /NODATA   
 
     cgOPLOT, time, new_idiff, THICK=1, LINESTYLE=0, COLOR='black'     
     cgOPLOT, time[SG_beg*60:SG_end*60], new_idiff[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='black' 
+
+
+    cgOPLOT, time, new_ddyn, COLOR='blue' , LINESTYLE=0, THICK=1
+    cgOPLOT, time, new_dp2, COLOR='red' , LINESTYLE=0, THICK=1    
+
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_ddyn[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='blue'  
+    cgOPLOT, time[SG_beg*60:SG_end*60], new_dp2[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='red'
      
     cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
     [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'
+    THICK=2, COLOR='blue'
     
     cgOPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
     [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'  
+    THICK=2, COLOR='blue'  
 
     ppi = TexToIDL('D_{I}')        
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
@@ -582,7 +600,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
                                
      cgPLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.55,0.1,0.95,0.29], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.1,0.95,0.29], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
     
     cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
@@ -602,7 +620,8 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
     
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0], LINESTYLE=1, THICK=4,COLOR='black'
 ;###############################################################################
-    med_dp2 = MEDIAN(new_dp2)     
+    med_dp2 = MEDIAN(new_dp2)   
+ 
 ;###############################################################################
 
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
@@ -657,7 +676,7 @@ PRO make_psfig, f_k, fn, pws, new_B, new_Ey, new_vp, new_pdyn, new_idiff, new_dd
    Alignment=0.5, Charsize=1.4, CHARTHICK= 3      
 ;###############################################################################   
 
-    cgPS_Close, density = 300, width = 1600 , /PNG  
+    cgPS_Close, density = 300, width = 1600 ;, /PNG  
     RETURN  
 END 
 
