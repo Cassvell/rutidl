@@ -64,6 +64,16 @@
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
 
+;FUNCTION f_pirad
+ ;   f_s = 2.77777777e-4;f_k[1]-f_k[0]
+  ;  print, f_s
+    
+;    f_r_hp = highpass_l*((2*!PI)/f_s)
+;END
+
+;FUNCTION n_terms
+
+;END
 
 FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter, $
                                             SIMPLE_FILTER = simple_filter
@@ -104,6 +114,8 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
     PRINT, 'Nyquist freq: ', fny, 'Hz'
 
 
+    
+ ;   N_terms = 
 ; define pass band frequencies  
     passband_l = freq_band(case_event, 'passband_l')
     passband_u = freq_band(case_event, 'passband_u')
@@ -112,9 +124,10 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
     highpass_l = freq_band(case_event, 'highpass_l')
 
     IF KEYWORD_SET(dig_filter) THEN BEGIN
-; define filtering 
-        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, 18*(1))
-        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, 1.0, 50, 4)
+; define filtering    
+    
+        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, 18)
+        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, 1.0, 50, 7)
 
 ; define disturbing effects 
         Bddyn        = CONVOL(Bdiono, coeff_ddyn, /edge_wrap)
@@ -142,3 +155,6 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
     RETURN, structure
     
 END
+
+
+
