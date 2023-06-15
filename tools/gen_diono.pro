@@ -64,16 +64,24 @@
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
 
-;FUNCTION f_pirad
- ;   f_s = 2.77777777e-4;f_k[1]-f_k[0]
-  ;  print, f_s
+FUNCTION f_pirad, f, ts
+
+    f_s = 0.
+
+    CASE ts of
+        3600    : f_s = 2.777777777e-4    
+        60      : f_s = 0.01666666
+        ELSE      :   PRINT, 'not registered time sample'
+    ENDCASE
     
-;    f_r_hp = highpass_l*((2*!PI)/f_s)
-;END
+    f_r = f*((2*!PI)/f_s)
+    RETURN, f_r
+END
 
-;FUNCTION n_terms
-
-;END
+FUNCTION n_terms, wdiff, A
+    M = ROUND(((A-8)/(2.285*wdiff))+1)
+    RETURN, M
+END
 
 FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter, $
                                             SIMPLE_FILTER = simple_filter
@@ -112,8 +120,6 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
 
     fk     = (1+FINDGEN(n))/(n*time)
     PRINT, 'Nyquist freq: ', fny, 'Hz'
-
-
     
  ;   N_terms = 
 ; define pass band frequencies  
@@ -123,12 +129,20 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
 ;define high band frequencies
     highpass_l = freq_band(case_event, 'highpass_l')
 
+    fr_wdif_pb = f_pirad((passband_l), time)
+    fr_wdif_hp = f_pirad((highpass_l), time)
+    
+    
+    M_pb = n_terms(fr_wdif_pb, 50)
+    M_hp = n_terms(fr_wdif_hp, 50)
+        
     IF KEYWORD_SET(dig_filter) THEN BEGIN
 ; define filtering    
     
-        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, 18)
-        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, 1.0, 50, 7)
-
+        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, M_pb)
+        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, 1.0, 50, M_hp)
+        print, 'M para pasabandas es: ', M_pb
+        print, 'M para pasa altas es: ', M_hp
 ; define disturbing effects 
         Bddyn        = CONVOL(Bdiono, coeff_ddyn, /edge_wrap)
         Bdp2         = CONVOL(Bdiono, coeff_dp2, /edge_wrap)  

@@ -220,11 +220,11 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
    ; X_label = xlabel([yr_i, mh_i, dy_i], file_number)
    ; old_month = month_name(mh_i, 'english')
     
-   ; f_s = 2.77777777e-4;f_k[1]-f_k[0]
+    f_s = 2.77777777e-4;f_k[1]-f_k[0]
   ;  print, f_s
-  ;  f_r = f_k*((2*!PI)/f_s)
+    f_r = f_k*((2*!PI)/f_s)
   ;  print, f_r
- ;   PLOT, f_r, ATAN(pws), THICK=2, YSTYLE=1, XSTYLE=1, /XLOG
+    PLOT, f_r, ATAN(pws), THICK=2, YSTYLE=1, XSTYLE=1, /XLOG
 
 ;        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
 ;                         XTICKS=file_number, $
@@ -322,6 +322,8 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 
     cgPolygon, [highpass_l, fn, fn, highpass_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
+                                             
+              
     cgOPLOT, f_k, pws, COLOR='black', THICK=5   
 ;###############################################################################    
         AXIS, XAXIS = 0, XRANGE=[freqs[1], fn], $
