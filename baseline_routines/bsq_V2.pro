@@ -69,10 +69,10 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
     station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
     station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 		
-	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_code, 'min')	
+	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
 	H1      = dat1.H
 
-    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_code, 'min')
+    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
     H2      = dat2.H
     
     ndays   = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
@@ -99,8 +99,8 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
     H2_exist = WHERE(finite(H2_tmp), ngooddata2, complement=baddata2, $
     ncomplement=nbaddata2)
     
-    H = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_code, 'min')
-    H_h = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_code, 'H')    
+    H = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
+    H_h = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')    
 ;###############################################################################                        
 ;identifying NAN percentage values in the Time Series    
     H = nanpc(H, 99999.0, 'gequal')
@@ -112,15 +112,10 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo       
     H = fillnan(H)
-    H_h = fillnan(H_h)       
-    ; interpolate at the locations of the bad data using the good data    
-    IF nbaddata1 GT 0 THEN H1_tmp[baddata1] = INTERPOL(H1_tmp[H1_exist], $
-    H1_exist, baddata1, /QUADRATIC)
-    H1 = H1_tmp  
+    H_h = fillnan(H_h)
     
-    IF nbaddata1 GT 0 THEN H2_tmp[baddata2] = INTERPOL(H2_tmp[H2_exist], $
-    H2_exist, baddata2, /QUADRATIC)
-    H2 = H2_tmp 
+    H1 = fillnan(H1)
+    H2 = fillnan(H2)          
 ;###############################################################################
 ;Extend QDS data ndays for a quadratic interpolation
     QDS1 = REFORM(REBIN(H1, 1440, ndays), N_ELEMENTS(td))
@@ -204,7 +199,8 @@ IF KEYWORD_SET(make_file) THEN BEGIN
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'h.dat'
+        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/'+STRLOWCASE(station_code)+$
+        '/Bsq_'+station_code+string_date[i]+'h.dat'
         ;PRINT, Bsq_H[i*24:(i+1)*24-1]     
         OPENW, LUN, outfile[i], /GET_LUN        
         PRINTF, LUN, Bsq_H[i*24:(i+1)*24-1], format='(F9.4)'
@@ -223,7 +219,8 @@ IF KEYWORD_SET(make_file) THEN BEGIN
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
 
-        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/Bsq_'+string_date[i]+'m.dat'    
+        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/'+STRLOWCASE(station_code)+$
+        '/Bsq_'+station_code+string_date[i]+'m.dat'    
         OPENW, LUN, outfile[i], /GET_LUN        
         PRINTF, LUN, Bsq[i*1440:(i+1)*1440-1], format='(F9.4)'
         CLOSE, LUN

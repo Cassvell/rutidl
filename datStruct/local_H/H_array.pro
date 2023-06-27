@@ -182,7 +182,7 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, FIX(idx), resolution)
+                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, STRING(idx), resolution)
                         
                         H[i*1440:(i+1)*1440-1] = d_h.H[*]
                                                                                                                        
@@ -231,7 +231,7 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, FIX(idx), resolution)
+                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, STRING(idx), resolution)
                         
                         H[i*24:(i+1)*24-1] = d_h.H[*]
                                                                                                                        
