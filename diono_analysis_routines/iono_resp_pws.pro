@@ -58,19 +58,28 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     time= findgen(file_number*1440)/1440.0    
     Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
+	@set_up_commons
+	set_up
+        
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+	
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu		
 ; Generate the time series variables 
 ; define H variables                  
-    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
-    dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+ ;   dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    ;dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
+    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
     sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
 ; define K variables   
-    kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
-    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
-    k_mex   = add_nan(k_mex, 9.0, 'greater') 
-    k_days  = FINDGEN(file_number*8)/8. 
+  ;  kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
+  ;  k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
+  ;  k_mex   = add_nan(k_mex, 9.0, 'greater') 
+  ;  k_days  = FINDGEN(file_number*8)/8. 
 ; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])    
+    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')    
 
 ; Generate the time variables to plot TEC time series         
 ;###############################################################################
@@ -89,13 +98,13 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     new_dstdays = findgen(file_number*1440)/1440.0 ;se genera un arreglo de tiempo con 
 ;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
     
-    new_dst = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_dst  = INTERPOL(dst, N_ELEMENTS(new_dstdays))
-    new_dst = tmp_dst 
+;    new_dst = FLTARR(N_ELEMENTS(new_dstdays))     	    
+;    tmp_dst  = INTERPOL(dst, N_ELEMENTS(new_dstdays))
+;    new_dst = tmp_dst 
     
-    new_H = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_H  = INTERPOL(H, N_ELEMENTS(new_dstdays))
-    new_H = tmp_H       
+;    new_H = FLTARR(N_ELEMENTS(new_dstdays))     	    
+;    tmp_H  = INTERPOL(H, N_ELEMENTS(new_dstdays))
+;    new_H = tmp_H       
 ;###############################################################################      
    ; tec_days= findgen(file_number*12)/12.0                         
    ; tec_diff = tec-med  
@@ -108,7 +117,7 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
  ;   new_tecdiff = tmp_tecdif
 ;###############################################################################
 ; Import the structure of diono generated variables   
-    dionstr = gen_diono(dst, H, Bsq, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
+    dionstr = gen_diono(sym, H, Bsq, 28.06, 'm', TGM_n, DIG_FILTER = 'dig_filter')
     ;PRINT, Bsq
 ; compute frequencies 
     f_k   = dionstr.f_k
@@ -463,7 +472,7 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
         
     ;DEVICE, /CLOSE
     SET_PLOT, Device_bak2  
-    path = '/home/isaac/geomstorm/rutidl/output/article1events/diono_ev/'
+    path = '/home/isaac/geomstorm/rutidl/output/article2/'
         IF keyword_set(jpeg) THEN BEGIN
                 info = size(Image)
                 nx = info[1]
