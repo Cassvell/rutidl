@@ -355,9 +355,9 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
         H_det[artfact] = !Values.F_NAN
     ENDIF
     
-    ;outlayer = WHERE(H_det GT 100)
+    outlayer = WHERE(H_det GT 100)
 
-;    H_det[outlayer] = !Values.F_NAN    
+ ;   H_det[outlayer] = !Values.F_NAN    
     
     H_hr = FINDGEN(N_ELEMENTS(H_det)/60)
     FOR i=0, N_ELEMENTS(H_hr)-1 DO BEGIN

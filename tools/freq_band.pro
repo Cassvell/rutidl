@@ -1,4 +1,4 @@
-;Name:
+ ;Name:
 ;	freq_band.pro
 ;purpose:
 ;	Convert numeric month format (01 to 12) to string name (January to December)
@@ -64,6 +64,9 @@ IF band_limit EQ 'passband_l' THEN BEGIN
         '18' : freq = 8.9e-6  ;30:51 hr listo
         '19' : freq = 8.9e-6 ;23:08 hr listo
         '20' : freq = 8.9e-6  ;23:08 hr
+        '21' : freq = 0.0000086808842 ;31:59
+        '22' : freq = 0.0000081777351 ;33:58
+        '23' : freq = 0.0000073394733 ;37:50
         ELSE: PRINT, 'fuera de rango'
     ENDCASE 
 ENDIF     
@@ -91,6 +94,9 @@ IF band_limit EQ 'passband_u' THEN BEGIN
         '18' : freq = 3.4e-5  ;30:51 hr listo 
         '19' : freq = 3.4e-5 ;23:08 hr listo
         '20' : freq = 2.4e-5  ;23:08 hr
+        '21' : freq = 0.000025261966 ;10:59
+        '22' : freq = 0.000021196104 ;13:06
+        '23' : freq = 0.000020048564 ;13:51        
         ELSE: PRINT, 'fuera de rango'
     ENDCASE 
 ENDIF     
@@ -119,6 +125,9 @@ IF band_limit EQ 'highpass_l' THEN BEGIN
         '18' : freq = 6.9e-5  ;30:51 hr listo
         '19' : freq = 6.9e-5 ;23:08 hr listo
         '20' : freq = 9.25e-5  ;23:08 hr
+        '21' : freq = 0.000081112629 ;03:25
+        '22' : freq = 0.000098254002 ;02:52
+        '23' : freq = 0.000095262271 ;02:54         
         ELSE: PRINT, 'fuera de rango'
     ENDCASE
 ENDIF

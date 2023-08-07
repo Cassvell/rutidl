@@ -51,8 +51,8 @@ FUNCTION SQbaseline_data, date, station, idx, resolution
         header=0
 
     IF resolution EQ 'min' THEN BEGIN 		
-		dir = set_var.local_dir+'output/Bsq_baselines/'+STRLOWCASE(station_code)+'/'
-		file_name = dir+'/Bsq_'+station_code+date+'m.dat'    
+		dir = set_var.local_dir+'output/Bsq_baselines/'+STRLOWCASE(station_code)
+		file_name = dir+'/Bsq_'+STRLOWCASE(station_code)+date+'m.dat'    
 	
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -72,7 +72,7 @@ FUNCTION SQbaseline_data, date, station, idx, resolution
     
     IF resolution EQ 'H' THEN BEGIN   		
 		dir = set_var.local_dir+'output/Bsq_baselines/'+STRLOWCASE(station_code)+'/'
-		file_name = dir+'/Bsq_'+station_code+date+'h.dat'    
+		file_name = dir+'/Bsq_'+STRLOWCASE(station_code)+date+'h.dat'    
 	
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -131,7 +131,7 @@ FUNCTION SQbaseline_array, date_i, date_f, station, idx, resolution, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')   
-                data_file_name_bsq[i]= dir+'Bsq_'+station_code+string_date[i]+'m.dat' 
+                data_file_name_bsq[i]= dir+'Bsq_'+STRLOWCASE(station_code)+string_date[i]+'m.dat' 
                ; print, data_file_name_bsq[i]   
                 file_sq = FILE_SEARCH(data_file_name_bsq[i], COUNT=opened_files)                    
         ENDFOR
@@ -170,7 +170,8 @@ FUNCTION SQbaseline_array, date_i, date_f, station, idx, resolution, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')   
-                data_file_name_bsq[i]= dir+dir+'Bsq_'+station_code+string_date[i]+'h.dat'    
+                data_file_name_bsq[i]= dir+'Bsq_'+STRLOWCASE(station_code)+string_date[i]+'h.dat'
+               ; print,     data_file_name_bsq[i]
                 file_sq = FILE_SEARCH(data_file_name_bsq[i], COUNT=opened_files)                              		                                    
         ENDFOR
 

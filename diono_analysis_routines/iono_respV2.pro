@@ -43,8 +43,8 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
-        @set_up_commons
-        set_up    
+	@set_up_commons
+	set_up    
 
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
@@ -71,12 +71,12 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     station_code    = set_var.gms_code[FIX(station_idx)] 
 ; Generate the time series variables 
 ; define H variables                  
-    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
     H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx), 'H')
  
 ; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])  
+    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')  
 ;###############################################################################      
 ; IP data
 ; Generate the time variables to plot TEC time series         
@@ -88,13 +88,13 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     H = nanpc(H, 999999.0, 'equal')
     H = nanpc(H, 100.0, 'greater')    
 ;Identifying the NAN values        
-;    tec = add_nan(tec, 999.0, 'equal')            
-;    med = add_nan(med, 999.0, 'equal')                
+    tec = add_nan(tec, 999.0, 'equal')            
+    med = add_nan(med, 999.0, 'equal')                
     H = add_nan(H, 999999.0, 'equal')
     H = add_nan(H, 99999.0, 'equal')                   
 ;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
-    H = fillnan(H)
-   ; PRINT, N_ELEMENTS(H), N_ELEMENTS(Bsq)
+  ;  H = fillnan(H)
+ ;   PRINT, H;N_ELEMENTS(H), N_ELEMENTS(Bsq)
 ;###############################################################################    
     new_dst = FLTARR(N_ELEMENTS(time))     	    
     tmp_dst  = INTERPOL(dst, N_ELEMENTS(time))
@@ -110,11 +110,12 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     
     new_tecresp = FLTARR(N_ELEMENTS(time))     	    
     tmp_tecresp  = INTERPOL(tec_resp, N_ELEMENTS(time))
-    new_tecresp = tmp_tecresp             
+    new_tecresp = tmp_tecresp 
+    new_tecresp = add_nan(new_tecresp, 0.0, 'equal')             
 ;###############################################################################
 ; Import the structure of diono generated variables   
     dionstr = gen_diono(dst, H, Bsq, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
-    ;PRINT, Bsq
+ ;   PRINT, Bsq
 ; compute frequencies 
     f_k   = dionstr.f_k
     fn    = dionstr.fn
@@ -129,6 +130,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     ddyn  = dionstr.ddyn
 ;############################################################################### 
     i_diff = diono
+   ; print, diono
     new_idiff = FLTARR(N_ELEMENTS(time))     	    
     tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(time))
     new_idiff = tmp_idiff      
@@ -204,27 +206,25 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     IQR = PERCENTILES(new_ddyn, CONFLIMIT=0.5) 
     IQR_n = (IQR[1]-IQR[0])*1
     
- ;   ddyn_out = WHERE(new_ddyn GE med_ddyn+IQR_n OR new_ddyn LE med_ddyn-IQR_n)
- ;   ddyn_in  = WHERE(new_ddyn LE med_ddyn+IQR_n AND new_ddyn GE med_ddyn-IQR_n)
+    ddyn_out = WHERE(new_ddyn GE med_ddyn+IQR_n OR new_ddyn LE med_ddyn-IQR_n)
+    ddyn_in  = WHERE(new_ddyn LE med_ddyn+IQR_n AND new_ddyn GE med_ddyn-IQR_n)
     
- ;   ddyn_diff_out = new_ddyn
- ;   ddyn_diff_out[ddyn_in]=!Values.F_NAN
+    ddyn_diff_out = new_ddyn
+    ddyn_diff_out[ddyn_in]=!Values.F_NAN
     
- ;   ddyn_diff_in  = new_ddyn
- ;   ddyn_diff_in[ddyn_out]=!Values.F_NAN    
+    ddyn_diff_in  = new_ddyn
+    ddyn_diff_in[ddyn_out]=!Values.F_NAN    
 ;###############################################################################
     med_dp2 = MEDIAN(new_dp2)                       
 ;###############################################################################
 ; define device and color parameters 
 ;###############################################################################
-   ; X_label = xlabel([yr_i, mh_i, dy_i], file_number)
-   ; old_month = month_name(mh_i, 'english')
     
-    f_s = 2.77777777e-4;f_k[1]-f_k[0]
+  ;  f_s = 2.77777777e-4;f_k[1]-f_k[0]
   ;  print, f_s
-    f_r = f_k*((2*!PI)/f_s)
+  ;  f_r = f_k*((2*!PI)/f_s)
   ;  print, f_r
-    PLOT, f_r, ATAN(pws), THICK=2, YSTYLE=1, XSTYLE=1, /XLOG
+;   PLOT, f_r, ATAN(pws), THICK=2, YSTYLE=1, XSTYLE=1, /XLOG
 
 ;        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
 ;                         XTICKS=file_number, $
@@ -271,20 +271,22 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
     TGM_n = event_case([yr_i,mh_i,dy_i])    	
 ;############################################################################### 
-    time_title = ' UT [days]'
-    window_title = 'SGS-'+ STRING(TGM_n, FORMAT='(I02)')
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-    path = '../rutidl/output/article1events/diono_ev/'
-    psfile =  path+'iono_PI_'+Date+'.eps' 
-
-    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
-    old_month = month_name(mh_i, 'english')    
+    ;path = '../rutidl/output/article1events/diono_ev/'
+    path = '../rutidl/output/article2/'
+    psfile =  path+'iono_PI_'+Date+'.eps'    
    ; LOADCT, 39
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
     /nomatch, XSize=16, YSize=10
 
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english') 
+    
+    time_title = ' UT [days]'
+    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+                STRING(old_month, yr_i, FORMAT='(A, X, I4)')    
     periodo = 'Period [h]'        
 ;###############################################################################               
     cgPLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.07,0.1,0.95,0.9],$
@@ -432,7 +434,8 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 ;###############################################################################                                 
 ;############################################################################### 
      up_diono=max(new_idiff)
-     down_diono=min(new_idiff)          
+     down_diono=min(new_idiff)
+    ; print,  new_idiff
      cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
      POSITION=[0.475,0.5,0.95,0.69], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
@@ -572,14 +575,15 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 
     cgOPLOT, time, new_tecresp, COLOR='red' , LINESTYLE=0, THICK=1
     cgOPLOT, time[SG_beg*60:SG_end*60], new_tecresp[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='red'    
-  
+  ;
+  ;print, new_tecresp
 ;###############################################################################     
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
                          XTICKS=file_number, $
                          XTITLE=time_title, $                         
                          XMINOR=8, $
                          XTICKNAME=X_label, $       
-                         XTICKFORMAT='(A1)',$
+                       ;  XTICKFORMAT='(A1)',$
                          COLOR=negro, $
                          CHARSIZE = 1.6, $
                          TICKLEN=0.04,$
@@ -610,6 +614,22 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.6       
 ;###############################################################################
+;first panel legend 
+        cgPolygon, [0.84,0.87,0.87,0.84], [0.804,0.804,0.807,0.807], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.84,0.87,0.87,0.84], [0.754,0.754,0.757,0.757], color = 'green', /NORMAL , /FILL  
+        
+        XYOUTS, 0.875, 0.795 , /NORMAL, d_H, CHARSIZE = 2.4, CHARTHICK=chr_thick1                 
+                
+        XYOUTS, 0.875, 0.74 , /NORMAL, 'Dst', CHARSIZE = 2.4, CHARTHICK=chr_thick1  
+;###############################################################################                     
+;second panel legend                   
+        cgPolygon, [0.84,0.87,0.87,0.84], [0.454,0.454,0.457,0.457], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.84,0.87,0.87,0.84], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
+        
+        XYOUTS, 0.875, 0.45 , /NORMAL, 'Ddyn', CHARSIZE = 2.4, CHARTHICK=chr_thick1                 
+                
+        XYOUTS, 0.875, 0.42 , /NORMAL, 'DP2', CHARSIZE = 2.4, CHARTHICK=chr_thick1     
+                
 ;###############################################################################                                                            
     CGTEXT, 0.93, 0.73, '(a)', /Normal, $
     Alignment=0.5, Charsize=1.6, CHARTHICK= 5   

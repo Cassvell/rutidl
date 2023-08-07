@@ -63,23 +63,19 @@
 ;       1. having Bsq data files (run the Bsq routines)
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
-
-FUNCTION f_pirad, f, ts
-
-    f_s = 0.
-
-    CASE ts of
-        3600    : f_s = 2.777777777e-4    
-        60      : f_s = 0.01666666
-        ELSE      :   PRINT, 'not registered time sample'
-    ENDCASE
+FUNCTION n_terms, wdiff, A, n
+    M = ROUND((42/(2.285*wdiff))+1)
+    N_terms = (M*2)+1
     
-    f_r = f*((2*!PI)/f_s)
-    RETURN, f_r
-END
-
-FUNCTION n_terms, wdiff, A
-    M = ROUND(((A-8)/(2.285*wdiff))+1)
+;    print, "threshold = ",threshold
+    M_over = 0
+    IF N_terms GT n THEN BEGIN
+    	M_over = N_terms - n
+		N_terms2 = N_terms-M_over 
+		M2 = (N_terms2-1)/2
+    	M = M2
+    ENDIF
+    
     RETURN, M
 END
 
@@ -128,21 +124,38 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
 
 ;define high band frequencies
     highpass_l = freq_band(case_event, 'highpass_l')
-
-    fr_wdif_pb = f_pirad((passband_l), time)
-    fr_wdif_hp = f_pirad((highpass_l), time)
+	
+	f_s = 1/time
+    fr_wdif_pb = passband_l*((2*!PI)*time)
+    fr_wdif_hp = (highpass_l)*((2*!PI)*time)
+		print, 'pasabandas es: ', passband_l
+		print, 'pasa altas es: ', highpass_l
+     ;   print, 'fr_wdif_pb para pasabandas es: ', fr_wdif_pb
+     ;   print, 'fr_wdif_hp para pasa altas es: ', fr_wdif_hp
     
-    
-    M_pb = n_terms(fr_wdif_pb, 50)
-    M_hp = n_terms(fr_wdif_hp, 50)
+    M_pb = n_terms(fr_wdif_pb, 50, n)
+    M_hp = n_terms(fr_wdif_hp, 50, n)
         
     IF KEYWORD_SET(dig_filter) THEN BEGIN
-; define filtering    
-    
-        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, M_pb)
-        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, 1.0, 50, M_hp)
+; define filtering   
+	top=0.0 
+        CASE time of
+        3600.0     : top = 1.0
+        60.0       : top = 1.0;(1/(0.5*3600.0))/fny
+   		ENDCASE
+       ; coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, M_pb)
+       coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, (M_pb))
+       ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, top, 50, M_hp)
+        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, top, 50, M_hp)
+        print,'top: ', top
+       ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, (1.0/(0.5*3600.0))/fny, 50, M_hp)
         print, 'M para pasabandas es: ', M_pb
         print, 'M para pasa altas es: ', M_hp
+        
+        print, 'coeff_ddyn para pasabandas es: ', N_ELEMENTS(coeff_ddyn)
+        print, 'coeff_dp2 para pasa altas es: ', N_ELEMENTS(coeff_dp2)
+        
+        print, 'N elements Diono', N_ELEMENTS(Bdiono)
 ; define disturbing effects 
         Bddyn        = CONVOL(Bdiono, coeff_ddyn, /edge_wrap)
         Bdp2         = CONVOL(Bdiono, coeff_dp2, /edge_wrap)  

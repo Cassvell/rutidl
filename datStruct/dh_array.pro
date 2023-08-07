@@ -34,7 +34,7 @@
 ;version
 ; Dec, 2022
 
-FUNCTION DH_teo, date
+FUNCTION DH_data, date, station, idx, resolution
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -42,11 +42,16 @@ FUNCTION DH_teo, date
 	month	= date[1]
 	day 	= date[2]	
 ;###############################################################################
+        @set_up_commons
+        set_up	
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
-
-        path='/home/isaac/MEGAsync/datos'		
-		file_name = path+'/dH_teo/'+'teo_'+date+'.dst.early'
+        str_year = STRING(year, FORMAT = '(I4)')	
+        station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+        
+        dir = set_var.Mega_dir+'dH_'+STRLOWCASE(station_code)+'/'        
+;        path='/home/isaac/MEGAsync/datos'		
+		file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.early'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -63,14 +68,14 @@ FUNCTION DH_teo, date
         DStruct = {hora : 0, D_stdesv : 0., D : 0., H_stdesv : 0., H : 0., $
         Z_stdesv : 0., Z : 0., N_stdesv : 0., N : 0., F_stdesv : 0., F : 0.}
 
-		teo_mag = REPLICATE(DStruct, number_of_lines)	
+		dh_mag = REPLICATE(DStruct, number_of_lines)	
   
-		READS, data[0:number_of_lines-1], teo_mag, $
+		READS, data[0:number_of_lines-1], dh_mag, $
 		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'		
-		RETURN, teo_mag		
+		RETURN, dh_mag		
 END
 
-FUNCTION dh_array, date_i, date_f, variable, HELP=help
+FUNCTION dh_array, date_i, date_f, station, idx;, resolution 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 	
@@ -82,14 +87,17 @@ FUNCTION dh_array, date_i, date_f, variable, HELP=help
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2] 
 
-;###############################################################################    
+;###############################################################################
+	@set_up_commons
+	set_up
+           
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 ; define DH variables
-        data_path='/home/isaac/MEGAsync/datos'
+	station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+    dir = set_var.Mega_dir+'dH_'+STRLOWCASE(station_code)+'/'      
+    ;    data_path='/home/isaac/MEGAsync/datos'
         
-        string_date        = STRARR(file_number)
-        string_date_2      = STRARR(file_number)
-        data_file_name_dst = STRARR(file_number)                 
+        string_date        = STRARR(file_number)                
         data_file_name_dh  = STRARR(file_number) 
              
         FOR i=0ll, file_number-1 DO BEGIN
@@ -99,9 +107,12 @@ FUNCTION dh_array, date_i, date_f, variable, HELP=help
                 tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-                string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')	        	                                        
-                data_file_name_dh[i] = data_path+'/dH_teo/teo_'+string_date[i]+'.dst.early'                		       		            
-		        file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
+                string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')	   
+                               
+                ;data_file_name_dh[i] = data_path+'/dH_teo/teo_'+string_date[i]+'.dst.early'
+                data_file_name_dh[i] = dir+STRLOWCASE(station_code)+'_'+string_date[i]+'.dst.early'
+               ; print, data_file_name_dh[i]
+                file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
 		        		        
 	            IF opened_files NE N_ELEMENTS(file_dh) THEN begin
 	                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'    
@@ -119,20 +130,20 @@ FUNCTION dh_array, date_i, date_f, variable, HELP=help
         ENDIF
 ;###############################################################################
 ; Generate the time variables to plot dH time series                                   
-        H    = FLTARR(file_number*24)                       
+        dH    = FLTARR(file_number*24)                       
         FOR i = 0, N_ELEMENTS(exist_data_file_dh)-1 DO BEGIN
                 IF exist_data_file_dh[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_dh = DH_teo([tmp_year, tmp_month, tmp_day])
+                        d_dh = DH_data([tmp_year, tmp_month, tmp_day], station, STRING(idx))
                         
-                        H[i*24:(i+1)*24-1] = d_dh.H[*]
+                        dH[i*24:(i+1)*24-1] = d_dh.H[*]
                                                                                                                        
                 ENDIF ELSE BEGIN
-                        H[i*24:(i+1)*24-1] = 999999.0
+                        dH[i*24:(i+1)*24-1] = 999999.0
                 ENDELSE                
         ENDFOR
-    RETURN, H
+    RETURN, dH
 END

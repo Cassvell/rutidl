@@ -37,6 +37,9 @@ PRO diono_valid, date_i, date_f, PNG = png, PS=ps
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
+	@set_up_commons
+	set_up 
+	
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -52,12 +55,19 @@ PRO diono_valid, date_i, date_f, PNG = png, PS=ps
     idate0 = STRING(yr_i, mh_i, format='(I4,I02)')
     TGM_n  = event_case([yr_i,mh_i,dy_i])
 ;###############################################################################
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)] 
+; Generate the time series variables 
 ;Generate the time series
 
 ; define Dst and dH variables
-    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx), 'H')
     
 ; define K variables   
     kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
@@ -65,7 +75,7 @@ PRO diono_valid, date_i, date_f, PNG = png, PS=ps
     k_mex   = add_nan(k_mex, 9.0, 'greater') 
     k_days  = FINDGEN(file_number*8)/8. 
 ; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')
     
 ; define DK effect
     new_kmex1   = new_kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'new_kmex1')
@@ -193,7 +203,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
     TGM_n = event_case([yr_i,mh_i,dy_i])  
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english')
-    path = '../rutidl/output/article1events/diono_ev/dH_approx/'
+    path = '../rutidl/output/article2/'
     psfile =  path+'diono_valid_V4_'+Date+'.eps'    
 ;###############################################################################
 
@@ -206,12 +216,14 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
     old_month = month_name(mh_i, 'english')                        ;Function to convert month from mm format to string                           
 ;############################################################################### 
     time_title = ' UT [days]'
-    window_title = 'SGS'+ STRING(TGM_n, FORMAT='(I01)')+', '+ $
+    window_title = 'Event'+ STRING(TGM_n, FORMAT='(I01)')+', '+ $
                     STRING(old_month, yr_i, FORMAT='(A, X, I4)') 
 
-                                  
-     up = MAX(dH)
-     down=MIN(dH)
+     IF MAX(dH) GT MAX(dst) THEN up = MAX(dH) ELSE up = MAX(dst)
+     IF MIN(dH) LT MIN(dst) THEN down=MIN(dH) ELSE down=MIN(dst)
+                             
+    ; up = MAX(dH)
+    ; down=MIN(dH)
 
      CGPLOT, tot_days, dH, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
@@ -243,7 +255,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
      CGOPLOT, tot_days, dst, COLOR='green', THICK=4  
      CGOPLOT, tot_days[SG_beg:SG_end], diono_effect[SG_beg:SG_end], COLOR='red', THICK=4         
     ; OPLOT, tot_days, diono_effect_tot, COLOR=azul, THICK=4
-    window_title = 'SGS'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
                 STRING(old_month, yr_i, FORMAT='(A, X, I4)')
     
     CGOPLOT, [tot_days[SG_beg],tot_days[SG_beg]], $ ;referencia para el inicio de la Tormenta

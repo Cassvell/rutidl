@@ -134,17 +134,17 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
 ;############################################################################### 
 ;###############################################################################
     i_diff = diono
-    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
-    new_idiff = tmp_idiff      
+ ;   new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	    
+  ;  tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
+  ;  new_idiff = tmp_idiff      
 ;###############################################################################      
-    new_ddyn = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_ddyn  = INTERPOL(ddyn, N_ELEMENTS(new_dstdays))
-    new_ddyn = tmp_ddyn           
+  ;  new_ddyn = FLTARR(N_ELEMENTS(new_dstdays))     	    
+  ;  tmp_ddyn  = INTERPOL(ddyn, N_ELEMENTS(new_dstdays))
+  ;  new_ddyn = tmp_ddyn           
 ;############################################################################### 
-    new_dp2 = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_dp2  = INTERPOL(dp2, N_ELEMENTS(new_dstdays))
-    new_dp2 = tmp_dp2               
+   ; new_dp2 = FLTARR(N_ELEMENTS(new_dstdays))     	    
+   ; tmp_dp2  = INTERPOL(dp2, N_ELEMENTS(new_dstdays))
+   ; new_dp2 = tmp_dp2               
 ;###############################################################################
 ; define device and color parameters 
 ;###############################################################################      
@@ -187,26 +187,26 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
 ;###############################################################################                             
 
 ;###############################################################################
-    med_ddyn = MEDIAN(new_ddyn)
+    med_ddyn = MEDIAN(ddyn)
    ; std_ddyn = STDDEV(new_ddyn, /NAN)
     
     IQR = PERCENTILES(ddyn, CONFLIMIT=0.5) 
     IQR_n = (IQR[1]-IQR[0])*1
     
-    ddyn_out = WHERE(new_ddyn GE med_ddyn+IQR_n OR new_ddyn LE med_ddyn-IQR_n)
-    ddyn_in  = WHERE(new_ddyn LE med_ddyn+IQR_n AND new_ddyn GE med_ddyn-IQR_n)
+    ddyn_out = WHERE(ddyn GE med_ddyn+IQR_n OR ddyn LE med_ddyn-IQR_n)
+    ddyn_in  = WHERE(ddyn LE med_ddyn+IQR_n AND ddyn GE med_ddyn-IQR_n)
     
-    ddyn_diff_out = new_ddyn
+    ddyn_diff_out = ddyn
     ddyn_diff_out[ddyn_in]=!Values.F_NAN
     
-    ddyn_diff_in  = new_ddyn
+    ddyn_diff_in  = ddyn
     ddyn_diff_in[ddyn_out]=!Values.F_NAN    
 ;###############################################################################    
 ;###############################################################################   
      dH = TeXtoIDL('\DeltaH') 
 ;###############################################################################      
  
-    dst_min = MIN(dst,i)    
+    sym_min = MIN(sym,i)    
     t0 = 0
     CASE TGM_n of
         1   :   t0 = 18
@@ -228,7 +228,10 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
         17  :   t0 = 22
         18  :   t0 = 18
         19  :   t0 = 5
-        20  :   t0 = 19        
+        20  :   t0 = 19
+        21  :   t0 = 19
+        22  :   t0 = 19
+        23  :   t0 = 19
         ELSE: PRINT, 'evento no disponible'   
     ENDCASE
     tf = 0
@@ -252,7 +255,10 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
         17  :   tf = 0
         18  :   tf = 19
         19  :   tf = 34
-        20  :   tf = 22        
+        20  :   tf = 22  
+        21  :   t0 = 19
+        22  :   t0 = 19
+        23  :   t0 = 19              
         ELSE: PRINT, 'evento no disponible'   
     ENDCASE
 
@@ -260,27 +266,27 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     IF tf NE 0 THEN BEGIN
     SG_end = i+tf
     ENDIF ELSE BEGIN
-    SG_end = N_ELEMENTS(dH)-10
+    SG_end = N_ELEMENTS(H)-10
     ENDELSE
                                   
 ;############################################################################### 
      up_diono=max(diono)
      down_diono=min(diono)          
-     PLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     PLOT, time, diono, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
      POSITION=[0.15,0.8,0.85,0.95], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], THICK=2, /NODATA   
 
-    OPLOT, time, new_idiff, THICK=1, LINESTYLE=0, COLOR=negro     
-    OPLOT, time[SG_beg*60:SG_end*60], new_idiff[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro 
+    OPLOT, time, diono, THICK=1, LINESTYLE=0, COLOR=negro     
+    ;OPLOT, time[SG_beg*60:SG_end*60], new_idiff[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro 
      
-    OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR=negro
+   ; OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+   ; [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+   ; THICK=2, COLOR=negro
     
-    OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR=negro    
+  ;  OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+  ;  [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+   ; THICK=2, COLOR=negro    
          
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
                          XTICKS=file_number, $
@@ -341,7 +347,7 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=amarillo
 
-    POLYFILL, [highpass_l, fn, fn, highpass_l], $
+    POLYFILL, [highpass_l, (1.0/(0.5*3600.0)), (1.0/(0.5*3600.0)), highpass_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=amarillo
     OPLOT, f_k, pws, COLOR=negro, THICK=5   
 ;###############################################################################    
@@ -393,25 +399,25 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     IF max(ddyn) GT max(dp2) THEN up = max(ddyn) ELSE up = max(dp2)
     IF min(ddyn) LT min(dp2) THEN down = min(ddyn) ELSE down = min(dp2)
 ;###############################################################################                            
-     PLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     PLOT, time, ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.15,0.1,0.85,0.25], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA             
 ;###############################################################################
-    OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR=negro
+ ;   OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
+ ;   [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+  ;  THICK=2, COLOR=negro
     
-    OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR=negro
+   ; OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
+   ; [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
+   ; THICK=2, COLOR=negro
 
-    OPLOT, time, new_ddyn, COLOR=negro, LINESTYLE=0, THICK=1
-    OPLOT, time[SG_beg*60:SG_end*60], new_ddyn[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro    
+    OPLOT, time, ddyn, COLOR=negro, LINESTYLE=0, THICK=1
+ ;   OPLOT, time[SG_beg*60:SG_end*60], new_ddyn[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro    
   
 ;###############################################################################     
-    OPLOT, time, new_dp2, COLOR=rojo, THICK=1
-    OPLOT, time[SG_beg*60:SG_end*60], new_dp2[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=rojo       
+    OPLOT, time, dp2, COLOR=rojo, THICK=1
+ ;   OPLOT, time[SG_beg*60:SG_end*60], new_dp2[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=rojo       
     
     OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0], LINESTYLE=1, THICK=4,COLOR=negro            
 ;############################################################################### 

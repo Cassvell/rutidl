@@ -43,7 +43,8 @@ PRO iono_respV3, date_i, date_f, PNG = png, PS = ps
 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
-
+	@set_up_commons
+	set_up 
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -59,20 +60,26 @@ PRO iono_respV3, date_i, date_f, PNG = png, PS = ps
     time= findgen(file_number*1440)/1440.0    
     Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)] 
 ; Generate the time series variables 
 ; define H variables                  
-    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
-    sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
+    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx), 'H')
+  ;  sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
 ; define K variables   
-    kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
-    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
-    k_mex   = add_nan(k_mex, 9.0, 'greater') 
-    k_days  = FINDGEN(file_number*8)/8. 
+  ;  kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
+ ;   k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
+  ;  k_mex   = add_nan(k_mex, 9.0, 'greater') 
+   ; k_days  = FINDGEN(file_number*8)/8. 
 ; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])    
-
+    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')    
+	print, Bsq
 ; Generate the time variables to plot TEC time series         
 ;###############################################################################
 ;identifying NAN percentage values in the Time Series
@@ -243,16 +250,21 @@ PRO make_psfig, new_idiff, time, new_ddyn, new_dp2, SG_beg, SG_end,  date_i, dat
     Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')      	
     LOADCT, 39;, /SILENT
     TGM_n = event_case([yr_i,mh_i,dy_i])  
-    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
-    old_month = month_name(mh_i, 'english')
-    path = '../rutidl/output/article1events/diono_ev/'
+    path = '../rutidl/output/article2/'
     psfile =  path+'iono_PI_V2_'+Date+'.ps'    
 ;############################################################################### 
     time_title = ' UT [days]'
-    window_title = 'SGS-'+ STRING(TGM_n, FORMAT='(I02)') 
+    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I02)') 
 ;###############################################################################        
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
     /nomatch, XSize=16, YSize=10
+
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english') 
+    
+    time_title = ' UT [days]'
+    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I02)')+', '+ $
+                STRING(old_month, yr_i, FORMAT='(A, X, I4)')
     
      up_diono=max(new_idiff)
      down_diono=min(new_idiff)          
@@ -380,7 +392,15 @@ PRO make_psfig, new_idiff, time, new_ddyn, new_dp2, SG_beg, SG_end,  date_i, dat
         AXIS, YAXIS = 1, yrange=[down,up], $ 
                          ystyle=2, $ 
                          CHARSIZE = 2.8 ,$
-                         CHARTHICK=3.5                                                           
+                         CHARTHICK=3.5          
+;###############################################################################                     
+;second panel legend                   
+        cgPolygon, [0.77,0.8,0.8,0.77], [0.254,0.254,0.257,0.257], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.77,0.8,0.8,0.77], [0.204,0.204,0.207,0.207], color = 'red', /NORMAL , /FILL  
+        
+        XYOUTS, 0.81, 0.24 , /NORMAL, 'Ddyn', CHARSIZE = 2.4, CHARTHICK=chr_thick1                 
+                
+        XYOUTS, 0.81, 0.19 , /NORMAL, 'DP2', CHARSIZE = 2.4, CHARTHICK=chr_thick1                                                                           
 ;###############################################################################      
    x = (!X.WINDOW[1] - !X.WINDOW[0]) / 2. + !X.WINDOW[0]
    y = 0.95   

@@ -67,6 +67,9 @@ FUNCTION event_case, date
         '20170526' : TGM_n = 18
         '20170906' : TGM_n = 19
         '20180824' : TGM_n = 20
+        '20230225' : TGM_n = 21
+        '20230322' : TGM_n = 22
+        '20230422' : TGM_n = 23
         ELSE: PRINT, 'fuera de rango'
     ENDCASE 	
 

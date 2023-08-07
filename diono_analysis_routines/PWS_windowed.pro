@@ -131,11 +131,11 @@ PRO PWS_windowed, date_i, date_f
 
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0, 0.3]
 
-    passband_l = 8.68E-06
+    passband_l = 7.34E-06
  ;1.0/(36.0*3600.0)
-    passband_u = 2.53E-05
+    passband_u = 2.0048564e-05
  ;1.0/(18.0*3600.0)
-    highpass_l = 7.58E-05
+    highpass_l = 9.5262271e-05;8.11E-05
 ; 1.0/(3.0*3600.0)
 
     
@@ -147,7 +147,7 @@ PRO PWS_windowed, date_i, date_f
     ysup = MAX(pws_w[MIN(i):fn])
     yinf = MIN(pws_w[MIN(i):fn])
 ;###############################################################################
-	WINDOW, 2, XSIZE=600, YSIZE=800, TITLE='PWS diono'
+	WINDOW, 2, XSIZE=1200, YSIZE=800, TITLE='PWS diono'
     PLOT, fk, pws_w, /XLOG, /YLOG, XRANGE = [freqs[0], fny], yrange=[yinf, ysup],$
     CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1
 
