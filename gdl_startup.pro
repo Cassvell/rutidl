@@ -8,7 +8,7 @@ COMPILE_OPT IDL2
 ; GDL PAHT
 !PATH =               EXPAND_PATH('+/usr/local/rsi/idl70/lib') +':'+$
                       EXPAND_PATH('+/home/isaac/geomstorm/rutidl/') +':'+$
-                      EXPAND_PATH('+/home/isaac/MEGAsync/') +':'+$
+                      EXPAND_PATH('+/home/isaac/MEGAsync/idl70/lib') +':'+$
                       EXPAND_PATH('+/home/isaac/MEGAsync/GICS/gic_rout/') +':'+$
                       EXPAND_PATH('+/home/isaac/geomstorm/rutpy')
                       !PATH 

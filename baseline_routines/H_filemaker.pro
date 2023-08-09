@@ -366,7 +366,10 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     ENDFOR    
     
    ; PRINT, MIN(dif_Hdet, /NAN)
-
+	PRINT, '#################################################################################'	
+	PRINT, 'AVR H0: ', MEAN(H_det, /NAN)
+	PRINT, 'MED H det: ', MEDIAN(H_det)	
+	
     DEVICE    
 
    ; set_plot, 'x'    

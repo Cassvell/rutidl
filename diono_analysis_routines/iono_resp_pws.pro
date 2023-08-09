@@ -268,63 +268,10 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     ENDIF ELSE BEGIN
     SG_end = N_ELEMENTS(H)-10
     ENDELSE
-                                  
-;############################################################################### 
-     up_diono=max(diono)
-     down_diono=min(diono)          
-     PLOT, time, diono, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
-     COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.15,0.8,0.85,0.95], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], THICK=2, /NODATA   
-
-    OPLOT, time, diono, THICK=1, LINESTYLE=0, COLOR=negro     
-    ;OPLOT, time[SG_beg*60:SG_end*60], new_idiff[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR=negro 
-     
-   ; OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
-   ; [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-   ; THICK=2, COLOR=negro
-    
-  ;  OPLOT, [time[SG_end*60],time[SG_end*60]], $ ;referencia para el final de la Tormenta
-  ;  [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-   ; THICK=2, COLOR=negro    
-         
-        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
-                         XTICKS=file_number, $
-                         XTITLE='', $                         
-                         XMINOR=8, $
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 1.6, $
-                         TICKLEN=0.04,$
-                         CHARTHICK=1.6
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
-                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
-                         XTICKS=file_number, $
-                         XMINOR=8, $
-                         ;XTICKV=FIX(days), $       
-                         XTICKFORMAT='(A1)',$                     
-                         COLOR=negro, $
-                         TICKLEN=0.04,$
-                         CHARTHICK=1.6
-
-        AXIS, YAXIS = 0, YRANGE=[down_diono,up_diono], $
-                         YTICKS=4, $
-                         YTITLE = '', $                          
-                         COLOR=negro, $
-                         YSTYLE=2, $
-                         CHARSIZE = 1.6,$
-                         CHARTHICK=1.6
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $
-                         YTICKS=4, $      
-                         COLOR=negro, $
-                         YSTYLE=2, $
-                         CHARSIZE = 1.6,$
-                         CHARTHICK=1.6                  
+                                                 
 ;###############################################################################                
 ;###############################################################################               
-    freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+    freqs = [1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
               1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0)]
     
     i = WHERE(f_k GE freqs[0])
@@ -334,11 +281,11 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     ysup = MAX(pws[MIN(i):fny])+1
     yinf = MIN(pws[MIN(i):fny]);-0.0001
                
-    periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
+    periods = [48.0, 24.0, 12.0, 6.0, 3.0]
     
-    PLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.3,0.35,0.7,0.65],$
+    PLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.15,0.35,0.92,0.9],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR=negro, $
-    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NOERASE, /NODATA
+    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA
 
     passband_l = freq_band(TGM_n, 'passband_l')
     passband_u = freq_band(TGM_n, 'passband_u')
@@ -349,7 +296,7 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
 
     POLYFILL, [highpass_l, (1.0/(0.5*3600.0)), (1.0/(0.5*3600.0)), highpass_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=amarillo
-    OPLOT, f_k, pws, COLOR=negro, THICK=5   
+    OPLOT, f_k, pws, COLOR=negro, THICK=1   
 ;###############################################################################    
         AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
                          /XLOG,$
@@ -362,7 +309,7 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
                                            
         AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
                          /XLOG,$
-                         XTICKS=6,$
+                         XTICKS=5,$
                          XMINOR=4,$
                          XTICKV=freqs,$                         
                          XTICKN=STRING(FIX(periods), FORMAT='(I4)'),$
@@ -381,7 +328,8 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
                          CHARTHICK=1.5
                         
         AXIS, YAXIS = 1, yrange=[yinf, ysup], $
-                         COLOR=negro, $
+                         COLOR=negro, $       
+                         YTICKFORMAT='(A1)',$
                          /ylog,$
                          ystyle=1, $
                          CHARSIZE = 1.6,$
@@ -389,11 +337,11 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
 
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOUTS, X, 0.69, periodo, /NORMAL, $
+   XYOUTS, X, 0.95, periodo, /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, CHARTHICK=1.5   
    
    y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
-   XYOUTS, 0.15, y, 'Spectral component [nT]', /NORMAL, $
+   XYOUTS, 0.05, y, 'Spectral component [nT]', /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.6, ORIENTATION=90, CHARTHICK=1.5     
 ;###############################################################################
     IF max(ddyn) GT max(dp2) THEN up = max(ddyn) ELSE up = max(dp2)
@@ -401,7 +349,7 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
 ;###############################################################################                            
      PLOT, time, ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.15,0.1,0.85,0.25], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.15,0.1,0.92,0.25], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA             
 ;###############################################################################
  ;   OPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
@@ -451,7 +399,8 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
                          CHARTHICK=1.6
                         
         AXIS, YAXIS = 1, yrange=[down,up], $ 
-                         ystyle=2, $ 
+                         ystyle=2, $      
+                         YTICKFORMAT='(A1)',$ 
                          COLOR=negro, $
                          CHARSIZE = 1.6,$
                          CHARTHICK=1.6                                                             
@@ -461,10 +410,10 @@ PRO iono_resp_pws, date_i, date_f, JPEG = jpeg
     XYOUTS, 0.04, y, 'DP2 and Ddyn [nT]', /NORMAL, $
     COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.6, ORIENTATION=90, CHARTHICK=1.8   
 
-    ppi = TexToIDL('D_{I}')
-    y = (0.95 - 0.80) / 2. + 0.8
-    XYOUTS, 0.04, y, ppi+' [nT]', /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.6, ORIENTATION=90, CHARTHICK=1.8   
+  ;  ppi = TexToIDL('D_{I}')
+  ;  y = (0.95 - 0.80) / 2. + 0.8
+  ;  XYOUTS, 0.04, y, ppi+' [nT]', /NORMAL, $
+  ;  COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.6, ORIENTATION=90, CHARTHICK=1.8   
              
 ;###############################################################################                      
 ;second panel legend       
