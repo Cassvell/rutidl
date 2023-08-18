@@ -158,35 +158,54 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
         Bsq_H[i] = MEDIAN(Bsq[i*60:(i+1)*60-1]) 
     ENDFOR
 
-      
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
     time = FINDGEN(N_ELEMENTS(Bsq_H))
 
     Bsq_trendH = INTERPOLATE(Bsq_24h, time, CUBIC=-0.5,  /GRID)
     Bsq_detH =  Bsq_H-Bsq_trend  
+;###############################################################################    
+    DEVICE, true=24, retain=2, decomposed=0
+    TVLCT, R_bak, G_bak, B_bak, /GET        
+    LOADCT, 39, /SILENT
+        
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english')
+    new_month = month_name(mh_f, 'english')
+    IF mh_i NE mh_f THEN BEGIN
+    	time_name = 'days of '+old_month+' and '+ new_month
+    ENDIF ELSE BEGIN 
+    	time_name = 'days of '+old_month
+    ENDELSE
     
-    WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='Bsq [m]'
-    PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, COLOR=255
-    OPLOT, x, Bsq_det, LINESTYLE=0
-    OPLOT, x, Bsq_det2, LINESTYLE=2
+    WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
+    PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, background=255, color=0, $
+    CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, $
+    XTICKNAME=X_label, THICK=2
+    OPLOT, x, Bsq_det, LINESTYLE=0, color=240, THICK=2
+    OPLOT, x, Bsq_det2, LINESTYLE=0, color=70, THICK=2
     
-    WINDOW, 1, XSIZE=800, YSIZE=400, TITLE='H Bsq(trended) [m]' 
-    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+    WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='H Bsq(trended) [m]' 
+    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 , $
+    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
   ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-    OPLOT, x, H-Bsq, LINESTYLE=0 
+    OPLOT, x, H-Bsq, LINESTYLE=0, color=240, THICK=2 
 
-    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='Bsq [H]' 
-    PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1
+    WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='Bsq [H]' 
+    PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
+    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
 
 
-    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='H [m]'
-    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+    WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H [m]'
+    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
   ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-    OPLOT, x, H-Bsq_det2, LINESTYLE=0    
+    OPLOT, x, H-Bsq_det2, LINESTYLE=0, color=240, THICK=2    
 
-    WINDOW, 4, XSIZE=800, YSIZE=400, TITLE='H [H]'
-    PLOT, time, H_h, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+    WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H [h]'
+    PLOT, time, H_h, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
   ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-    OPLOT, time, H_h-Bsq_detH, LINESTYLE=0
+    OPLOT, time, H_h-Bsq_detH, LINESTYLE=0, color=240, THICK=2
 
 IF KEYWORD_SET(make_file) THEN BEGIN
 ;Generación de archivo en muestreo de horas  

@@ -308,9 +308,9 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     IQR_n = (IQR[1]-IQR[0])*1
  
     index_out = WHERE(H_24h GE MEDIAN(H_24h)+IQR_n OR H_24h LE MEDIAN(H_24h)-IQR_n[0])
-    ;index_in  = WHERE(H_24h LE QR3 AND H_24h GE QR1)      
-    time = FINDGEN(N_ELEMENTS(H))/1440
-   ; PRINT, N_ELEMENTS(index_out)
+    ;index_in  = WHERE(H_24h LE QR3 AND H_24h GE QR1)          
+
+    time = FINDGEN(N_ELEMENTS(H))/1440.0
    
     IF MIN(index_out) NE -1 THEN BEGIN
         H_24h[index_out] = !Values.F_NAN
@@ -345,20 +345,19 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     ;H_t  = INTERPOL(H_trend, N_ELEMENTS(x), /QUADRATIC)
      
     H_det = H - H_trend
-
-    dif_Hdet = TS_DIFF(H_det,2)
-    IQR_diff = PERCENTILES(dif_Hdet, CONFLIMIT=0.96) 
-    IQR_diff_n = (IQR_diff[1]-IQR_diff[0])*1.5
-    med_diff  = MEDIAN(dif_Hdet)
-    artfact = WHERE(dif_Hdet GE med_diff+IQR_diff_n OR dif_Hdet LE med_diff-IQR_diff_n[0])
-    IF artfact[0] NE -1 THEN BEGIN    
-        H_det[artfact] = !Values.F_NAN
-    ENDIF
-    
-    outlayer = WHERE(H_det GT 100)
-
- ;   H_det[outlayer] = !Values.F_NAN    
-    
+;###############################################################################    
+    dif_Hdet = TS_DIFF(H_det,1)
+	spikes = whitaker_hayer(dif_Hdet, 20)    
+	IF spikes[0] NE -1 THEN BEGIN
+		print, 'spikes num: ', N_ELEMENTS(spikes)
+	 ; dif_Hdet[spikes] = !Values.F_NAN
+		H_det[spikes] = !Values.F_NAN
+	;dif_Hdet = fillnan(dif_Hdet)	
+		;H_det = fillnan(H_det)		
+	ENDIF ELSE BEGIN
+		MESSAGE, 'no spikes detected'	
+	ENDELSE 															
+;###############################################################################    
     H_hr = FINDGEN(N_ELEMENTS(H_det)/60)
     FOR i=0, N_ELEMENTS(H_hr)-1 DO BEGIN
         H_hr[i] = MEDIAN(H_det[i*60:(i+1)*60-1])
@@ -369,35 +368,68 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 	PRINT, '#################################################################################'	
 	PRINT, 'AVR H0: ', MEAN(H_det, /NAN)
 	PRINT, 'MED H det: ', MEDIAN(H_det)	
-	
-    DEVICE    
+;###############################################################################
+    DEVICE, true=24, retain=2, decomposed=0
+    TVLCT, R_bak, G_bak, B_bak, /GET        
+    LOADCT, 39, /SILENT    
+        
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english')
+    new_month = month_name(mh_f, 'english')
+    IF mh_i NE mh_f THEN BEGIN
+    	time_name = 'days of '+old_month+' and '+ new_month
+    ENDIF ELSE BEGIN 
+    	time_name = 'days of '+old_month
+    ENDELSE
+   ; set_plot, 'x'   
+   
+   WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H raw data'
+    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
 
-   ; set_plot, 'x'    
-   WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
+   WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H raw data'
+    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4
+
+   WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='H raw data'
+    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    
     OPLOT, time, H_trend, LINESTYLE=2, THICK=2
- ;   OPLOT, time, H_t, LINESTYLE=2, THICK=1
-    OPLOT, time, l_sup, LINESTYLE=1, THICK=2
-    OPLOT, time, l_inf, LINESTYLE=1, THICK=2    
+    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4, color=0    
+    
+   WINDOW, 6, XSIZE=1000, YSIZE=400, TITLE='H raw data'
+    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    
+    OPLOT, time, H_trend, LINESTYLE=2, THICK=2, color=254
+    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4, color=0 
+
+   WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='H raw data'
+    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    
+    OPLOT, time, H_trend, LINESTYLE=2, THICK=2, color=254
+    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4, color=0 
+    OPLOT, time, l_sup, LINESTYLE=1, THICK=2, color=0
+    OPLOT, time, l_inf, LINESTYLE=1, THICK=2, color=0    
    ; PRINT, H_t
 
 
-    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
-    PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
-      
-    PRINT, 'MIN Value within the time window'
-    PRINT, MIN(H_det, /NAN)
-
-    PRINT, 'Press click to get H_det value in a certain point until right mouse button is pressed'
+    WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='dH/dT'
+    PLOT, time, dif_Hdet, XSTYLE=1, YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], CHARSIZE = 1.8, background=255, color=0,$
+    CHARTHICK=2.0, YTITLE = 'dH/dt', XTITLE =time_name , XTICKS=file_number, XTICKNAME=X_label
 
     
-    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='H detrending'
-    PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1
+    WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='H detrended'
+    PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'H [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
 
-    WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
-      CURSOR, x, y, /DOWN, /DATA
-      PRINT, y    
-    ENDWHILE 
+ ;   WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
+    ;  CURSOR, x, y, /DOWN, /DATA
+    ;  PRINT, y    
+    ;ENDWHILE 
     
 
 
@@ -439,40 +471,6 @@ IF KEYWORD_SET(make_file) THEN BEGIN
         FREE_LUN, LUN    
     ENDFOR      
 
-
-
-   ; PRINT, MIN(dif_Hdet, /NAN)
-
-    DEVICE    
-
-   ; set_plot, 'x'    
-   WINDOW, 2, XSIZE=800, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, COLOR=255
-    OPLOT, time, H_trend, LINESTYLE=2, THICK=2
- ;   OPLOT, time, H_t, LINESTYLE=2, THICK=1
-    OPLOT, time, l_sup, LINESTYLE=1, THICK=2
-    OPLOT, time, l_inf, LINESTYLE=1, THICK=2    
-   ; PRINT, H_t
-
-      
-    WINDOW, 3, XSIZE=800, YSIZE=400, TITLE='H detrending'
-    PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1
-
-    PRINT, 'MIN Value within the time window'
-    PRINT, MIN(H_det, /NAN)
-    
-    PRINT, 'Press click to get H_det value in a certain point until right mouse button is pressed'
-    WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
-      CURSOR, x, y, /DOWN, /DATA
-      PRINT, y    
-    ENDWHILE 
-
- 
-
-
-
-    WINDOW, 0, XSIZE=800, YSIZE=400, TITLE='d2H/dT2'
-    PLOT, time, TS_DIFF(H_det,2), YRANGE=[MIN(dif_Hdet, /NAN),MAX(dif_Hdet,/NAN)], XSTYLE=1
 
 ENDIF
 RETURN
