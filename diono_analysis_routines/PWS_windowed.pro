@@ -326,8 +326,8 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     fny=WHERE(f_k EQ freqs[5])
     
     ;PRINT, MIN(i), MIN(f_k), freqs[0]
-    ysup = MAX(pws[MIN(i):fny])+1
-    yinf = MIN(pws[MIN(i):fny]);-0.0001        
+    ysup = 10e-2
+    yinf = 10e-7      
     cgPLOT, f_k, pws, POSITION=[0.07,0.1,0.45,0.4], /XLOG, /YLOG, XRANGE = [freqs[0], freqs[5]], $
     YRANGE=[yinf, ysup], XSTYLE=5, YSTYLE=5, /NOERASE                                                                
 
@@ -389,10 +389,10 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     fny=WHERE(f_k EQ fn)
     
     ;PRINT, MIN(i), MIN(f_k), freqs[0]
-    ysup = MAX(pws[MIN(i):fny])+1
-    yinf = MIN(pws[MIN(i):fny]);-0.0001
+    ysup = 10e-4
+   ; yinf = 10e-7
    ; ysup = MAX(pws)+1
-   ; yinf = MIN(pws);-0.0001
+    yinf = MIN(pws);-0.0001
                    
     periods = [60.0, 30.0, 15.0, 6.0]
     

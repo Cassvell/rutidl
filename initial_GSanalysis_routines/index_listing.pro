@@ -39,6 +39,10 @@ PRO list_kp, date_i, date_f
     On_error, 2
 	COMPILE_OPT idl2, HIDDEN	
 
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up
+        
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -50,7 +54,8 @@ PRO list_kp, date_i, date_f
 
     tot_days= FINDGEN(file_number*24)/24.0  
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')    
-
+;###############################################################################
+;###############################################################################
 ; define K variables   
     kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')   
 
@@ -67,8 +72,12 @@ PRO list_kp, date_i, date_f
         hr_max[i]= j
     ENDFOR
 
-                 
-	idx = WHERE(kp_max GE 6, count)
+
+	PRINT, 'Enter threshold index for K local (kmex) equal or greater than 6: '
+	threshold = ''
+	READ, threshold, PROMPT = '> '
+	                 
+	idx = WHERE(kp_max GE threshold, count)
 	IF count LE 0 THEN MESSAGE, 'ERROR'
     
     idx_kp  = kp_max[idx]
@@ -127,8 +136,18 @@ PRO list_kmex, date_i, date_f
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]	
 ;##############################################################################
-; reading data files
-    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up
+;###############################################################################
+;define station data
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
+;###############################################################################
+    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k', station, FIX(station_idx))    
     k_mex   = add_nan(k_mex, 9.0, 'greater')                                                        ;built my self function to add nan to time series
 
     km_max = FINDGEN(N_ELEMENTS(k_mex)/8)
@@ -142,8 +161,12 @@ PRO list_kmex, date_i, date_f
         km_max[i] = MAX(k_mex[i*8:(i+1)*8-1], j, /NAN)
         hr_max[i]= j
     ENDFOR
-             
-	idx = WHERE(km_max GE 6, count)
+
+	PRINT, 'Enter threshold index for K local (kmex) equal or greater than 6: '
+	threshold = ''
+	READ, threshold, PROMPT = '> '
+	             
+	idx = WHERE(km_max GE FIX(threshold), count)
 	IF count LE 0 THEN MESSAGE, 'ERROR'       
 
     y_idx        = y[idx]   
@@ -201,11 +224,16 @@ PRO list_dst, date_i, date_f
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]	
-;###############################################################################
-        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1     
 
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up	
+;###############################################################################
+
+        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1     
+;###############################################################################
 ;Dst Data                       
-    dst0 = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])                                
+    dst0 = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')                                
         
     dst0_min = FINDGEN(N_ELEMENTS(dst0)/24)
     hr_min= INDGEN(N_ELEMENTS(dst0)/24)
@@ -220,7 +248,11 @@ PRO list_dst, date_i, date_f
         hr_min[i]= j
     ENDFOR
 
-    idx = WHERE(dst0_min LE -120, count)
+	PRINT, 'Enter threshold index for dH local equal or lower than -30: '
+	threshold = ''
+	READ, threshold, PROMPT = '> '
+	
+    idx = WHERE(dst0_min LE threshold, count)
 	IF count LE 0 THEN MESSAGE, 'ERROR' 
            	
     y_idx      = y[idx]   
@@ -276,6 +308,10 @@ PRO list_dh, date_i, date_f
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up
+        
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -284,10 +320,18 @@ PRO list_dh, date_i, date_f
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]	
 ;##############################################################################
+;###############################################################################
+;define station data
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
+;###############################################################################
 ; reading data files
-    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1    
     
-    H  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    H  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
  
     H = add_nan(H, 999999.0, 'equal')          
     time_w = TIMEGEN(N_ELEMENTS(file_number), final=JULDAY(mh_f, dy_f, yr_f, 23), $
@@ -303,7 +347,11 @@ PRO list_dh, date_i, date_f
         hr_min[i]= j
     ENDFOR
 
-    idx = WHERE(H_min LE -120, count)
+	PRINT, 'Enter threshold index for dH local equal or lower than -30: '
+	threshold = ''
+	READ, threshold, PROMPT = '> '
+
+    idx = WHERE(H_min LE threshold, count)
 	IF count LE 0 THEN MESSAGE, 'ERROR' 
            	
     y_idx    = y[idx]   

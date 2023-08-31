@@ -44,30 +44,42 @@
 ;
 ;   3. bsq_V2.pro,   to generate Bsq files for the following analysis
 ;
-PRO sel_qdayV2, date_i, date_f
+FUNCTION sel_qdayV2, date_i, station_idx
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
-	
-	yr_i	= date_i[0]
-	mh_i	= date_i[1]
-	dy_i 	= date_i[2]	
-
-	yr_f	= date_f[0]
-	mh_f	= date_f[1]
-	dy_f 	= date_f[2]
 
 
         @set_up_commons
         set_up
+        	
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= 1
 
-	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
-	READ, station_idx, PROMPT = '> '
+	fday = ''
+	CASE mh_i of
+		1	: fday=31
+		2	: fday=28
+		3	: fday=31
+		4	: fday=30
+		5	: fday=31
+		6	: fday=30
+		7	: fday=31
+		8	: fday=31
+		9	: fday=30
+		10	: fday=31
+		11	: fday=30
+		12	: fday=31
+	ENDCASE	  
+
+	yr_f	= yr_i
+	mh_f	= mh_i
+	dy_f 	= fday
 
     station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
     station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
         
-        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
+        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, 1, yr_i))+1
         data_file_name = STRARR(file_number)
         string_date     = STRARR(file_number) 
        
@@ -83,6 +95,7 @@ PRO sel_qdayV2, date_i, date_f
 	    
     PRINT, '#######################################################################'
     PRINT, '#######################################################################'       
+    twmin = FINDGEN(file_number*1440)/1440.    
     tw = FINDGEN(file_number*24)/24.    
     H_IQR = FINDGEN(N_ELEMENTS(H)/60)
     FOR i=0, N_ELEMENTS(H_IQR)-1 DO BEGIN
@@ -107,17 +120,30 @@ PRO sel_qdayV2, date_i, date_f
     CALDAT, time_w, m, d, y, hr
     
 ;selección de los días quietos con base en el día con menor desviación en IQR  
-    PRINT, format='(2X, "Fecha", 4X,"Indice IQR(H)")'
-    PRINT, '---------------------------------'
-    PRINT, '                                                                    '
-         
-    FOR i=0, N_ELEMENTS(IQR_hr)-1 DO BEGIN
-        PRINT, y[i], m[i], d[i], IQR_hr[i], $
-        FORMAT = '(I4, "-", I02, "-", I02, 4X, F6.2)'                                 
-    ENDFOR        
-;###############################################################################   
+;	PRINT, "Five Qdays according to IQR criteria"
+  ;  PRINT, format='(2X, "Fecha", 4X, "QD", 4X, "Indice IQR(H)")'
+   ; PRINT, '---------------------------------'
+    
+    IQR_sorted = SORT(IQR_hr)
+    iqr_sort = IQR_hr[IQR_sorted]
+       
+    d_sort = d[IQR_sorted[0:4]]
+    m_sort = m[IQR_sorted[0:4]]
+    y_sort = y[IQR_sorted[0:4]]
+	
+	result = {day : INTARR(5), month : INTARR(5), year : INTARR(5), iqr : FLTARR(5)}	               
+;###############################################twmin################################   
+	result.day[*] = d_sort
+	result.month[*] = m_sort
+	result.year[*] = y_sort
+	result.iqr[*] = iqr_sort[0:4]
  ;   DEVICE
-   ; WINDOW, 0,  XSIZE=1600, YSIZE=800, TITLE='kmex vx kp'
-   ;; PLOT, tw, H
+     
+ ;   WINDOW, 0,  XSIZE=1600, YSIZE=800, TITLE='H'
+ ;   PLOT, tw, H_IQR_n, xstyle=1, XTICKS=file_number, XTICKNAME=X_label, THICK=1
+    
+ ;   WINDOW, 1,  XSIZE=1600, YSIZE=800, TITLE='H'
+ ;   PLOT, twmin, H, xstyle=1, ystyle=1, XTICKS=file_number, XTICKNAME=X_label, THICK=1    
     ;OPLOT, tw, k_mex, LINESTYLE=3
+    RETURN, result
 END	

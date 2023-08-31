@@ -35,7 +35,10 @@
 PRO dh_dst_plot, date_i, date_f
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
-
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up
+        
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -46,10 +49,16 @@ PRO dh_dst_plot, date_i, date_f
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
     tot_days       = FINDGEN(file_number*24)/24.
     Date = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, FORMAT  = '(I4,"-",I02,"-",I02,"_",I4,"-",I02,"-",I02)')    
+;define station data
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	    
 ;###############################################################################
 ; Generate the time series DH and Dst                                
-    H   = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
-    dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])    
+    H   = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
+    dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')    
 ;###############################################################################                
 ;identifying NAN percentage values in the Time Series
     H = nanpc(H, 999999.0, 'equal')

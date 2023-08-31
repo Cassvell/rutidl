@@ -323,11 +323,13 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
  
         
 ;plotting to check data    
-    H_trend = INTERPOL(H_24h, N_ELEMENTS(time), /QUADRATIC)
-    ;H_trend = INTERPOLATE(H_24h, x, CUBIC=-0.5,  /GRID, /MISSING)
+   ; H_trend = INTERPOL(H_24h, N_ELEMENTS(time), /QUADRATIC)
+
+    H_trend = INTERPOLATE(H_24h, time, CUBIC=-0.5,  /GRID, /MISSING)
+    ;print, H_trend
     QR1 = cgPercentiles(H_trend, Percentiles=[0.25])  
     QR3 = cgPercentiles(H_trend, Percentiles=[0.75])
-    n = 1
+    n = 1.5
     IQR_n = (QR3-QR1)*n
     ;PRINT, QR1, QR3
     sup = MEDIAN(H_trend)+IQR_n
@@ -356,19 +358,15 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 		;H_det = fillnan(H_det)		
 	ENDIF ELSE BEGIN
 		MESSAGE, 'no spikes detected'	
-	ENDELSE 															
-;###############################################################################    
-    H_hr = FINDGEN(N_ELEMENTS(H_det)/60)
-    FOR i=0, N_ELEMENTS(H_hr)-1 DO BEGIN
-        H_hr[i] = MEDIAN(H_det[i*60:(i+1)*60-1])
-          
-    ENDFOR    
+	ENDELSE 															 
     
    ; PRINT, MIN(dif_Hdet, /NAN)
 	PRINT, '#################################################################################'	
 	PRINT, 'AVR H0: ', MEAN(H_det, /NAN)
 	PRINT, 'MED H det: ', MEDIAN(H_det)	
 ;###############################################################################
+;###############################################################################
+;###############################################################################   
     DEVICE, true=24, retain=2, decomposed=0
     TVLCT, R_bak, G_bak, B_bak, /GET        
     LOADCT, 39, /SILENT    
@@ -382,30 +380,7 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     	time_name = 'days of '+old_month
     ENDELSE
    ; set_plot, 'x'   
-   
-   WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-
-   WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4
-
-   WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-    
-    OPLOT, time, H_trend, LINESTYLE=2, THICK=2
-    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4, color=0    
-    
-   WINDOW, 6, XSIZE=1000, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-    
-    OPLOT, time, H_trend, LINESTYLE=2, THICK=2, color=254
-    PLOTS, FINDGEN(file_number), H_24h, PSYM=4, symsize=2, THICK=4, color=0 
-
+;###############################################################################
    WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='H raw data'
     PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
     CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
@@ -424,8 +399,90 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     
     WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='H detrended'
     PLOT, time, H_det, YRANGE=[MIN(H_det, /NAN),MAX(H_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'H [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    CHARTHICK=2.0, YTITLE = 'H [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label	
+;###############################################################################
+;###############################################################################
+;###############################################################################
+;Selection of Qdays
+	QD = ['QD1', 'QD2', 'QD3', 'QD4', 'QD5']     
+;###############################################################################
+;Selection of Q days Based on Kmex criteria
+	fiveQD_1 = getting_local_qdays([yr_i,mh_i,dy_i], station_idx)
 
+   PRINT, '                                                                    '
+PRINT, "Five Qdays according to K criteria"
+
+    FOR i=0, 4 DO BEGIN
+       PRINT, fiveQD_1.year[i], fiveQD_1.month[i], $
+       fiveQD_1.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X, A)'                                 
+    ENDFOR
+    
+    IF mh_i NE mh_f THEN BEGIN
+    	fiveQD_2 = getting_local_qdays([yr_f,mh_f,dy_f], station_idx)
+    	PRINT, ''
+    	PRINT, ''    
+		FOR i=0, 4 DO BEGIN
+		   PRINT, fiveQD_2.year[i], fiveQD_2.month[i], $
+		   fiveQD_2.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X,  A)'                                 
+		ENDFOR 
+	ENDIF	
+
+;###############################################################################
+;Selection of Q days Based on IQR criteria    
+	fiveQD2_1 = sel_qdayV2([yr_i,mh_i,dy_i], station_idx)  
+	PRINT, "Five Qdays according to IQR criteria"	
+    FOR i=0, 4 DO BEGIN
+       PRINT, STRING(fiveQD2_1.year[i], fiveQD2_1.month[i], fiveQD2_1.day[i], QD[i], fiveQD2_1.iqr[i],$
+      ;  PRINT, y[i], m[i], d[i], IQR_hr[i], $
+        FORMAT = '(I4, "-", I02, "-", I02,  4X,A, F6.2)')                                 
+    ENDFOR
+    
+    IF 	mh_i NE mh_f THEN BEGIN
+    	fiveQD2_2 = sel_qdayV2([yr_f,mh_f,dy_f], station_idx)
+
+		FOR i=0, 4 DO BEGIN
+		   PRINT, STRING(fiveQD2_2.year[i], fiveQD2_2.month[i], fiveQD2_2.day[i], QD[i], fiveQD2_2.iqr[i],$
+		  ;  PRINT, y[i], m[i], d[i], IQR_hr[i], $
+		    FORMAT = '(I4, "-", I02, "-", I02,  4X,A, F6.2)')                                 
+		ENDFOR
+        	
+    ENDIF	
+;###############################################################################
+;###############################################################################
+	qday1 = ''
+	PRINT, 'select the first QD: [dd]'
+	READ, qday1, PROMPT = '> '
+
+	qday2 = ''
+	PRINT, 'select the second QD: [dd]'
+	READ, qday2, PROMPT = '> '
+	
+	dy_1 	= FIX(qday1)	
+	dy_2 	= FIX(qday2)	
+;###############################################################################
+;###############################################################################
+;Bsq baseline
+	H1 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
+	H2 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
+	bsq = bsq_V2(H1, H2)
+	;print, N_ELEMENTS(H_det[10:7])
+	day1_diff = (JULDAY(mh_i,dy_1,yr_i)-JULDAY(mh_i,dy_i,yr_i))+1
+	day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_f,dy_2,yr_f))+1
+	
+	H_clean = H_det[(day1_diff-1)*1440:((file_number)-day2_diff)*1440] - bsq.m
+	;print, H_clean
+    
+    
+    WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H cleaned'
+    PLOT, time, H_clean, XSTYLE=1, XRANGE=[day1_diff-1,(file_number)-day2_diff], $
+    YRANGE=[MIN(H_clean, /NAN),MAX(H_clean,/NAN)], CHARSIZE = 1.8, background=255, color=0, $
+    CHARTHICK=2.0, YTITLE = 'H [nT]',XTITLE = time_name, /NODATA, XTICKS=file_number, $
+    XTICKNAME=X_label    
+	
+	OPLOT, time[(day1_diff-1)*1440:((file_number)-day2_diff)*1440], H_clean, COLOR=0, THICK=2
+	
+	OPLOT, time[(day1_diff-1)*1440:((file_number)-day2_diff)*1440], $
+	H_det[(day1_diff-1)*1440:((file_number)-day2_diff)*1440], COLOR=254
  ;   WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
     ;  CURSOR, x, y, /DOWN, /DATA
     ;  PRINT, y    
@@ -436,6 +493,14 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 IF KEYWORD_SET(make_file) THEN BEGIN    
     outfile = STRARR(file_number)    
 ;Generación de archivo en muestreo de horas 
+
+;###############################################################################    
+    H_hr = FINDGEN(N_ELEMENTS(H_clean)/60)
+    FOR i=0, N_ELEMENTS(H_hr)-1 DO BEGIN
+        H_hr[i] = MEDIAN(H_det[i*60:(i+1)*60-1])
+          
+    ENDFOR  
+
     string_date     = STRARR(file_number)
     FOR i=0, file_number-1 DO BEGIN
         tmp_year    = 0
@@ -466,7 +531,7 @@ IF KEYWORD_SET(make_file) THEN BEGIN
 
         outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m.dat'    
         OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_det[i*1440:(i+1)*1440-1], format='(F9.4)'
+        PRINTF, LUN, H_clean[i*1440:(i+1)*1440-1], format='(F9.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
     ENDFOR      

@@ -50,11 +50,24 @@ FUNCTION DH_data, date, station, idx, resolution
         station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
         
         dir = set_var.Mega_dir+'dH_'+STRLOWCASE(station_code)+'/'        
-;        path='/home/isaac/MEGAsync/datos'		
-		file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.early'
-		
+
+	IF station_code EQ 'teo' THEN BEGIN
+		file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.final'
+	ENDIF ELSE BEGIN
+	 	file_name = dir+STRLOWCASE(station_code)+'_'+date+'.delta_H.final'
+	ENDELSE
+	 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
+	    IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+			IF station_code EQ 'teo' THEN BEGIN
+				file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.early'
+			ENDIF ELSE BEGIN
+	 			file_name = dir+STRLOWCASE(station_code)+'_'+date+'.delta_H.early'
+			ENDELSE	    	        
+	        ;name = STRLOWCASE(station_code)+'_'+date+'.index'+status
+	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
+    	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  	    
+	    ENDIF
 
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)

@@ -46,10 +46,12 @@
 ;
 
 
-PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
+FUNCTION bsq_V2, H1, H2, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
-
+;###############################################################################
+        @set_up_commons
+        set_up
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -57,23 +59,20 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
-;###############################################################################
-        @set_up_commons
-        set_up
         
-	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
-	READ, station_idx, PROMPT = '> '
+;	station_idx = ''
+;	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+;	READ, station_idx, PROMPT = '> '
 
 
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
+ ;   station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+ ;   station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 		
-	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
-	H1      = dat1.H
+;	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
+;	H1      = dat1.H
 
-    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
-    H2      = dat2.H
+;    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
+;    H2      = dat2.H
     
     ndays   = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
     td      = FINDGEN(ndays*1440)/1440.0
@@ -99,20 +98,20 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
     H2_exist = WHERE(finite(H2_tmp), ngooddata2, complement=baddata2, $
     ncomplement=nbaddata2)
     
-    H = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
-    H_h = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')    
+;    H = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
+;    H_h = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')    
 ;###############################################################################                        
 ;identifying NAN percentage values in the Time Series    
-    H = nanpc(H, 99999.0, 'gequal')
-    H = add_nan(H, 99999.0, 'gequal') 
+;    H = nanpc(H, 99999.0, 'gequal')
+;    H = add_nan(H, 99999.0, 'gequal') 
 
-    H_h = nanpc(H_h, 99999.0, 'gequal')
-    H_h = add_nan(H_h, 99999.0, 'gequal') 
+;    H_h = nanpc(H_h, 99999.0, 'gequal')
+;    H_h = add_nan(H_h, 99999.0, 'gequal') 
 ;###############################################################################        
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo       
-    H = fillnan(H)
-    H_h = fillnan(H_h)
+;    H = fillnan(H)
+;    H_h = fillnan(H_h)
     
     H1 = fillnan(H1)
     H2 = fillnan(H2)          
@@ -164,49 +163,55 @@ PRO bsq_V2, date_i, date_f, resolution, MAKE_FILE=make_file
     Bsq_trendH = INTERPOLATE(Bsq_24h, time, CUBIC=-0.5,  /GRID)
     Bsq_detH =  Bsq_H-Bsq_trend  
 ;###############################################################################    
-    DEVICE, true=24, retain=2, decomposed=0
-    TVLCT, R_bak, G_bak, B_bak, /GET        
-    LOADCT, 39, /SILENT
+    ;DEVICE, true=24, retain=2, decomposed=0
+    ;TVLCT, R_bak, G_bak, B_bak, /GET        
+   ; LOADCT, 39, /SILENT
         
-    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
-    old_month = month_name(mh_i, 'english')
-    new_month = month_name(mh_f, 'english')
-    IF mh_i NE mh_f THEN BEGIN
-    	time_name = 'days of '+old_month+' and '+ new_month
-    ENDIF ELSE BEGIN 
-    	time_name = 'days of '+old_month
-    ENDELSE
+  ;  X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+ ;   old_month = month_name(mh_i, 'english')
+;    new_month = month_name(mh_f, 'english')
+    ;IF mh_i NE mh_f THEN BEGIN
+   ; 	time_name = 'days of '+old_month+' and '+ new_month
+  ;  ENDIF ELSE BEGIN 
+ ;   	time_name = 'days of '+old_month
+;    ENDELSE
     
-    WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
-    PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, background=255, color=0, $
-    CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, $
-    XTICKNAME=X_label, THICK=2
-    OPLOT, x, Bsq_det, LINESTYLE=0, color=240, THICK=2
-    OPLOT, x, Bsq_det2, LINESTYLE=0, color=70, THICK=2
+   ; WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
+  ;  PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, background=255, color=0, $
+ ;   CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, $
+;    XTICKNAME=X_label, THICK=2
+    ;OPLOT, x, Bsq_det, LINESTYLE=0, color=240, THICK=2
+   ; OPLOT, x, Bsq_det2, LINESTYLE=0, color=70, THICK=2
     
-    WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='H Bsq(trended) [m]' 
-    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 , $
-    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
+  ;  WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='H Bsq(trended) [m]' 
+ ;   PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 , $
+;    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
   ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-    OPLOT, x, H-Bsq, LINESTYLE=0, color=240, THICK=2 
+;    OPLOT, x, H-Bsq, LINESTYLE=0, color=240, THICK=2 
 
-    WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='Bsq [H]' 
-    PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
-    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
+  ;  WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='Bsq [H]' 
+ ;   PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
+;    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
 
 
-    WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H [m]'
-    PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
+  ;  WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H [m]'
+ ;   PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
+;    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
   ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-    OPLOT, x, H-Bsq_det2, LINESTYLE=0, color=240, THICK=2    
+;    OPLOT, x, H-Bsq_det2, LINESTYLE=0, color=240, THICK=2    
 
-    WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H [h]'
-    PLOT, time, H_h, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
+  ;  WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H [h]'
+ ;   PLOT, time, H_h, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
+;    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
   ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-    OPLOT, time, H_h-Bsq_detH, LINESTYLE=0, color=240, THICK=2
+ ;   OPLOT, time, H_h-Bsq_detH, LINESTYLE=0, color=240, THICK=2
 
+
+
+	Bsq_res = {H : FLTARR(N_ELEMENTS(Bsq_H)), m : FLTARR(N_ELEMENTS(Bsq))}
+	
+	Bsq_res.H[*] = Bsq_H
+	Bsq_res.m[*] = Bsq
 IF KEYWORD_SET(make_file) THEN BEGIN
 ;Generación de archivo en muestreo de horas  
 
@@ -249,5 +254,6 @@ IF KEYWORD_SET(make_file) THEN BEGIN
     PRINT, 'Se generaron archivos BSQ'
 ENDIF 
 
+RETURN, Bsq_res
 
 END

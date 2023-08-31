@@ -63,12 +63,12 @@ PRO indexdata_v2, date_i, date_f
     
 ; define K variables   
     kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
-    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
+    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k')    
     k_mex   = add_nan(k_mex, 9.0, 'greater') 
 
 ; Generate the time variables to plot TEC time series         
-    tec  = tec_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'tec')
-    med  = tec_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'med')
+ ;   tec  = tec_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'tec')
+ ;   med  = tec_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'med')
 
 ;setting certain values as NaN        
     H      = add_nan(dH, 999999.0, 'equal')        
