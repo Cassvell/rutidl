@@ -42,4 +42,4 @@ DEFSYSV, '!Gravitation', 6.673D-11, 1
 ;Boltzmann’s constant (N m^2 kg^−2)
 DEFSYSV, '!Boltzmann', 1.3806503D-23, 1
 
-print, 'STARTUP.pro executed'
+print, 'STARTUP.pro executed SON OF A BITCH!!!'

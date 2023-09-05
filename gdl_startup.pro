@@ -15,5 +15,5 @@ COMPILE_OPT IDL2
         
 ;!quiet = 1
         
-print, 'GDL_STARTUP.pro executed!!!'
+print, 'GDL_STARTUP.pro executed SON OF A BITCH!!!'
 print, ''

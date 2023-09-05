@@ -254,7 +254,7 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
                    
     periods = [48.0, 24.0, 12.0, 6.0, 3.0, 1.0]
     
-    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.5,0.95,0.9],$
+    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [f_k[0], fn], POSITION=[0.07,0.5,0.95,0.9],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA
 
@@ -271,7 +271,7 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
               
     cgOPLOT, f_k, pws, COLOR='black', THICK=1  
 ;###############################################################################    
-        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
+        AXIS, XAXIS = 0, XRANGE=[f_k[0], fn], $
                          /XLOG,$
                          XSTYLE=1,$
                          xTITLE = 'Frequence [Hz]',$
@@ -280,7 +280,7 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[f_k[0], fn], $;.0/(!X.CRANGE), $
                          /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
