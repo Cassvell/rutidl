@@ -70,7 +70,7 @@ FUNCTION event_case, date
         '20230225' : TGM_n = 21
         '20230322' : TGM_n = 22
         '20230422' : TGM_n = 23
-        ELSE: PRINT, 'fuera de rango'
+        ELSE: TGM_n = 'fuera de rango'
     ENDCASE 	
 
 	

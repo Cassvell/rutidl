@@ -234,14 +234,25 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
 
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english') 
-    
+    	print, TGM_n
     time_title = ' UT [days]'
-    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+    IF TGM_n NE 'fuera de rango' THEN BEGIN    
+    	window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+                STRING(old_month, yr_i, FORMAT='(A, X, I4)')
+    freqs = [1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0), 1.0/3600]    
+    
+    ENDIF ELSE BEGIN
+	    window_title = 'Quiet Period, '+ $
                 STRING(old_month, yr_i, FORMAT='(A, X, I4)')    
+
+    freqs = [1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0), 1.0/3600]    
+    
+    ENDELSE                    
     periodo = 'Period [h]'                     
 ;###############################################################################               
-    freqs = [1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
-              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0), 1.0/3600]
+
     
     i = WHERE(f_k GE freqs[0])
     fny=WHERE(f_k EQ fn)
@@ -262,12 +273,14 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     passband_u = freq_band(TGM_n, 'passband_u')
     highpass_l = freq_band(TGM_n, 'highpass_l')
     
+    IF TGM_n NE 'fuera de rango' THEN BEGIN
     cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
 
     cgPolygon, [highpass_l, 1.0/(1800.0), 1.0/1800.0, highpass_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
                                              
+    ENDIF
               
     cgOPLOT, f_k, pws, COLOR='black', THICK=1  
 ;###############################################################################    
@@ -331,14 +344,13 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     cgPLOT, f_k, pws, POSITION=[0.07,0.1,0.45,0.4], /XLOG, /YLOG, XRANGE = [freqs[0], freqs[5]], $
     YRANGE=[yinf, ysup], XSTYLE=5, YSTYLE=5, /NOERASE                                                                
 
-
-    
+    IF TGM_n NE 'fuera de rango' THEN BEGIN    
     cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
 
     cgPolygon, [highpass_l, 1.0/(3600.0), 1.0/3600.0, highpass_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
-                            
+	ENDIF                            
     cgOPLOT, f_k, pws, COLOR='black', THICK=1  
                             
         AXIS, XAXIS = 0, XRANGE=[freqs[0], freqs[5]], $
@@ -398,10 +410,10 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     
     cgPLOT, f_k, pws, POSITION=[0.55,0.1,0.95,0.4], /XLOG, /YLOG, XRANGE = [freqs[0], fn], $
     YRANGE=[yinf, ysup], XSTYLE=5, YSTYLE=5, /NOERASE  
-
+    IF TGM_n NE 'fuera de rango' THEN BEGIN
     cgPolygon, [1.0/(3600.0), freqs[1], freqs[1], 1.0/3600.0], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
-
+	ENDIF
     cgOPLOT, f_k, pws, COLOR='black', THICK=1  
     
         AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
