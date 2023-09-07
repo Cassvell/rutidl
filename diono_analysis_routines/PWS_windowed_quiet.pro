@@ -1,5 +1,5 @@
 ;Name:
-;	PWS_windowed.pro
+;	PWS_windowed_quiet.pro
 ;purpose:
 ;   plot geomagnetic and ionospheric response due to Dst and Ddyn magnetic trace
 ;   
@@ -37,7 +37,7 @@
 ;       1. having Bsq data files (run the Bsq routines)
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
-PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq 
+PRO PWS_windowed_quiet, date_i, date_f, PS=ps
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -72,34 +72,19 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 ; define H variables                  
   ;  dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
   ;  dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
-    sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
+;    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
 
 
-; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')    
+sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
 
-; Generate the time variables to plot TEC time series         
-;###############################################################################
-;identifying NAN percentage values in the Time Series
-    H = nanpc(H, 999999.0, 'equal')
-    H = nanpc(H, 100.0, 'greater')    
-;Identifying the NAN values        
-;    tec = add_nan(tec, 999.0, 'equal')            
-;    med = add_nan(med, 999.0, 'equal')                
-    H = add_nan(H, 999999.0, 'equal')
-    H = add_nan(H, 99999.0, 'equal')                   
-;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
-    H = fillnan(H)
-
+H = H_clean([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_idx, QUIETD='QUIETD')
 ; define frequencies
     l            = 28.06  
     mlat         = l*!pi
     ld           = cos(mlat/180)
-    p_a          = sym*ld
-    baseline     = Bsq + p_a             
-    Bdiono       = H-baseline
-    n            = N_ELEMENTS(Bdiono) 
+    p_a          = sym*ld             
+    B            = H-p_a
+    n            = N_ELEMENTS(B) 
     
     time_res    = 'm'
     time        = 0.
@@ -109,11 +94,11 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
         'h'     : time = 3600.0
         'm'     : time = 60.0
     ENDCASE
-
+	B = fillnan(B)
     fny      = FLOAT(1.0/(2.0*time)) ; frecuencia de Nyquist
-    y        = FFT(Bdiono)            ; Compute Fast Fourie Transform from diono time series
-	y2 		 = FFT(Bsq)
+    y        = FFT(B)            ; Compute Fast Fourie Transform from diono time series
     power_s = ABS(y[0:n/2])^2
+    power_s = power_s/SQRT(TOTAL(power_s^2));se normaliza el espectro de potencia
    ; pws_s   = SMOOTH(pws, 1)
 
     fk     = (1+FINDGEN(n))/(n*time)
@@ -121,7 +106,7 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     
     w_ss = (TOTAL((hann_w)^2))/n
     ;print, w_ss
-    y_w = FFT(hann_w*Bdiono)
+    y_w = FFT(hann_w*B)
     pws_w = (ABS(y_w[0:n/2])^2)/w_ss 
 
 ;###############################################################################
@@ -130,15 +115,12 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     
 
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0, 0.3]
-
-    passband_l = 7.34E-06
- ;1.0/(36.0*3600.0)
-    passband_u = 2.0048564e-05
- ;1.0/(18.0*3600.0)
-    highpass_l = 9.5262271e-05;8.11E-05
+	threshold_rn = 1.0/(0.2*3600.0)
 ; 1.0/(3.0*3600.0)
 
-    
+    j = WHERE(fk GE threshold_rn)
+	limP = MIN([j])
+	print, limP
     i = WHERE(fk GE freqs[0])
     fn=WHERE(fk EQ fny)
 
@@ -146,65 +128,94 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 
     ysup = MAX(pws_w[MIN(i):fn])
     yinf = MIN(pws_w[MIN(i):fn])
+
 ;###############################################################################
-	;WINDOW, 2, XSIZE=1200, YSIZE=800, TITLE='PWS diono'
-    PLOT, fk, pws_w, /XLOG, /YLOG, XRANGE = [freqs[0], fny], yrange=[yinf, ysup],$
-    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1
+;###############################################################################
+;###############################################################################
+;LS-log curve fitting
+N = 1+0.25068;cte Euler
+a = 2.3
+;logP = ALOG(N) -a*(ALOG(fk[0:fn]))
+;logP = logP/SQRT(TOTAL(logP^2))
+P	= N*(fk[0:limP]^(-a))
+P	= P/SQRT(TOTAL(P^2))
+;###############################################################################
+;###############################################################################
+;###############################################################################
 
+	IF keyword_set(ps) THEN BEGIN
+    	make_psfig, fk, fny, pws_w, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
+    ENDIF
     
-    POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=255
+    DEVICE, true=24, retain=2, decomposed=0
+    TVLCT, R_bak, G_bak, B_bak, /GET        
+    LOADCT, 39, /SILENT 
+    OMAX = 0
+    OMIN = 0
+    Hist = HISTOGRAM(H, NBINS=1000, LOCATIONS=binvals,  MIN=MIN(H), MAX=MAX(H), OMAX=OMAX, OMIN=OMIN)
+WINDOW,0,  XSIZE=600, YSIZE=600, TITLE='Dist H'
+    plot, binvals, Hist, XRANGE=[OMIN,OMAX], background=255, color=0
+;###############################################################################    
+    freqs = [1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0), 1.0/3600] 
+    
+    i = WHERE(fk GE freqs[0])
+    fn=WHERE(fk EQ fny)
+    
+    ;PRINT, MIN(i), MIN(f_k), freqs[0]
+    ;ysup = MAX(pws[MIN(i):fny])+1
+   ;: yinf = MIN(pws[MIN(i):fny]);-0.0001
+    ysup = MAX(pws_w)+1
+    yinf = MIN(pws_w);-0.0001
+                   
+    periods = [48.0, 24.0, 12.0, 6.0, 3.0, 1.0]
 
-    POLYFILL, [highpass_l, freqs[6], freqs[6], highpass_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR=255
-    OPLOT, fk, pws_w, THICK=1 
-            
+WINDOW,4,  XSIZE=600, YSIZE=600, TITLE='Dist PSD'
+    PLOT, fk, pws_w, /XLOG, /YLOG, XRANGE = [freqs[0], fny], yrange=[yinf, ysup],$
+    CHARSIZE = chr_size1, XSTYLE=6, YSTYLE=6, SUBTITLE='', THICK=1, BACKGROUND=255, COLOR=0
+    
+    OPLOT, fk, P, LINESTYLE=0, COLOR=250, THICK=2   
+
         AXIS, XAXIS = 0, XRANGE=[freqs[0], fny], $
-                         /XLOG,$
-                         XSTYLE=1,$
+                         /XLOG,$                          
+                         COLOR=0, $
+                         XSTYLE=2,$
                          xTITLE = 'Frequence [Hz]',$
                          CHARSIZE = 1.4, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
         AXIS, XAXIS = 1, XRANGE=[freqs[0], fny], $;.0/(!X.CRANGE), $
-                         /XLOG,$
+                         /XLOG,$                          
+                         COLOR=0, $
                          XTICKS=7,$
                       ;   XMINOR=4,$
                          XTICKV=freqs,$                         
                          XTICKN=STRING(periods, FORMAT='(F4.1)'),$
-                         XSTYLE=1,$
+                         XSTYLE=2,$
                          CHARSIZE = 1.4,$
                          TICKLEN=0.04,$
                          CHARTHICK=1.5                     
 
         AXIS, YAXIS = 0, yrange=[yinf, ysup], $
                          YTITLE = '', $
-                         ystyle=1,$                          
-                         COLOR=negro, $
+                         ystyle=2,$                          
+                         COLOR=0, $
                          /ylog,$
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
                         
         AXIS, YAXIS = 1, yrange=[yinf, ysup], $
-                         /ylog,$
+                         /ylog,$                          
+                         COLOR=0, $
                          YTICKFORMAT='(A1)',$ 
-                         ystyle=1, $
+                         ystyle=2, $
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
+  WINDOW, 5, XSIZE=600, YSIZE=600, TITLE='fit PSD'
+  PLOT, fk, P, /XLOG, /YLOG, $
+  LINESTYLE=0, XSTYLE=1, YSTYLE=1,  COLOR=0, BACKGROUND=255                        
                          
-    PRINT, 'Press click to get PWS value in a certain point until right mouse button is pressed'
-  ;  WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
-;  FOR i = 0, 4 DO BEGIN; (!MOUSE.button NE 4) THEN BEGIN
-  ;    CURSOR, x, y, /WAIT, /DATA
-    ;  PRINT, x 
-                 
-;   ENDFOR      
-  ;  ENDWHILE    
-    IF keyword_set(ps) THEN BEGIN
-    make_psfig, fk, fny, pws_w, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
-    ENDIF
-    
 END
 
 PRO make_psfig, f_k, fn, pws, date_i, date_f
@@ -222,11 +233,12 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
     TGM_n = event_case([yr_i,mh_i,dy_i])    	
 ;############################################################################### 
-    Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
+    Date    = STRING(yr_i, mh_i, dy_i, yr_f,  mh_f, dy_f, $
+    FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 
-    ;path = '../rutidl/output/article1events/diono_ev/'
+;path = '../rutidl/output/article1events/diono_ev/'
     path = '../rutidl/output/article2/'
-    psfile =  path+'diono_PWS_'+Date+'.eps'    
+    psfile =  path+'Quiet_PWS_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=10, YSize=16
@@ -264,19 +276,6 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.5,0.95,0.9],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA
-
-    passband_l = freq_band(TGM_n, 'passband_l')
-    passband_u = freq_band(TGM_n, 'passband_u')
-    highpass_l = freq_band(TGM_n, 'highpass_l')
-    
-    IF TGM_n NE 'fuera de rango' THEN BEGIN
-    cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='gray', /FILL
-
-    cgPolygon, [highpass_l, 1.0/(1800.0), 1.0/1800.0, highpass_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='gray', /FILL
-                                             
-    ENDIF
               
     cgOPLOT, f_k, pws, COLOR='black', THICK=1 
 	;cgOPLOT, f_k, pws_1, COLOR='blue', THICK=1  
@@ -341,15 +340,7 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     ysup = 10e-2
     yinf = 10e-7      
     cgPLOT, f_k, pws, POSITION=[0.07,0.1,0.45,0.4], /XLOG, /YLOG, XRANGE = [freqs[0], freqs[5]], $
-    YRANGE=[yinf, ysup], XSTYLE=5, YSTYLE=5, /NOERASE                                                                
-
-    IF TGM_n NE 'fuera de rango' THEN BEGIN    
-    cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='gray', /FILL
-
-    cgPolygon, [highpass_l, 1.0/(3600.0), 1.0/3600.0, highpass_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='gray', /FILL
-	ENDIF                            
+    YRANGE=[yinf, ysup], XSTYLE=5, YSTYLE=5, /NOERASE                                                                                        
     cgOPLOT, f_k, pws, COLOR='black', THICK=1  
                             
         AXIS, XAXIS = 0, XRANGE=[freqs[0], freqs[5]], $
@@ -409,10 +400,7 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     
     cgPLOT, f_k, pws, POSITION=[0.55,0.1,0.95,0.4], /XLOG, /YLOG, XRANGE = [freqs[0], fn], $
     YRANGE=[yinf, ysup], XSTYLE=5, YSTYLE=5, /NOERASE  
-    IF TGM_n NE 'fuera de rango' THEN BEGIN
-    cgPolygon, [1.0/(3600.0), freqs[1], freqs[1], 1.0/3600.0], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='gray', /FILL
-	ENDIF
+
     cgOPLOT, f_k, pws, COLOR='black', THICK=1  
     
         AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
@@ -479,4 +467,5 @@ PRO make_psfig, f_k, fn, pws, date_i, date_f
     cgPS_Close, density = 300, width = 1600 ;, /PNG  
     RETURN  
 END 
+
 

@@ -48,7 +48,7 @@ FUNCTION dst_data, date
 ;reading data files
         path='/home/isaac/MEGAsync/datos'
         date = STRING(year, month, day, format = '(I4,"-",I02,"-",I02)')
-		file_name = path+'/dst/daily/dst_'+date+'.txt'
+		file_name = path+'/dst/daily/dst_'+date+'.dat'
 
         header = 1             ; Defining number of lines of the header 
 ;###############################################################################
@@ -99,7 +99,7 @@ FUNCTION dst_array, date_i, date_f, variable, HELP=help
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date_2[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')
 
-                data_file_name_dst[i]= data_path+'/dst/daily/dst_'+string_date_2[i]+'.txt'		        	                                        
+                data_file_name_dst[i]= data_path+'/dst/daily/dst_'+string_date_2[i]+'.dat'		        	                                        
              	file_dst = FILE_SEARCH(data_file_name_dst[i], COUNT=opened_files)
 
         	                            

@@ -46,7 +46,7 @@
 ;
 
 
-FUNCTION bsq_V2, H1, H2, MAKE_FILE=make_file
+FUNCTION bsq_V2, H1, H2, ndays, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 ;###############################################################################
@@ -60,21 +60,21 @@ FUNCTION bsq_V2, H1, H2, MAKE_FILE=make_file
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
         
-;	station_idx = ''
-;	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
-;	READ, station_idx, PROMPT = '> '
+	station_idx = ''
+	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	READ, station_idx, PROMPT = '> '
 
 
- ;   station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
- ;   station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
+    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 		
-;	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
+	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
 ;	H1      = dat1.H
 
-;    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
+    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
 ;    H2      = dat2.H
     
-    ndays   = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
+   ; ndays   = ;(JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
     td      = FINDGEN(ndays*1440)/1440.0
     td_h    = FINDGEN(ndays*24)/24.0
     datetime= TIMEGEN(N_ELEMENTS(td), FINAL=JULDAY(mh_f, dy_f, yr_f, 23), $
@@ -110,8 +110,8 @@ FUNCTION bsq_V2, H1, H2, MAKE_FILE=make_file
 ;###############################################################################        
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo       
-;    H = fillnan(H)
-;    H_h = fillnan(H_h)
+    H = fillnan(H)
+    H_h = fillnan(H_h)
     
     H1 = fillnan(H1)
     H2 = fillnan(H2)          
@@ -157,7 +157,7 @@ FUNCTION bsq_V2, H1, H2, MAKE_FILE=make_file
         Bsq_H[i] = MEDIAN(Bsq[i*60:(i+1)*60-1]) 
     ENDFOR
 
-    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
+ ;   file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
     time = FINDGEN(N_ELEMENTS(Bsq_H))
 
     Bsq_trendH = INTERPOLATE(Bsq_24h, time, CUBIC=-0.5,  /GRID)
