@@ -5,9 +5,10 @@ DEVICE, retain = 2
 ;Set compiler options
 COMPILE_OPT IDL2
 ;User’s directory for IDL programs
-!PATH = !PATH + ':' + EXPAND_PATH('+/home/isaac/geomstorm/rutidl/') +':'+$
+!PATH = !PATH + ':' + EXPAND_PATH('+/home/isaac/geomstorm/rutidl/') +':'+$                      
+                      EXPAND_PATH('+/home/isaac/geomstorm/rutidl/datStruct') +':'+$
+                      EXPAND_PATH('+/home/isaac/geomstorm/rutidl/baseline_routines') +':'+$
                       EXPAND_PATH('+/home/isaac/MEGAsync/') +':'+$
-                      EXPAND_PATH('+/home/isaac/MEGAsync/GICS/gic_rout/') +':'+$
                       EXPAND_PATH('+/home/isaac/geomstorm/rutpy')  
 ;Have IDL provide backing store
 DEVICE, RETAIN = 2

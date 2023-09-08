@@ -120,7 +120,7 @@ H = H_clean([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_idx, QUIETD='QUIETD'
 
     j = WHERE(fk GE threshold_rn)
 	limP = MIN([j])
-	print, limP
+	;print, limP
     i = WHERE(fk GE freqs[0])
     fn=WHERE(fk EQ fny)
 
@@ -134,11 +134,41 @@ H = H_clean([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_idx, QUIETD='QUIETD'
 ;###############################################################################
 ;LS-log curve fitting
 N = 1+0.25068;cte Euler
-a = 2.3
-;logP = ALOG(N) -a*(ALOG(fk[0:fn]))
-;logP = logP/SQRT(TOTAL(logP^2))
-P	= N*(fk[0:limP]^(-a))
-P	= P/SQRT(TOTAL(P^2))
+a = 2.242; evento [2023,04,12], [2023,04,14]
+logX = -0.57721466/alog(10)
+
+logP = ALOG(N) -a*(ALOG(fk[0:limP]))
+P = EXP(logP)
+P = P/SQRT(TOTAL(P^2))
+
+;P	= N*(fk[0:limP]^(-a))
+;P	= P/SQRT(TOTAL(P^2))
+
+;###############################################################################
+;###############################################################################
+;###############################################################################
+;KS test
+gamma_hat = pws_w/P 
+print, ''
+PRINT, 'TEST KS: MEDIAN(gamma), EXP(Xi)'
+print, MEDIAN(gamma_hat), EXP(logX)
+;###############################################################################
+;###############################################################################
+;###############################################################################
+;Incertidumbre de parametros
+sigma = !PI^2 / (6*(ALOG(10)^2)); Varianza de la ordenada del periodograma
+a_j = ALOG(fk[0:limP])
+n1 = N_ELEMENTS(fk[0:limP])
+delta = (n1 * TOTAL(a_j^2))-(TOTAL(a_j))^2
+
+;error de alfa
+err2_a = n1 * sigma^2/delta
+
+;error de N
+err2_Nlog = sigma^2 * TOTAL(a_j^2)/delta
+print, ''
+Print, 'error de alfa, error log(N), error N'
+print, err2_a, err2_Nlog, EXP(err2_Nlog)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
@@ -153,7 +183,7 @@ P	= P/SQRT(TOTAL(P^2))
     OMAX = 0
     OMIN = 0
     Hist = HISTOGRAM(H, NBINS=1000, LOCATIONS=binvals,  MIN=MIN(H), MAX=MAX(H), OMAX=OMAX, OMIN=OMIN)
-WINDOW,0,  XSIZE=600, YSIZE=600, TITLE='Dist H'
+WINDOW,1,  XSIZE=600, YSIZE=600, TITLE='Dist H'
     plot, binvals, Hist, XRANGE=[OMIN,OMAX], background=255, color=0
 ;###############################################################################    
     freqs = [1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
@@ -170,7 +200,7 @@ WINDOW,0,  XSIZE=600, YSIZE=600, TITLE='Dist H'
                    
     periods = [48.0, 24.0, 12.0, 6.0, 3.0, 1.0]
 
-WINDOW,4,  XSIZE=600, YSIZE=600, TITLE='Dist PSD'
+WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
     PLOT, fk, pws_w, /XLOG, /YLOG, XRANGE = [freqs[0], fny], yrange=[yinf, ysup],$
     CHARSIZE = chr_size1, XSTYLE=6, YSTYLE=6, SUBTITLE='', THICK=1, BACKGROUND=255, COLOR=0
     
@@ -212,10 +242,15 @@ WINDOW,4,  XSIZE=600, YSIZE=600, TITLE='Dist PSD'
                          ystyle=2, $
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
-  WINDOW, 5, XSIZE=600, YSIZE=600, TITLE='fit PSD'
-  PLOT, fk, P, /XLOG, /YLOG, $
-  LINESTYLE=0, XSTYLE=1, YSTYLE=1,  COLOR=0, BACKGROUND=255                        
-                         
+	WINDOW, 3, XSIZE=600, YSIZE=600, TITLE='fit PSD'
+	PLOT, fk, gamma_hat, /XLOG, /YLOG, $
+	LINESTYLE=0, XSTYLE=1, YSTYLE=1,  COLOR=0, BACKGROUND=255                        
+
+    Hist2 = HISTOGRAM(gamma_hat, NBINS=10000, LOCATIONS=binvals,  MIN=MIN(gamma_hat), MAX=MAX(gamma_hat), OMAX=OMAX, OMIN=OMIN)
+	gama = TeXtoIDL('\gamma') 
+	WINDOW,0,  XSIZE=600, YSIZE=600, TITLE='Dist'
+    plot, binvals, Hist, XRANGE=[OMIN,OMAX], background=255, color=0, title=gama, CHARSIZE=2, /XLOG
+
 END
 
 PRO make_psfig, f_k, fn, pws, date_i, date_f
