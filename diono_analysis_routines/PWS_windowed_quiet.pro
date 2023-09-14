@@ -133,11 +133,17 @@ H = H_clean([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_idx, QUIETD='QUIETD'
 ;###############################################################################
 ;###############################################################################
 ;LS-log curve fitting
-N = 1+0.25068;cte Euler
-a = 2.242; evento [2023,04,12], [2023,04,14]
-logX = -0.57721466/alog(10)
+N = 2+0.25068;cte Euler
+; a, valor con H y Bsq, valor con H - Bsq, fecha
+;a = 5.6;5.4 ;evento [2023,02,11], [2023,02,13]
+;a = 4.75;4.67 ;evento [2023,03,11], [2023,03,13];
+;a = 4.78;4; ;evento [2023,03,18], [2023,03,22] GS weak
+;a = 4.45; ; evento [2023,04,9], [2023,04,14]
+;a = 5.;5.1; evento [2023,04,12], [2023,04,14]
+;a = 4.5 ;4.12; evento [2023,05,15], [2023,05,18]; caso esp
+logX = (-0.57721466/alog10(10))-ALOG10(2)
 
-logP = ALOG(N) -a*(ALOG(fk[0:limP]))
+logP = ALOG10(N) -a*(ALOG10(fk[0:limP]))
 P = EXP(logP)
 P = P/SQRT(TOTAL(P^2))
 
@@ -150,14 +156,14 @@ P = P/SQRT(TOTAL(P^2))
 ;KS test
 gamma_hat = pws_w/P 
 print, ''
-PRINT, 'TEST KS: MEDIAN(gamma), EXP(Xi)'
-print, MEDIAN(gamma_hat), EXP(logX)
+PRINT, 'TEST KS: MEDIAN(gamma), EXP(Xi), MAX(gamma)'
+print, MEDIAN(gamma_hat),EXP(logX), MAX(gamma_hat)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
 ;Incertidumbre de parametros
-sigma = !PI^2 / (6*(ALOG(10)^2)); Varianza de la ordenada del periodograma
-a_j = ALOG(fk[0:limP])
+sigma = !PI^2 / (6*(ALOG10(10)^2)); Varianza de la ordenada del periodograma
+a_j = ALOG10(fk[0:limP])
 n1 = N_ELEMENTS(fk[0:limP])
 delta = (n1 * TOTAL(a_j^2))-(TOTAL(a_j))^2
 
@@ -172,7 +178,50 @@ print, err2_a, err2_Nlog, EXP(err2_Nlog)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
+;Covarianza
+cov= (sigma^2 * TOTAL(a_j))/delta
+print, ''
+Print, 'Cov'
+print, cov
+;###############################################################################
+;###############################################################################
+;###############################################################################
+;Icertidumbre del modelo
+log_fj = ALOG(fk[0:limP])
+cross_prodd1 = err2_a*(log_fj)^2
+cross_prodd2 = (2*cov) * log_fj
 
+err2_mod_log = cross_prodd1 + err2_Nlog - cross_prodd2
+print, ""
+;PRINT, "Error^2 del modelo logarítmico, Error^2 del modelo"
+;PRINT, err2_mod_log, EXP(err2_mod_log)
+
+M_j = ALOG(P)
+S_j = SQRT(err2_mod_log) * ALOG(10)
+y = 2.5e-5; Una variable dada por los gamma ??
+PDF = 1/(S_j*y * 2*!PI)*EXP(-(ALOG(y)-M_j)^2/(2*(S_j)^2))
+
+;###############################################################################
+;###############################################################################
+;###############################################################################
+;CONFIDENCE LEVELS
+	P_hat = P/SQRT(TOTAL(P)^2)
+	eps = 0.05
+	eps_n = 1-(1-eps)^n1
+	gamma_e = (-2)*ALOG(eps_n/N_ELEMENTS(fk[0:limP]))
+
+	;gamma_e2 = -2*ALOG(epsn)
+	;Plog_95 = logP + ALOG10(gamma_e/2)
+	P_95 = (gamma_e/2)* P
+	;P_95_2 = gamma_e2*P
+	PRINT, 'e = ',eps, ', confidence limit: ', (1-eps)*100
+;###############################################################################
+;###############################################################################
+;###############################################################################
+
+;###############################################################################
+;###############################################################################
+;###############################################################################
 	IF keyword_set(ps) THEN BEGIN
     	make_psfig, fk, fny, pws_w, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
     ENDIF
@@ -205,6 +254,7 @@ WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
     CHARSIZE = chr_size1, XSTYLE=6, YSTYLE=6, SUBTITLE='', THICK=1, BACKGROUND=255, COLOR=0
     
     OPLOT, fk, P, LINESTYLE=0, COLOR=250, THICK=2   
+	OPLOT, fk, P_95, LINESTYLE=2, COLOR=250, THICK=2 
 
         AXIS, XAXIS = 0, XRANGE=[freqs[0], fny], $
                          /XLOG,$                          
@@ -246,11 +296,20 @@ WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
 	PLOT, fk, gamma_hat, /XLOG, /YLOG, $
 	LINESTYLE=0, XSTYLE=1, YSTYLE=1,  COLOR=0, BACKGROUND=255                        
 
-    Hist2 = HISTOGRAM(gamma_hat, NBINS=10000, LOCATIONS=binvals,  MIN=MIN(gamma_hat), MAX=MAX(gamma_hat), OMAX=OMAX, OMIN=OMIN)
+    Hist2 = HISTOGRAM(gamma_hat, NBINS=10000, LOCATIONS=binvals,  MIN=MIN(gamma_hat), $
+    MAX=MAX(gamma_hat), OMAX=OMAX, OMIN=OMIN)
+    
 	gama = TeXtoIDL('\gamma') 
 	WINDOW,0,  XSIZE=600, YSIZE=600, TITLE='Dist'
     plot, binvals, Hist, XRANGE=[OMIN,OMAX], background=255, color=0, title=gama, CHARSIZE=2, /XLOG
 
+	alfa = TeXtoIDL('\alpha')
+	
+	;Hist3 = HISTOGRAM(PDF, NBINS=10000, LOCATIONS=binvals,  MIN=MIN(PDF), $
+    ;MAX=MAX(PDF), OMAX=OMAX, OMIN=OMIN)
+	;PRINT, N_ELEMENTS(PDF), N_ELEMENTS(fk[0:limP])
+	;WINDOW,3,  XSIZE=600, YSIZE=600, TITLE='Scatter'
+    ;plot, fk[0:limP], PDF, background=255, color=0, title='PDF of the model', CHARSIZE=2;, /YLOG, /XLOG
 END
 
 PRO make_psfig, f_k, fn, pws, date_i, date_f
