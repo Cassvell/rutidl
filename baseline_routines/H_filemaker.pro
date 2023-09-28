@@ -407,25 +407,25 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 	QD = ['QD1', 'QD2', 'QD3', 'QD4', 'QD5']     
 ;###############################################################################
 ;Selection of Q days Based on Kmex criteria
-	fiveQD_1 = getting_local_qdays([yr_i,mh_i,dy_i], station_idx)
+	;fiveQD_1 = getting_local_qdays([yr_i,mh_i,dy_i], station_idx)
 
-   PRINT, '                                                                    '
-PRINT, "Five Qdays according to K criteria"
+   ;PRINT, '                                                                    '
+;PRINT, "Five Qdays according to K criteria"
 
-    FOR i=0, 4 DO BEGIN
-       PRINT, fiveQD_1.year[i], fiveQD_1.month[i], $
-       fiveQD_1.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X, A)'                                 
-    ENDFOR
+ ;   FOR i=0, 4 DO BEGIN
+ ;      PRINT, fiveQD_1.year[i], fiveQD_1.month[i], $
+ ;      fiveQD_1.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X, A)'                                 
+ ;   ENDFOR
     
-    IF mh_i NE mh_f THEN BEGIN
-    	fiveQD_2 = getting_local_qdays([yr_f,mh_f,dy_f], station_idx)
-    	PRINT, ''
-    	PRINT, ''    
-		FOR i=0, 4 DO BEGIN
-		   PRINT, fiveQD_2.year[i], fiveQD_2.month[i], $
-		   fiveQD_2.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X,  A)'                                 
-		ENDFOR 
-	ENDIF	
+ ;   IF mh_i NE mh_f THEN BEGIN
+ ;   	fiveQD_2 = getting_local_qdays([yr_f,mh_f,dy_f], station_idx)
+ ;   	PRINT, ''
+ ;   	PRINT, ''    
+;		FOR i=0, 4 DO BEGIN
+;		   PRINT, fiveQD_2.year[i], fiveQD_2.month[i], $
+;		   fiveQD_2.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X,  A)'                                 
+;		ENDFOR 
+;	ENDIF	
 
 ;###############################################################################
 ;Selection of Q days Based on IQR criteria    
@@ -462,12 +462,17 @@ PRINT, "Five Qdays according to K criteria"
 ;###############################################################################
 ;###############################################################################
 ;Bsq baseline
-	H1 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
-	H2 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
-	bsq = bsq_V2(H1, H2)
-	;print, N_ELEMENTS(H_det[10:7])
 	day1_diff = (JULDAY(mh_i,dy_1,yr_i)-JULDAY(mh_i,dy_i,yr_i))+1
 	day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_f,dy_2,yr_f))+1
+	
+	H1 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
+	H2 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
+	
+	ndays = (JULDAY(mh_f,dy_2,yr_f)-JULDAY(mh_i,dy_1,yr_i))+1
+	
+	bsq = bsq_V2(H1, H2, [yr_i, mh_i, dy_1], [yr_f, mh_f, dy_2], ndays, station_idx, $
+	MAKE_FILE="make_file")
+	;print, N_ELEMENTS(H_det[10:7])
 	
 	H_clean = H_det[(day1_diff-1)*1440:((file_number)-day2_diff)*1440] - bsq.m
 	;print, H_clean
@@ -491,23 +496,39 @@ PRINT, "Five Qdays according to K criteria"
 
 
 IF KEYWORD_SET(make_file) THEN BEGIN    
-    outfile = STRARR(file_number)    
+    outfile = STRARR(ndays)    
 ;Generación de archivo en muestreo de horas 
 
 ;###############################################################################    
     H_hr = FINDGEN(N_ELEMENTS(H_clean)/60)
     FOR i=0, N_ELEMENTS(H_hr)-1 DO BEGIN
-        H_hr[i] = MEDIAN(H_det[i*60:(i+1)*60-1])
+        H_hr[i] = MEDIAN(H_clean[i*60:(i+1)*60-1])
           
     ENDFOR  
 
-    string_date     = STRARR(file_number)
-    FOR i=0, file_number-1 DO BEGIN
+    string_date     = STRARR(ndays)  
+    
+    FOR i=0, ndays-1 DO BEGIN
+        tmp_year    = 0
+        tmp_month   = 0
+        tmp_day     = 0
+        tmp_julday  = JULDAY(mh_i, dy_1, yr_i)
+        CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+        string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
+
+        outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m.dat'    
+        OPENW, LUN, outfile[i], /GET_LUN        
+        PRINTF, LUN, H_clean[i*1440:(i+1)*1440-1], format='(F9.4)'
+        CLOSE, LUN
+        FREE_LUN, LUN    
+    ENDFOR      
+
+    FOR i=0, ndays-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0
         tmp_day     = 0
         string_year = 0
-        tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
+        tmp_julday  = JULDAY(mh_i, dy_1, yr_i)
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         
         str_year = STRMID(STRING(tmp_year, format='(I4)'),2,2)
@@ -519,23 +540,7 @@ IF KEYWORD_SET(make_file) THEN BEGIN
         PRINTF, LUN, H_hr[i*24:(i+1)*24-1], format='(F9.4)'
         CLOSE, LUN
         FREE_LUN, LUN    
-    ENDFOR     
-    
-    FOR i=0, file_number-1 DO BEGIN
-        tmp_year    = 0
-        tmp_month   = 0
-        tmp_day     = 0
-        tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
-        CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-        string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
-
-        outfile[i] = set_var.Mega_dir+station+'/min/'+station_code+'_'+string_date[i]+'m.dat'    
-        OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, H_clean[i*1440:(i+1)*1440-1], format='(F9.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN    
-    ENDFOR      
-
+    ENDFOR   
 
 ENDIF
 RETURN

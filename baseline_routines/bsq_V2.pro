@@ -46,7 +46,7 @@
 ;
 
 
-FUNCTION bsq_V2, H1, H2, ndays, MAKE_FILE=make_file
+FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_idx, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 ;###############################################################################
@@ -60,19 +60,19 @@ FUNCTION bsq_V2, H1, H2, ndays, MAKE_FILE=make_file
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
         
-	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
-	READ, station_idx, PROMPT = '> '
+;	station_idx = ''
+;	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+;	READ, station_idx, PROMPT = '> '
 
 
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+  ;  station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
     station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 		
-	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
+;	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
 ;	H1      = dat1.H
 
-    dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
-;    H2      = dat2.H
+ ;   dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
+ ;   H2      = dat2.H
     
    ; ndays   = ;(JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
     td      = FINDGEN(ndays*1440)/1440.0
@@ -110,11 +110,12 @@ FUNCTION bsq_V2, H1, H2, ndays, MAKE_FILE=make_file
 ;###############################################################################        
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo       
-    H = fillnan(H)
-    H_h = fillnan(H_h)
+    ;H = fillnan(H)
+    ;H_h = fillnan(H_h)
     
     H1 = fillnan(H1)
-    H2 = fillnan(H2)          
+    H2 = fillnan(H2) 
+   ; PRINT, H2
 ;###############################################################################
 ;Extend QDS data ndays for a quadratic interpolation
     QDS1 = REFORM(REBIN(H1, 1440, ndays), N_ELEMENTS(td))
@@ -128,7 +129,7 @@ FUNCTION bsq_V2, H1, H2, ndays, MAKE_FILE=make_file
     Bsq1     = (QDS2-QDS1)*slope
     Bsq     = QDS1+Bsq1
     Bsq = SMOOTH(Bsq, 60, /EDGE_TRUNCATE, /NAN); consultar   
-    
+ ;   PRINT, Bsq
 ;Applying a detrend function
     Bsq_24h=FINDGEN(N_ELEMENTS(Bsq)/1440)   
     FOR i=0, N_ELEMENTS(Bsq_24h)-1 DO BEGIN
@@ -176,10 +177,10 @@ FUNCTION bsq_V2, H1, H2, ndays, MAKE_FILE=make_file
  ;   	time_name = 'days of '+old_month
 ;    ENDELSE
     
-   ; WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
-  ;  PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, background=255, color=0, $
- ;   CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, $
-;    XTICKNAME=X_label, THICK=2
+    WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
+    PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, background=255, color=0, $
+    CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, $
+    XTICKNAME=X_label, THICK=2
     ;OPLOT, x, Bsq_det, LINESTYLE=0, color=240, THICK=2
    ; OPLOT, x, Bsq_det2, LINESTYLE=0, color=70, THICK=2
     
