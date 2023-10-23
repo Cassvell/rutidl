@@ -462,32 +462,33 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 ;###############################################################################
 ;###############################################################################
 ;Bsq baseline
-	day1_diff = (JULDAY(mh_i,dy_1,yr_i)-JULDAY(mh_i,dy_i,yr_i))+1
-	day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_f,dy_2,yr_f))+1
+	day1_diff = (JULDAY(mh_i,dy_1,yr_i)-JULDAY(mh_i,dy_i,yr_i))
+	day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_f,dy_2,yr_f))
 	
-	H1 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
-	H2 = H_det[(day1_diff-1)*1440:(day1_diff)*1439]
+	H1 = H_det[day1_diff*1440:((day1_diff+1)*1440)-1]
+	H2 = H_det[(file_number-(day2_diff+1))*1440:((file_number-day2_diff)*1440)-1]
+	print, N_ELEMENTS(H2)
+	
 	
 	ndays = (JULDAY(mh_f,dy_2,yr_f)-JULDAY(mh_i,dy_1,yr_i))+1
 	
 	bsq = bsq_V2(H1, H2, [yr_i, mh_i, dy_1], [yr_f, mh_f, dy_2], ndays, station_idx, $
 	MAKE_FILE="make_file")
 	;print, N_ELEMENTS(H_det[10:7])
-	
-	H_clean = H_det[(day1_diff-1)*1440:((file_number)-day2_diff)*1440] - bsq.m
-	;print, H_clean
-    
-    
+	;print, N_ELEMENTS(bsq.m), (file_number-day2_diff)*1440
+	H_clean = H_det[day1_diff*1440:(file_number-day2_diff)*1440] - bsq.m
+
+    X_label2 = xlabel([yr_i, mh_i, dy_1], ndays)
     WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H cleaned'
-    PLOT, time, H_clean, XSTYLE=1, XRANGE=[day1_diff-1,(file_number)-day2_diff], $
+    PLOT, time, H_clean, XSTYLE=1, XRANGE=[day1_diff,(file_number-day2_diff)], $
     YRANGE=[MIN(H_clean, /NAN),MAX(H_clean,/NAN)], CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'H [nT]',XTITLE = time_name, /NODATA, XTICKS=file_number, $
-    XTICKNAME=X_label    
+    CHARTHICK=2.0, YTITLE = 'H [nT]',XTITLE = time_name, /NODATA, XTICKS=ndays, $
+    XTICKNAME=X_label2    
 	
-	OPLOT, time[(day1_diff-1)*1440:((file_number)-day2_diff)*1440], H_clean, COLOR=0, THICK=2
+	OPLOT, time[day1_diff*1440:(file_number-day2_diff)*1440], H_clean, COLOR=0, THICK=2
 	
-	OPLOT, time[(day1_diff-1)*1440:((file_number)-day2_diff)*1440], $
-	H_det[(day1_diff-1)*1440:((file_number)-day2_diff)*1440], COLOR=254
+	OPLOT, time[day1_diff*1440:(file_number-day2_diff)*1440], $
+	H_det[day1_diff*1440:(file_number-day2_diff)*1440], COLOR=254
  ;   WHILE (!MOUSE.button NE 4) DO BEGIN  ; repeat printing H trend value until right mouse button is pressed
     ;  CURSOR, x, y, /DOWN, /DATA
     ;  PRINT, y    
@@ -507,7 +508,7 @@ IF KEYWORD_SET(make_file) THEN BEGIN
     ENDFOR  
 
     string_date     = STRARR(ndays)  
-    
+    ;PRINT, ndays, N_ELEMENTS(H_clean)/1440
     FOR i=0, ndays-1 DO BEGIN
         tmp_year    = 0
         tmp_month   = 0

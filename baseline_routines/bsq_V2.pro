@@ -115,7 +115,7 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_idx, MAKE_FILE=make_file
     
     H1 = fillnan(H1)
     H2 = fillnan(H2) 
-   ; PRINT, H2
+   ; PRINT, MAX(H1)
 ;###############################################################################
 ;Extend QDS data ndays for a quadratic interpolation
     QDS1 = REFORM(REBIN(H1, 1440, ndays), N_ELEMENTS(td))
@@ -123,13 +123,13 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_idx, MAKE_FILE=make_file
 ;###############################################################################
 ;Interpolate between the QDS
     slope1   = (td - td[719])
-    slope2   = (td[N_ELEMENTS(td)-721]-td[719])
+    slope2   = (td[N_ELEMENTS(td)-721])-td[719]
     slope    = slope1/slope2
-
+	
     Bsq1     = (QDS2-QDS1)*slope
     Bsq     = QDS1+Bsq1
     Bsq = SMOOTH(Bsq, 60, /EDGE_TRUNCATE, /NAN); consultar   
- ;   PRINT, Bsq
+ ;   PRINT, N_ELEMENTS(td)-721
 ;Applying a detrend function
     Bsq_24h=FINDGEN(N_ELEMENTS(Bsq)/1440)   
     FOR i=0, N_ELEMENTS(Bsq_24h)-1 DO BEGIN
@@ -177,13 +177,13 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_idx, MAKE_FILE=make_file
  ;   	time_name = 'days of '+old_month
 ;    ENDELSE
     
-    WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
-    PLOT, x,Bsq, YRANGE=[MIN(Bsq_det, /NAN),MAX(Bsq_det, /NAN)], XSTYLE=1, background=255, color=0, $
-    CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, $
-    XTICKNAME=X_label, THICK=2
-    ;OPLOT, x, Bsq_det, LINESTYLE=0, color=240, THICK=2
-   ; OPLOT, x, Bsq_det2, LINESTYLE=0, color=70, THICK=2
-    
+
+  ;  WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='Bsq DQL1[m]'
+   ; PLOT, x[0:719],Bsq[0:719], XSTYLE=1, background=255, color=0, $
+   ; CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name,THICK=2
+	;OPLOT, x[0:719], H1, color=254
+	;OPLOT, x[0:719], H1-Bsq[0:719], color=76
+
   ;  WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='H Bsq(trended) [m]' 
  ;   PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 , $
 ;    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2

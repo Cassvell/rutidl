@@ -97,9 +97,9 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     mlat         = l*!pi
     ld           = cos(mlat/180)
     p_a          = sym*ld
-    baseline     = Bsq + p_a
+    baseline     = p_a;Bsq + p_a Desde la actualización, Bsq ya está restado de H
     Bdiono       = H-baseline
-    Bdiono2	     = H-p_a
+    Bdiono2	     = H-p_a+Bsq	; Al no tener Bsq desde el inicio, aquí se suma
     n            = N_ELEMENTS(Bdiono) 
     
     time_res    = 'm'
@@ -135,12 +135,14 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0, 0.3]
 	threshold_rn = 1.0/(1300.0)
 	hr_36 = 1.0/(36.0*3600.0)
-
+	hr_7 = 1.0/(7.0*3600.0)
     j = WHERE(fk GE threshold_rn)
-    k = WHERE(fk GE hr_4)
+    k = WHERE(fk GE freqs[5])
     m = WHERE(fk GE hr_36)
+    n = WHERE(fk GE hr_7)
 	limP2 = MIN([j])
 	limP  = MIN([k])
+	limP1  = MIN([n])
 	limP0 = MIN([m])
     passband_l = 7.34E-06
  ;1.0/(36.0*3600.0)
@@ -154,6 +156,7 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     fn=WHERE(fk EQ fny)
 
 	pws_w = pws_w/SQRT(TOTAL(pws_w^2))	;se normaliza el espectro de potencia
+	;PRINT, SQRT(MEDIAN(pws_w[limP0:limP1]))
 	pws_w2 = pws_w2/SQRT(TOTAL(pws_w2^2))	;se normaliza el espectro de potencia
     ysup = MAX(pws_w[MIN(i):fn])
     yinf = MIN(pws_w[MIN(i):fn])
@@ -162,34 +165,67 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 pw_mod = pw_parameter([yr_i,mh_i,dy_i])
 ;###############################################################################
 ;LS-log curve fitting, CURVA 
-N = 1+0.25068;cte Euler
+c = 7.62127
+N = c+0.25068;cte Euler
 a = pw_mod.a1 
-a_err1 = a+SQRT(SQRT(0.0706783))
-a_err2 = a-SQRT(SQRT(0.0706783))
 logX = (-0.57721466/alog10(10))-ALOG10(2)
 p_law = pws_powerlaw(fk[limP0:limP], pws_w[limP0:limP], a, N, 0.05)
-
+a_err1 = a+SQRT(p_law.a_2err)
+a_err2 = a-SQRT(p_law.a_2err)
 P = p_law.P
-P = P*SQRT(TOTAL(pws_w[limP0:limP]^2))
+
+P = P*SQRT(TOTAL(pws_w[limP0:limP1]^2)) ;P*SQRT(TOTAL(pws_w[limP0:limP1]^2))
+a_l = p_law.a_l
+N_l = p_law.N_l
+a_lw = p_law.a_lw
+N_lw = p_law.N_lw
+PRINT, ''
+PRINT, 'a law, least square result (LSR), (LSR weighted): '
+PRINT, a, ABS(a_l), ABS(a_lw)
+PRINT, ''
+PRINT, 'N law, least square result ALOG(LSR), ALOG(LSR weighted), : '
+PRINT, N, ABS(N_l), EXP(ABS(N_l))
 ;P_95 = p_law.P_lim*SQRT(TOTAL(pws_w[0:limP]^2))
-err1 = pws_powerlaw(fk[limP0:limP], pws_w[limP0:limP], a_err1, N, 0.05)
-err2 = pws_powerlaw(fk[limP0:limP], pws_w[limP0:limP], a_err2, N, 0.05)
+err1 = pws_powerlaw(fk[limP0:limP1], pws_w[limP0:limP1], a_err1, N, 0.05)
+err2 = pws_powerlaw(fk[limP0:limP1], pws_w[limP0:limP1], a_err2, N, 0.05)
 
 P_err1 = err1.P
-P_err1 = P_err1*SQRT(TOTAL(pws_w[limP0:limP]^2))
+P_err1 = P_err1*SQRT(TOTAL(pws_w[limP0:limP1]^2))
 
 P_err2 = err2.P
-P_err2 = P_err2*SQRT(TOTAL(pws_w[limP0:limP]^2))
+P_err2 = P_err2*SQRT(TOTAL(pws_w[limP0:limP1]^2))
 ;###############################################################################
 ;###############################################################################
 ;LS-log curve fitting, CURVA 2
-N2 = 1+0.25068;cte Euler
+c2 = 12.4164
+N2 = c2+0.25068;cte Euler
 
 a2 = pw_mod.a2 
+
 ;logP2 = ALOG10(N2) -a2*(ALOG10(fk[limP:limP2]))
 p_law2 = pws_powerlaw(fk[limP:limP2], pws_w[limP:limP2], a2, N2, 0.05)
 P2 = p_law2.P*SQRT(TOTAL(pws_w[limP:limP2]^2))
+a_l2 = p_law2.a_l
+N_l2 = p_law2.N_l
+a_lw2 = p_law2.a_lw
+N_lw2 = p_law2.N_lw
+a2_err1 = a2+SQRT(p_law2.a_2err)
+a2_err2 = a2-SQRT(p_law2.a_2err)
+err2_1 = pws_powerlaw(fk[limP:limP2], pws_w[limP:limP2], a2_err1, N, 0.05)
+err2_2 = pws_powerlaw(fk[limP:limP2], pws_w[limP:limP2], a2_err2, N, 0.05)
+
+P2_err1 = err2_1.P
+P2_err1 = P2_err1*SQRT(TOTAL(pws_w[limP:limP2]^2))
+
+P2_err2 = err2_2.P
+P2_err2 = P2_err2*SQRT(TOTAL(pws_w[limP:limP2]^2))
 ;P2_95 = p_law2.P_lim*SQRT(TOTAL(pws_w[limP:limP2]^2))
+PRINT, ''
+PRINT, 'a2 law, least square result (LSR), LSR weighted: '
+PRINT, a2, ABS(a_l2), ABS(a_lw2)
+PRINT, ''
+PRINT, 'N, least square result ALOG(LSR), (LSR weighted): '
+PRINT, N2, ABS(N_l2), (ABS(N_lw2))
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
@@ -197,13 +233,14 @@ P2 = p_law2.P*SQRT(TOTAL(pws_w[limP:limP2]^2))
 ;usar el error^2 de alfa
 a_err = SQRT(0.0706783)
 ;###############################################################################
-;###############################################################################
-;###############################################################################
+
+
 ;###############################################################################
 ;###############################################################################
     
     IF keyword_set(ps) THEN BEGIN
-    	make_psfig, fk, fny, pws_w, pws_w2, P, P2,P_err1, P_err2, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
+    	make_psfig, fk, fny, pws_w, pws_w2, P, P2,P_err1, P_err2, P2_err1, P2_err2, a, a2, $
+    	[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
     ENDIF
 
     DEVICE, true=24, retain=2, decomposed=0
@@ -228,14 +265,14 @@ gammahat1 = 2*pws_w[limP0:limP]/P_err1
 gammahat2 = 2*pws_w[limP0:limP]/P_err2
 
 WINDOW,4,  XSIZE=600, YSIZE=600, TITLE='gammahat1'
-PLOT, fk[limP0:limP], gammahat, XSTYLE=1, YSTYLE=2,background=255, color=0, CHARSIZE=2, /XLOG, /YLOG
-ERRPLOT, fk[limP0:limP], gammahat2, gammahat1, color=0, THICK=2
-OPLOT, fk[limP0:limP], gammahat, PSYM=4, color=70, THICK=4
+PLOT, fk[limP0:limP1], gammahat, XSTYLE=1, YSTYLE=2,background=255, color=0, CHARSIZE=2, /XLOG, /YLOG
+ERRPLOT, fk[limP0:limP1], gammahat2, gammahat1, color=0, THICK=2
+OPLOT, fk[limP0:limP1], gammahat, PSYM=4, color=70, THICK=4
 
-OPLOT, [fk[limP0],fk[limP]], [1,1], color=240
-OPLOT, [fk[limP0],fk[limP]], [1+SQRT(a_err),1+SQRT(a_err)], color=240, linestyle=2
-OPLOT, [fk[limP0],fk[limP]], [1-SQRT(a_err),1-SQRT(a_err)], color=240, linestyle=2
-
+OPLOT, [fk[limP0],fk[limP1]], [1,1], color=240
+OPLOT, [fk[limP0],fk[limP1]], [1+SQRT(a_err),1+SQRT(a_err)], color=240, linestyle=2
+OPLOT, [fk[limP0],fk[limP1]], [1-SQRT(a_err),1-SQRT(a_err)], color=240, linestyle=2
+    
 gammahat2 = 2*pws_w[limP:limP2]/P2 
 WINDOW,5,  XSIZE=600, YSIZE=600, TITLE='gammahat2'
 PLOT, fk[limP:limP2], gammahat2, XSTYLE=1, YSTYLE=1,background=255, color=0, /XLOG, /YLOG, CHARSIZE=2
@@ -260,15 +297,15 @@ OPLOT, [fk[limP],fk[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color=240, linestyle
     periods = [48.0, 24.0, 12.0, 6.0, 3.0, 1.0]
 
 WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
-    PLOT, fk, pws_w, /XLOG, /YLOG, XRANGE = [fk[0], fny], yrange=[yinf, ysup],$
+    PLOT, fk, pws_w, /XLOG, /YLOG, XRANGE = [freqs[0], fny], yrange=[yinf, ysup],$
     CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, BACKGROUND=255, COLOR=0
     
-	OPLOT, fk[limP0:limP], P_err1, LINESTYLE=2, COLOR=75, THICK=2 
-    OPLOT, fk[limP0:limP], P_err2, LINESTYLE=2, COLOR=75, THICK=2
+	OPLOT, fk[limP0:limP1], P_err1, LINESTYLE=2, COLOR=75, THICK=2 
+    OPLOT, fk[limP0:limP1], P_err2, LINESTYLE=2, COLOR=75, THICK=2
 
-    OPLOT, fk[limP0:limP], P, LINESTYLE=0, COLOR=250, THICK=2
+    OPLOT, fk[limP0:limP1], P, LINESTYLE=0, COLOR=250, THICK=2
     OPLOT, fk[limP:limP2], P2, LINESTYLE=0, COLOR=75, THICK=2	
-        AXIS, XAXIS = 0, XRANGE=[fk[0], fny], $
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], fny], $
                          /XLOG,$                          
                          COLOR=0, $
                          XSTYLE=1,$
@@ -277,7 +314,7 @@ WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[fk[0], fny], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], fny], $;.0/(!X.CRANGE), $
                          /XLOG,$                          
                          COLOR=0, $
                          XTICKS=7,$
@@ -322,7 +359,7 @@ WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
 	alfa = TeXtoIDL('\alpha')	
 END
 
-PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, date_i, date_f
+PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1, a2, date_i, date_f
         @set_up_commons
         set_up
 	On_error, 2
@@ -368,15 +405,18 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, date_i, date_f
     i = WHERE(f_k GE freqs[0]);, THICK=1 
     fny=WHERE(f_k EQ fn)
 
-    hr_4 = 1.0/(4.0*3600.0)
 	hr_36 = 1.0/(36.0*3600.0)
+	hr_7 = 1.0/(7.0*3600.0)
 	threshold_rn = 1.0/(1300.0)
-; 1.0/(3.0*3600.0)
+	hr_4 = 1.0/(4.0*3600.0)
+	
     j = WHERE(f_k GE threshold_rn)
-    k = WHERE(f_k GE hr_4)
+    k = WHERE(f_k GE freqs[4])
     m = WHERE(f_k GE hr_36)
+    n = WHERE(f_k GE hr_7)
 	limP2 = MIN([j])
 	limP  = MIN([k])
+	limP1  = MIN([n])
 	limP0 = MIN([m])
     ;PRINT, MIN(i), MIN(f_k), freqs[0]
     ;ysup = MAX(pws[MIN(i):fny])+1
@@ -386,12 +426,12 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, date_i, date_f
                    
     periods = [48, 24, 12, 6, 3, 1]
    
-    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [f_k[0], fn], POSITION=[0.07,0.55,0.5,0.95],$
+    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.55,0.5,0.95],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA
     
   ;  IF TGM_n NE 'fuera de rango' THEN BEGIN
-    cgPolygon, [f_k[limP0], f_k[limP] ,f_k[limP], f_k[limP0]], $
+    cgPolygon, [f_k[limP0], f_k[limP1] ,f_k[limP1], f_k[limP0]], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], Color='grey', /FILL
 
     cgPolygon, [f_k[limP], f_k[limP2] ,f_k[limP2], f_k[limP]], $
@@ -404,14 +444,30 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, date_i, date_f
    XYOUTS, X, y, periodo, /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
    
+   CGTEXT, 0.17, 0.92, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 5, COLOR='red' 
+
+
+   CGTEXT, X, 0.92, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 5 , COLOR='red' 
+   
+    cgOPLOT, f_k[limP:limP2], pws[limP:limP2], PSYM=4, Color='yellow', THICK=1
+    
     cgOPLOT, f_k, pws, COLOR='black', THICK=1 
-	cgOPLOT, f_k[limP0:limP], P_err1, LINESTYLE=2, Color='green', THICK=1 
-    cgOPLOT, f_k[limP0:limP], P_err2, LINESTYLE=2, Color='green', THICK=1    
+	cgOPLOT, f_k[limP0:limP1], P_err1, LINESTYLE=2, Color='red', THICK=1 
+    cgOPLOT, f_k[limP0:limP1], P_err2, LINESTYLE=2, Color='red', THICK=1    
+    cgOPLOT, f_k[limP0:limP1], pws[limP0:limP1], PSYM=4, Color='yellow', THICK=1
     
-    cgOPLOT, f_k[limP0:limP], P, COLOR='red', THICK=3 
-    cgOPLOT, f_k[limP:limP2], P2, COLOR='red', THICK=3 	
+    cgOPLOT, f_k[limP0:limP1], P, COLOR='red', THICK=3
+
+ 	 
+	cgOPLOT, f_k[limP:limP2], P2_err1, LINESTYLE=2, Color='red', THICK=1 
+    cgOPLOT, f_k[limP:limP2], P2_err2, LINESTYLE=2, Color='red', THICK=1    
+    cgOPLOT, f_k[limP:limP2], P2, COLOR='red', THICK=3
     
-        AXIS, XAXIS = 0, XRANGE=[f_k[0], fn], $
+    
+   
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
                          /XLOG,$
                          XSTYLE=1,$
                          xTITLE = 'Frequence [Hz]',$
@@ -420,7 +476,7 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, date_i, date_f
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[f_k[0], fn], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
                          /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
@@ -454,18 +510,18 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, date_i, date_f
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
  ;###############################################################################  
  a_err = SQRT(0.0706783)
-gammahat  = 2*pws[limP0:limP]/P 
-gammahat1 = 2*pws[limP0:limP]/P_err1 
-gammahat2 = 2*pws[limP0:limP]/P_err2
-    cgPLOT, f_k[limP0:limP], gammahat, /XLOG,/YLOG, XRANGE = [f_k[limP0], f_k[limP]], POSITION=[0.6,0.8,0.95,0.95],$
+gammahat  = 2*pws[limP0:limP1]/P 
+gammahat1 = 2*pws[limP0:limP1]/P_err1 
+gammahat2 = 2*pws[limP0:limP1]/P_err2
+    cgPLOT, f_k[limP0:limP1], gammahat, /XLOG,/YLOG, XRANGE = [f_k[limP0], f_k[limP1]], POSITION=[0.6,0.8,0.95,0.95],$
     COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=1, YSTYLE=1, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-	CGOPLOT, f_k[limP0:limP], gammahat, color='gray', THICK=4	
-	ERRPLOT, f_k[limP0:limP], gammahat2, gammahat1, THICK=2
-	CGOPLOT, f_k[limP0:limP], gammahat, PSYM=4, color='black', THICK=4
-CGOPLOT, [f_k[limP0],f_k[limP]], [1,1], color='red', THICK=1
-CGOPLOT, [f_k[limP0],f_k[limP]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=1
-CGOPLOT, [f_k[limP0],f_k[limP]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=1
+	CGOPLOT, f_k[limP0:limP1], gammahat, color='gray', THICK=4	
+	ERRPLOT, f_k[limP0:limP1], gammahat2, gammahat1, THICK=2
+	CGOPLOT, f_k[limP0:limP1], gammahat, PSYM=4, color='black', THICK=4
+;CGOPLOT, [f_k[limP0],f_k[limP1]], [1,1], color='red', THICK=1
+;CGOPLOT, [f_k[limP0],f_k[limP1]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=1
+;CGOPLOT, [f_k[limP0],f_k[limP1]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=1
 ;###############################################################################
 ;###############################################################################
 
@@ -479,11 +535,11 @@ gammahat_2  = 2*pws[limP:limP2]/P2
 	;ERRPLOT, f_k[limP0:limP], gammahat2, gammahat1, THICK=2
 	CGOPLOT, f_k[limP:limP2], gammahat_2, PSYM=4, color='black', THICK=2	
 	
-CGOPLOT, [f_k[limP],f_k[limP2]], [1,1], color='red', THICK=2
-CGOPLOT, [f_k[limP],f_k[limP2]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=2
-CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=2	
+;CGOPLOT, [f_k[limP],f_k[limP2]], [1,1], color='red', THICK=2
+;CGOPLOT, [f_k[limP],f_k[limP2]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=2
+;CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=2	
 ;############################################################################### 
-    cgPLOT, f_k, pws2, /XLOG, /YLOG, XRANGE = [f_k[0], fn], POSITION=[0.07,0.05,0.5,0.45],$
+    cgPLOT, f_k, pws2, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.05,0.5,0.45],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA, /NOERASE
 
@@ -492,7 +548,7 @@ CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', lin
     highpass_l = freq_band(TGM_n, 'highpass_l')
     
   ;  IF TGM_n NE 'fuera de rango' THEN BEGIN
-    cgPolygon, [f_k[limP0], f_k[limP] ,f_k[limP], f_k[limP0]], $
+    cgPolygon, [f_k[limP0], f_k[limP1] ,f_k[limP1], f_k[limP0]], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], Color='grey', /FILL
 
     cgPolygon, [f_k[limP], f_k[limP2] ,f_k[limP2], f_k[limP]], $
@@ -504,15 +560,29 @@ CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', lin
    y = 0.47   
    XYOUTS, X, y, periodo, /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
-   
+
+   CGTEXT, 0.17, 0.42, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 5, COLOR='red' 
+
+
+   CGTEXT, X, 0.42, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
+   Alignment=0.5, Charsize=1.4, CHARTHICK= 5 , COLOR='red'
+
+    cgOPLOT, f_k[limP:limP2], pws2[limP:limP2], PSYM=4, Color='yellow', THICK=1
+    
     cgOPLOT, f_k, pws2, COLOR='black', THICK=1 
-	cgOPLOT, f_k[limP0:limP], P_err1, LINESTYLE=2, Color=("green"), THICK=1 
-    cgOPLOT, f_k[limP0:limP], P_err2, LINESTYLE=2, Color=("green"), THICK=1    
+	cgOPLOT, f_k[limP0:limP1], P_err1, LINESTYLE=2, Color='red', THICK=1 
+    cgOPLOT, f_k[limP0:limP1], P_err2, LINESTYLE=2, Color='red', THICK=1    
+    cgOPLOT, f_k[limP0:limP1], pws2[limP0:limP1], PSYM=4, Color='yellow', THICK=1
     
-    cgOPLOT, f_k[limP0:limP], P, COLOR='red', THICK=3 
-    cgOPLOT, f_k[limP:limP2], P2, COLOR='red', THICK=3 	
+    cgOPLOT, f_k[limP0:limP1], P, COLOR='red', THICK=3
+
+ 	 
+	cgOPLOT, f_k[limP:limP2], P2_err1, LINESTYLE=2, Color='red', THICK=1 
+    cgOPLOT, f_k[limP:limP2], P2_err2, LINESTYLE=2, Color='red', THICK=1    
+    cgOPLOT, f_k[limP:limP2], P2, COLOR='red', THICK=3
     
-        AXIS, XAXIS = 0, XRANGE=[f_k[0], fn], $
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
                          /XLOG,$
                          XSTYLE=1,$
                          xTITLE = 'Frequence [Hz]',$
@@ -521,7 +591,7 @@ CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', lin
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[f_k[0], fn], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
                          /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
@@ -556,18 +626,18 @@ CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', lin
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
  ;###############################################################################  
  a_err = SQRT(0.0706783)
-gammahat  = 2*pws2[limP0:limP]/P 
-gammahat1 = 2*pws2[limP0:limP]/P_err1 
-gammahat2 = 2*pws2[limP0:limP]/P_err2
-    cgPLOT, f_k[limP0:limP], gammahat, /XLOG,/YLOG, XRANGE = [f_k[limP0], f_k[limP]], POSITION=[0.6,0.3,0.95,0.45],$
+gammahat  = 2*pws2[limP0:limP1]/P 
+gammahat1 = 2*pws2[limP0:limP1]/P_err1 
+gammahat2 = 2*pws2[limP0:limP1]/P_err2
+    cgPLOT, f_k[limP0:limP1], gammahat, /XLOG,/YLOG, XRANGE = [f_k[limP0], f_k[limP1]], POSITION=[0.6,0.3,0.95,0.45],$
     COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=1, YSTYLE=1, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-	CGOPLOT, f_k[limP0:limP], gammahat, color='gray', THICK=4	
-	ERRPLOT, f_k[limP0:limP], gammahat2, gammahat1, THICK=2
-	CGOPLOT, f_k[limP0:limP], gammahat, PSYM=4, color='black', THICK=4
-CGOPLOT, [f_k[limP0],f_k[limP]], [1,1], color='red', THICK=1
-CGOPLOT, [f_k[limP0],f_k[limP]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=1
-CGOPLOT, [f_k[limP0],f_k[limP]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=1
+	CGOPLOT, f_k[limP0:limP1], gammahat, color='gray', THICK=4	
+	ERRPLOT, f_k[limP0:limP1], gammahat2, gammahat1, THICK=2
+	CGOPLOT, f_k[limP0:limP1], gammahat, PSYM=4, color='black', THICK=4
+;CGOPLOT, [f_k[limP0],f_k[limP1]], [1,1], color='red', THICK=1
+;CGOPLOT, [f_k[limP0],f_k[limP1]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=1
+;CGOPLOT, [f_k[limP0],f_k[limP1]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=1
 ;###############################################################################
 ;###############################################################################
 
@@ -581,9 +651,9 @@ gammahat_2  = 2*pws2[limP:limP2]/P2
 	;ERRPLOT, f_k[limP0:limP], gammahat2, gammahat1, THICK=2
 	CGOPLOT, f_k[limP:limP2], gammahat_2, PSYM=4, color='black', THICK=2	
 	
-CGOPLOT, [f_k[limP],f_k[limP2]], [1,1], color='red', THICK=2
-CGOPLOT, [f_k[limP],f_k[limP2]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=2
-CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=2	
+;CGOPLOT, [f_k[limP],f_k[limP2]], [1,1], color='red', THICK=2
+;CGOPLOT, [f_k[limP],f_k[limP2]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=2
+;CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=2	
 ;###############################################################################                          
 ;###############################################################################                     
 ;second panel legend                     
@@ -615,9 +685,7 @@ CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', lin
    
 ;   XYOuts, 0.93, 0.53, '(b)', /Normal, $
  ;  Alignment=0.5, Charsize=1.6, CHARTHICK= 5  
-   
-;   XYOuts, 0.93, 0.33, '(c)', /Normal, $
-  ; Alignment=0.5, Charsize=1.6, CHARTHICK= 5  
+    
    
 ;   XYOuts, 0.11, 0.14, '(d)', /Normal, $
  ;  Alignment=0.5, Charsize=2.4, CHARTHICK= 5   
