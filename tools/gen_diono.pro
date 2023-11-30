@@ -79,7 +79,7 @@ FUNCTION n_terms, wdiff, A, n
     RETURN, M
 END
 
-FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter, $
+FUNCTION gen_diono, f1, f2, l, time_res, case_event, DIG_FILTER = dig_filter, $
                                             SIMPLE_FILTER = simple_filter
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
@@ -88,7 +88,7 @@ FUNCTION gen_diono, f1, f2, f3, l, time_res, case_event, DIG_FILTER = dig_filter
     mlat         = l*!pi
     ld           = cos(mlat/180)
     p_a          = f1*ld
-    baseline     = f3 + p_a             
+    baseline     = p_a             
     Bdiono       = f2-baseline
     n           = N_ELEMENTS(Bdiono) 
     

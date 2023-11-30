@@ -71,11 +71,13 @@ PRO diono_valid, date_i, date_f, PNG = png, PS=ps
     
 ; define K variables   
     kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
-    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k_mex')    
+
+    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k', station, FIX(station_idx))    
     k_mex   = add_nan(k_mex, 9.0, 'greater') 
+	print, k_mex
     k_days  = FINDGEN(file_number*8)/8. 
 ; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')
+;    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')
     
 ; define DK effect
     new_kmex1   = new_kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'new_kmex1')
@@ -203,7 +205,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
     TGM_n = event_case([yr_i,mh_i,dy_i])  
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english')
-    path = '../rutidl/output/article2/'
+    path = '../rutidl/output/article2/ev_art1/'
     psfile =  path+'diono_valid_V4_'+Date+'.eps'    
 ;###############################################################################
 
@@ -235,7 +237,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
 
 ;############################################################################### 
 ; Import the structure of diono generated variables   
-    dionstr = gen_diono(dst, H, Bsq, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
+    dionstr = gen_diono(dst, H, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
     
 ; compute frequencies 
     fn    = dionstr.fn
@@ -245,8 +247,8 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
     dp2   = dionstr.dp2
     ddyn  = dionstr.ddyn
      
-     Bsq_med     = MEDIAN(Bsq)
-     Bsq0        = Bsq-Bsq_med
+    ; Bsq_med     = MEDIAN(Bsq)
+    ; Bsq0        = Bsq-Bsq_med
      dp2_effect  = dionstr.p_a+dp2
      ddyn_effect = dionstr.p_a+ddyn
      diono_effect= dionstr.p_a+dp2+ddyn
@@ -255,7 +257,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
      CGOPLOT, tot_days, dst, COLOR='green', THICK=4  
      CGOPLOT, tot_days[SG_beg:SG_end], diono_effect[SG_beg:SG_end], COLOR='red', THICK=4         
     ; OPLOT, tot_days, diono_effect_tot, COLOR=azul, THICK=4
-    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+    window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
                 STRING(old_month, yr_i, FORMAT='(A, X, I4)')
     
     CGOPLOT, [tot_days[SG_beg],tot_days[SG_beg]], $ ;referencia para el inicio de la Tormenta
@@ -332,13 +334,13 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
                          YTITLE = '', $                          
                          ;COLOR=negro, $
                          YSTYLE=2, $
-                         CHARSIZE = 2.8 ,$
+                         CHARSIZE = 2.6 ,$
                          CHARTHICK=3.5 
                         
         AXIS, YAXIS = 1, YRANGE=[down,up], $
                         ; COLOR=negro, $                                                                      
                          YSTYLE=2, $
-                         CHARSIZE = 2.8 ,$
+                         CHARSIZE = 2.6 ,$
                          CHARTHICK=3.5                                                                                        
 ;###############################################################################    
      CGPLOT, k_days, k_mex, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
@@ -365,7 +367,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
      
      k_w = kp[GS_ini:GS_end]
      km_w= k_mex[GS_ini:GS_end]
-     
+
      km1_w = new_kmex1[GS_ini:GS_end]
      km2_w = new_kmex2[GS_ini:GS_end]
 
@@ -410,13 +412,13 @@ ENDFOR
                          YTITLE = '', $                          
                         ; COLOR=negro, $
                          YSTYLE=1, $
-                         CHARSIZE = 2.8 ,$
+                         CHARSIZE = 2.6 ,$
                          CHARTHICK=3.5 
                         
         AXIS, YAXIS = 1, YRANGE=[0,9], $
                         ; COLOR=negro, $                     
                          YSTYLE=1, $
-                         CHARSIZE = 2.8 ,$
+                         CHARSIZE = 2.6 ,$
                          CHARTHICK=3.5                                                 
 ;###############################################################################
    x = (!X.WINDOW[1] - !X.WINDOW[0]) / 2. + !X.WINDOW[0]
@@ -434,27 +436,31 @@ ENDFOR
   ; XYOUTS, 0.14, 0.41, '(b)', /NORMAL, color=negro, Alignment=0.5, Charsize=1.8, CHARTHICK= 4          
 ;###############################################################################                     
 ;first panel legend                   
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.654,0.654,0.657,0.657], color = 'black', /NORMAL, /FILL
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.624,0.624,0.627,0.627], color = 'red', /NORMAL  , /FILL      
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.594,0.594,0.597,0.597], color = 'green', /NORMAL , /FILL  
+        cgPolygon, [0.74,0.77,0.77,0.74], [0.694,0.694,0.697,0.697], color = 'black', /NORMAL, /FILL
+        cgPolygon, [0.74,0.77,0.77,0.74], [0.644,0.644,0.647,0.647], color = 'red', /NORMAL  , /FILL      
+        cgPolygon, [0.74,0.77,0.77,0.74], [0.594,0.594,0.597,0.597], color = 'green', /NORMAL , /FILL  
         
-        XYOUTS, 0.825, 0.65 , /NORMAL, d_H, CHARSIZE = 2.4, CHARTHICK=chr_thick1 
+        XYOUTS, 0.78, 0.685 , /NORMAL, d_H, CHARSIZE = 2.4, CHARTHICK=chr_thick1 
                 
-        XYOUTS, 0.825, 0.62 , /NORMAL, dst_l, CHARSIZE = 2.4, CHARTHICK=chr_thick1   
+        XYOUTS, 0.78, 0.635 , /NORMAL, dst_l, CHARSIZE = 2.4, CHARTHICK=chr_thick1   
                 
-        XYOUTS, 0.825, 0.59 , /NORMAL, 'Dst', CHARSIZE = 2.4, CHARTHICK=chr_thick1     
+        XYOUTS, 0.78, 0.585 , /NORMAL, 'Dst', CHARSIZE = 2.4, CHARTHICK=chr_thick1     
                 
 ;second panel legend  
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.424,0.424,0.427,0.427], color = 'black', /NORMAL, /FILL
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.394,0.394,0.397,0.397], color = 'green', /NORMAL , /FILL 
+        cgPolygon, [0.74,0.77,0.77,0.74], [0.444,0.444,0.447,0.447], color = 'black', /NORMAL, /FILL
+        cgPolygon, [0.74,0.77,0.77,0.74], [0.4,0.4,0.403,0.403], color = 'green', /NORMAL , /FILL 
 
-        XYOUTS, 0.825, 0.42 , /NORMAL, 'Kmex', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
+        XYOUTS, 0.78, 0.442 , /NORMAL, 'Kmex', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
                 
-        XYOUTS, 0.825, 0.39 , /NORMAL, 'Kp', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
+        XYOUTS, 0.78, 0.39 , /NORMAL, 'Kp', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
 ;###############################################################################                
    y = (0.9 - 0.55) / 2. + 0.55 
    XYOUTS, 0.02, y, '[nT]', /NORMAL, $
-   ALIGNMENT=0.5, CHARSIZE=1.6, ORIENTATION=90, CHARTHICK=3.5                       
+   ALIGNMENT=0.5, CHARSIZE=2.4, ORIENTATION=90, CHARTHICK=3.5    
+   
+   y = (0.51 - 0.1) / 2. + 0.1 
+   XYOUTS, 0.04, y, 'K index', /NORMAL, $
+   ALIGNMENT=0.5, CHARSIZE=2.6, ORIENTATION=90, CHARTHICK=3.5     
 ;###############################################################################
 ; saving png
     cgPS_Close, density = 300, width = 1000   

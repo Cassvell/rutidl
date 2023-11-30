@@ -231,7 +231,7 @@ PRINT, N2, ABS(N_l2), (ABS(N_lw2))
 ;###############################################################################
 ;lineas de tolerancia
 ;usar el error^2 de alfa
-a_err = SQRT(0.0706783)
+a_err = SQRT(0.0706783)   
 ;###############################################################################
 
 
@@ -382,7 +382,7 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
     psfile =  path+'diono_PWS_powerL_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
-    /nomatch, XSize=12, YSize=16
+    /nomatch, XSize=8, YSize=16
 
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english') 
@@ -426,7 +426,7 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
                    
     periods = [48, 24, 12, 6, 3, 1]
    
-    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.55,0.5,0.95],$
+    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[0], 2.7e-3], POSITION=[0.07,0.52,0.9,0.92],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA
     
@@ -438,19 +438,34 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], Color='light grey', /FILL
                                              
     ;ENDIF
-    
+
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.97   
+   XYOUTS, X, y, window_title, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.8, CHARTHICK=3 
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.94   
    XYOUTS, X, y, periodo, /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
-   
-   CGTEXT, 0.17, 0.92, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.492   
+   XYOUTS, X, y, 'Frequence [Hz]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4
+
+   CGTEXT, 0.19, 0.7, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
    Alignment=0.5, Charsize=1.4, CHARTHICK= 5, COLOR='red' 
 
 
-   CGTEXT, X, 0.92, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
+   CGTEXT, X+0.05, 0.89, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
    Alignment=0.5, Charsize=1.4, CHARTHICK= 5 , COLOR='red' 
-   
+
+
+	sq = TeXtoIDL('H_{SQ}')
+   CGTEXT, 0.8, 0.79, 'sin '+sq, /Normal, $
+   Alignment=0.5, Charsize=2, CHARTHICK= 5, COLOR='blue' 
+
     cgOPLOT, f_k[limP:limP2], pws[limP:limP2], PSYM=4, Color='yellow', THICK=1
     
     cgOPLOT, f_k, pws, COLOR='black', THICK=1 
@@ -467,16 +482,16 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
     
     
    
-        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], 2.7e-3], $
                          /XLOG,$
                          XSTYLE=1,$
-                         xTITLE = 'Frequence [Hz]',$
+                         ;xTITLE = 'Frequence [Hz]',$
                         ; COLOR=negro, $
                          CHARSIZE = 1.4, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], 2.7e-3], $;.0/(!X.CRANGE), $
                          /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
@@ -503,43 +518,8 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
                          ystyle=1, $
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
-;###############################################################################          
-   x = (!X.Window[1] - !X.Window[0]) / 1. + !X.Window[0]
-   y = 0.98   
-   XYOUTS, X, y, 'PSD with no SQ effect', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
- ;###############################################################################  
- a_err = SQRT(0.0706783)
-gammahat  = 2*pws[limP0:limP1]/P 
-gammahat1 = 2*pws[limP0:limP1]/P_err1 
-gammahat2 = 2*pws[limP0:limP1]/P_err2
-    cgPLOT, f_k[limP0:limP1], gammahat, /XLOG,/YLOG, XRANGE = [f_k[limP0], f_k[limP1]], POSITION=[0.6,0.8,0.95,0.95],$
-    COLOR='black', $
-    CHARSIZE = 1.4, XSTYLE=1, YSTYLE=1, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-	CGOPLOT, f_k[limP0:limP1], gammahat, color='gray', THICK=4	
-	ERRPLOT, f_k[limP0:limP1], gammahat2, gammahat1, THICK=2
-	CGOPLOT, f_k[limP0:limP1], gammahat, PSYM=4, color='black', THICK=4
-;CGOPLOT, [f_k[limP0],f_k[limP1]], [1,1], color='red', THICK=1
-;CGOPLOT, [f_k[limP0],f_k[limP1]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=1
-;CGOPLOT, [f_k[limP0],f_k[limP1]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=1
-;###############################################################################
-;###############################################################################
-
-gammahat_2  = 2*pws[limP:limP2]/P2 
-;gammahat1 = 2*pws[limP:lim2]/P_err1 
-;gammahat2 = 2*pws[limP:lim2]/P_err2
-    cgPLOT, f_k[limP:limP2], gammahat_2, /XLOG,/YLOG, XRANGE = [f_k[limP], f_k[limP2]], POSITION=[0.6,0.55,0.95,0.75],$
-    COLOR='black', $
-    CHARSIZE = 1.4, XSTYLE=1, YSTYLE=1, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-	CGOPLOT, f_k[limP:limP2], gammahat_2, color='gray', THICK=4	
-	;ERRPLOT, f_k[limP0:limP], gammahat2, gammahat1, THICK=2
-	CGOPLOT, f_k[limP:limP2], gammahat_2, PSYM=4, color='black', THICK=2	
-	
-;CGOPLOT, [f_k[limP],f_k[limP2]], [1,1], color='red', THICK=2
-;CGOPLOT, [f_k[limP],f_k[limP2]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=2
-;CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=2	
 ;############################################################################### 
-    cgPLOT, f_k, pws2, /XLOG, /YLOG, XRANGE = [freqs[0], fn], POSITION=[0.07,0.05,0.5,0.45],$
+    cgPLOT, f_k, pws2, /XLOG, /YLOG, XRANGE = [freqs[0], 2.7e-3], POSITION=[0.07,0.05,0.9,0.45],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA, /NOERASE
 
@@ -561,12 +541,15 @@ gammahat_2  = 2*pws[limP:limP2]/P2
    XYOUTS, X, y, periodo, /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
 
-   CGTEXT, 0.17, 0.42, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
+   CGTEXT, 0.19, 0.23, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
    Alignment=0.5, Charsize=1.4, CHARTHICK= 5, COLOR='red' 
 
 
-   CGTEXT, X, 0.42, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
+   CGTEXT, X+0.05, 0.42, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
    Alignment=0.5, Charsize=1.4, CHARTHICK= 5 , COLOR='red'
+
+   CGTEXT, 0.8, 0.34, 'con '+sq, /Normal, $
+   Alignment=0.5, Charsize=2, CHARTHICK= 5, COLOR='blue' 
 
     cgOPLOT, f_k[limP:limP2], pws2[limP:limP2], PSYM=4, Color='yellow', THICK=1
     
@@ -582,7 +565,7 @@ gammahat_2  = 2*pws[limP:limP2]/P2
     cgOPLOT, f_k[limP:limP2], P2_err2, LINESTYLE=2, Color='red', THICK=1    
     cgOPLOT, f_k[limP:limP2], P2, COLOR='red', THICK=3
     
-        AXIS, XAXIS = 0, XRANGE=[freqs[0], fn], $
+        AXIS, XAXIS = 0, XRANGE=[freqs[0], 2.7e-3], $
                          /XLOG,$
                          XSTYLE=1,$
                          xTITLE = 'Frequence [Hz]',$
@@ -591,7 +574,7 @@ gammahat_2  = 2*pws[limP:limP2]/P2
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
-        AXIS, XAXIS = 1, XRANGE=[freqs[0], fn], $;.0/(!X.CRANGE), $
+        AXIS, XAXIS = 1, XRANGE=[freqs[0], 2.7e-3], $;.0/(!X.CRANGE), $
                          /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
@@ -617,69 +600,14 @@ gammahat_2  = 2*pws[limP:limP2]/P2
                          YTICKFORMAT='(A1)',$ 
                          ystyle=1, $
                          CHARSIZE = 1.4,$
-                         CHARTHICK=1.5  
-                         
-;###############################################################################   
-   x = (!X.Window[1] - !X.Window[0]) / 1. + !X.Window[0]
-   y = 0.5   
-   XYOUTS, X, y, 'PSD with SQ effect', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
- ;###############################################################################  
- a_err = SQRT(0.0706783)
-gammahat  = 2*pws2[limP0:limP1]/P 
-gammahat1 = 2*pws2[limP0:limP1]/P_err1 
-gammahat2 = 2*pws2[limP0:limP1]/P_err2
-    cgPLOT, f_k[limP0:limP1], gammahat, /XLOG,/YLOG, XRANGE = [f_k[limP0], f_k[limP1]], POSITION=[0.6,0.3,0.95,0.45],$
-    COLOR='black', $
-    CHARSIZE = 1.4, XSTYLE=1, YSTYLE=1, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-	CGOPLOT, f_k[limP0:limP1], gammahat, color='gray', THICK=4	
-	ERRPLOT, f_k[limP0:limP1], gammahat2, gammahat1, THICK=2
-	CGOPLOT, f_k[limP0:limP1], gammahat, PSYM=4, color='black', THICK=4
-;CGOPLOT, [f_k[limP0],f_k[limP1]], [1,1], color='red', THICK=1
-;CGOPLOT, [f_k[limP0],f_k[limP1]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=1
-;CGOPLOT, [f_k[limP0],f_k[limP1]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=1
-;###############################################################################
-;###############################################################################
-
-gammahat_2  = 2*pws2[limP:limP2]/P2 
-;gammahat1 = 2*pws[limP:lim2]/P_err1 
-;gammahat2 = 2*pws[limP:lim2]/P_err2
-    cgPLOT, f_k[limP:limP2], gammahat_2, /XLOG,/YLOG, XRANGE = [f_k[limP], f_k[limP2]], POSITION=[0.6,0.05,0.95,0.25],$
-    COLOR='black', $
-    CHARSIZE = 1.4, XSTYLE=1, YSTYLE=1, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-	CGOPLOT, f_k[limP:limP2], gammahat_2, color='gray', THICK=4	
-	;ERRPLOT, f_k[limP0:limP], gammahat2, gammahat1, THICK=2
-	CGOPLOT, f_k[limP:limP2], gammahat_2, PSYM=4, color='black', THICK=2	
-	
-;CGOPLOT, [f_k[limP],f_k[limP2]], [1,1], color='red', THICK=2
-;CGOPLOT, [f_k[limP],f_k[limP2]], [1+SQRT(a_err),1+SQRT(a_err)], color='red', linestyle=2, THICK=2
-;CGOPLOT, [f_k[limP],f_k[limP2]], [1-SQRT(a_err),1-SQRT(a_err)], color='red', linestyle=2, THICK=2	
+                         CHARTHICK=1.5                          
 ;###############################################################################                          
 ;###############################################################################                     
 ;second panel legend                     
                 
 ;###############################################################################                                                            
-   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.96   
-   XYOUTS, X, y, 'first power law', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65  
-
-   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.76   
-   XYOUTS, X, y, 'second power law', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65  
 
 ;###############################################################################  
-
-   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.46  
-   XYOUTS, X, y, 'first power law', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65  
-
-   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.26   
-   XYOUTS, X, y, 'second power law', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
  ;   CGTEXT, 0.93, 0.73, '(a)', /Normal, $
  ;   Alignment=0.5, Charsize=1.6, CHARTHICK= 5   
    

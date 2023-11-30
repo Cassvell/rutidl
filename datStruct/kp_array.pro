@@ -47,7 +47,7 @@ FUNCTION kp_data, date
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4,"-",I02,"-",I02)')
         path='/home/isaac/MEGAsync/datos'
-		file_name = path+'/kp/daily/kp_'+date+'.dat'
+		file_name = path+'/kp/daily/kp_'+date+'.txt'
         header = 1             ; Defining number of lines of the header 
 ;###############################################################################
 ;reading data files
@@ -62,11 +62,11 @@ FUNCTION kp_data, date
 		FREE_LUN, lun
 ;###############################################################################
 ;extracting data and denfining an structure data
-        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0,$
+        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0, doy : 0,$
                       Kp: 0, Kp_str: '', Ap: 0}
 
 		r_kp = REPLICATE(DataStruct, number_of_lines-header)	                
-		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I02,A1,I04)'			
+		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I3,I02,A1,I04)'			
 		RETURN, r_kp
 END   
 
@@ -99,7 +99,7 @@ FUNCTION kp_array, date_i, date_f, variable, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date_2[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')                
-		        data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.dat'
+		        data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt'
                 file = FILE_SEARCH(data_file_name_kp[i], COUNT=opened_files)	            
 	            IF opened_files NE N_ELEMENTS(file) THEN begin
 	             ;   data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt'

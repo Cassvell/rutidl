@@ -114,7 +114,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     new_tecresp = add_nan(new_tecresp, 0.0, 'equal')             
 ;###############################################################################
 ; Import the structure of diono generated variables   
-    dionstr = gen_diono(dst, H, Bsq, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
+    dionstr = gen_diono(dst, H, 28.06, 'h', TGM_n, DIG_FILTER = 'dig_filter')
  ;   PRINT, Bsq
 ; compute frequencies 
     f_k   = dionstr.f_k
@@ -125,7 +125,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 
 ; compute diono variables    
     diono = dionstr.diono
- ;   PRINT, H
+  ;  PRINT, dst
     dp2   = dionstr.dp2
     ddyn  = dionstr.ddyn
 ;############################################################################### 
@@ -274,18 +274,18 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
     ;path = '../rutidl/output/article1events/diono_ev/'
-    path = '../rutidl/output/article2/'
+    path = '../rutidl/output/article2/ev_art1/'
     psfile =  path+'iono_PI_'+Date+'.eps'    
    ; LOADCT, 39
     
-    cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
+    cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=16, YSize=10
 
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english') 
     
     time_title = ' UT [days]'
-    window_title = 'Event-'+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+    window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
                 STRING(old_month, yr_i, FORMAT='(A, X, I4)')    
     periodo = 'Period [h]'        
 ;###############################################################################               
@@ -296,7 +296,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.95   
    XYOUTS, X, y, window_title, /NORMAL, $
-   ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5               
+   ALIGNMENT=0.5, CHARSIZE=2.8, CHARTHICK=1.5               
 ;###############################################################################               
     freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
               1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0)]
@@ -331,9 +331,9 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
         AXIS, XAXIS = 0, XRANGE=[freqs[1], fn], $
                          /XLOG,$
                          XSTYLE=1,$
-                         xTITLE = 'Frequence [Hz]',$
+                         xTITLE = '',$
                         ; COLOR=negro, $
-                         CHARSIZE = 1.4, $
+                         CHARSIZE = 1.8, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
@@ -344,7 +344,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XTICKV=freqs,$                         
                          XTICKN=STRING(periods, FORMAT='(F4.1)'),$
                          XSTYLE=1,$
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.8,$
                        ;  COLOR=negro, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5                     
@@ -367,12 +367,23 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOUTS, X, 0.94, periodo, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, CHARTHICK=1.5   
+   XYOUTS, X, 0.95, periodo, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5   
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOUTS, X, 0.04, 'Frequence [Hz]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.2, CHARTHICK=1.5      
+   
    
    y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
-   XYOUTS, 0.02, y, 'Spectral component [nT]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90, CHARTHICK=1.5        
+   XYOUTS, 0.03, y, 'Power Spectral Density', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.4, ORIENTATION=90, CHARTHICK=1.5
+   
+   XYOUTS, 0.18, .3, 'Ddyn', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.4, CHARTHICK=1.5     
+   
+   XYOUTS, 0.36, .75, 'DP2', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.4, CHARTHICK=1.5    
 ;###############################################################################       
      dH = TeXtoIDL('\DeltaH') 
 ;###############################################################################   [0.5,0.7,0.95,0.9]   
@@ -491,8 +502,8 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.6                
 ;###############################################################################                
-    IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn) ELSE up = max(new_dp2)
-    IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn) ELSE down = min(new_dp2)
+    IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn+10) ELSE up = max(new_dp2+10)
+    IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn-10) ELSE down = min(new_dp2-10)
 ;###############################################################################
    ; IF upddyn GT updp2 THEN up = upddyn ELSE up=updp2 
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
@@ -585,7 +596,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XTICKNAME=X_label, $       
                        ;  XTICKFORMAT='(A1)',$
                          COLOR=negro, $
-                         CHARSIZE = 1.6, $
+                         CHARSIZE = 1.8, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.6
                          
@@ -615,39 +626,41 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          CHARTHICK=1.6       
 ;###############################################################################
 ;first panel legend 
-        cgPolygon, [0.84,0.87,0.87,0.84], [0.804,0.804,0.807,0.807], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.84,0.87,0.87,0.84], [0.754,0.754,0.757,0.757], color = 'green', /NORMAL , /FILL  
+        cgPolygon, [0.88,0.91,0.91,0.88], [0.804,0.804,0.807,0.807], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.88,0.91,0.91,0.88], [0.754,0.754,0.757,0.757], color = 'green', /NORMAL , /FILL  
         
-        XYOUTS, 0.875, 0.795 , /NORMAL, d_H, CHARSIZE = 2.4, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.84, 0.795 , /NORMAL, d_H, CHARSIZE = 2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.875, 0.74 , /NORMAL, 'Dst', CHARSIZE = 2.4, CHARTHICK=chr_thick1  
+        XYOUTS, 0.84, 0.74 , /NORMAL, 'Dst', CHARSIZE = 2, CHARTHICK=chr_thick1  
 ;###############################################################################                     
 ;second panel legend                   
-        cgPolygon, [0.84,0.87,0.87,0.84], [0.454,0.454,0.457,0.457], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.84,0.87,0.87,0.84], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
+        cgPolygon, [0.89,0.92,0.92,0.89], [0.461,0.461,0.464,0.464], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.89,0.92,0.92,0.89], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
         
-        XYOUTS, 0.875, 0.45 , /NORMAL, 'Ddyn', CHARSIZE = 2.4, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.84, 0.455 , /NORMAL, 'Ddyn', CHARSIZE = 2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.875, 0.42 , /NORMAL, 'DP2', CHARSIZE = 2.4, CHARTHICK=chr_thick1     
+        XYOUTS, 0.84, 0.415 , /NORMAL, 'DP2', CHARSIZE = 2, CHARTHICK=chr_thick1     
                 
 ;###############################################################################                                                            
-    CGTEXT, 0.93, 0.73, '(a)', /Normal, $
-    Alignment=0.5, Charsize=1.6, CHARTHICK= 5   
+  !P.Font = 1
+  XYOuts, 0.52, 0.75, '(a)', /Normal, $
+    Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font= 3 
    
-   XYOuts, 0.93, 0.53, '(b)', /Normal, $
-   Alignment=0.5, Charsize=1.6, CHARTHICK= 5  
+   XYOuts, 0.91, 0.54, '(b)', /Normal, $
+   Alignment=0.5, Charsize=3.2, CHARTHICK= 10, font=1  
    
-   XYOuts, 0.93, 0.33, '(c)', /Normal, $
-   Alignment=0.5, Charsize=1.6, CHARTHICK= 5  
+   XYOuts, 0.52, 0.33, '(c)', /Normal, $
+   Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font=1  
    
-   XYOuts, 0.11, 0.14, '(d)', /Normal, $
-   Alignment=0.5, Charsize=2.4, CHARTHICK= 5   
+   XYOuts, 0.11, 0.8, '(d)', /Normal, $
+   Alignment=0.5, Charsize=3.8, CHARTHICK= 10;, font=1  
    
-   XYOuts, 0.93, 0.13, '(e)', /Normal, $
-   Alignment=0.5, Charsize=1.6, CHARTHICK= 5      
+   XYOuts, 0.91, 0.15, '(e)', /Normal, $
+   Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font=1    
+   !P.Font = 0
 ;###############################################################################   
 
-    cgPS_Close, density = 300, width = 1600 ;, /PNG  
+    cgPS_Close, density = 300, width = 1600;, /PNG  
     RETURN  
 END 
 
@@ -786,8 +799,8 @@ PRO make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, CHARTHICK=1.5   
    
    y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
-   XYOUTS, 0.02, y, 'Spectral component [nT]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90, CHARTHICK=1.5        
+   XYOUTS, 0.02, y, 'Power Spectral density [nT]', /NORMAL, CHARSIZE=2.5, ALIGNMENT=0.5, $
+   ORIENTATION=90, CHARTHICK=1.5        
 ;###############################################################################       
      dH = TeXtoIDL('\DeltaH') 
 ;###############################################################################      

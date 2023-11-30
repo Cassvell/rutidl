@@ -115,17 +115,6 @@ PRO FFT_output, date_i, date_f, PS=ps, Bsq=Bsq
     y        = FFT(Bdiono)            ; Compute Fast Fourie Transform from diono time series
 	y2 		 = FFT(Bdiono2)
 ;###############################################################################
-        string_date    = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f,FORMAT='(I4,I02,I02,"_",I4,I02,I02)')        
 
-        outfile = set_var.local_dir+station_code+string_date+'.dat'    
-        OPENW, LUN, outfile, /GET_LUN        
-        PRINTF, LUN, Bdiono, format='(F9.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN    
-      	
-        outfile = set_var.local_dir+station_code+string_date+'SQ.dat'    
-        OPENW, LUN, outfile, /GET_LUN        
-        PRINTF, LUN, Bdiono2, format='(F9.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN 
+	wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], PS="ps"
 END
