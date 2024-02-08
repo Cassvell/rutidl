@@ -119,7 +119,7 @@ PRO index_plot, date_i, date_f
     IF MAX(dst) GT MAX(H) THEN up = MAX(dst) ELSE up = MAX(H)
     IF MIN(dst) LT MIN(H) THEN down = MIN(dst) ELSE down = MIN(H)
     
-    WINDOW, 1,  XSIZE=1000, YSIZE=800, TITLE='Dst vx dH'
+    WINDOW, 1,  XSIZE=1000, YSIZE=800, TITLE='Dst vs dH'
 
     PLOT, tot_days2, dst, YRANGE=[down, up], CHARSIZE = 1.8, background=255, color=0, CHARTHICK=2.0,$
     XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=3

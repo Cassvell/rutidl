@@ -66,7 +66,7 @@ FUNCTION kp_data, date
                       Kp: 0, Kp_str: '', Ap: 0}
 
 		r_kp = REPLICATE(DataStruct, number_of_lines-header)	                
-		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I3,I02,A1,I04)'			
+		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I4,I02,A1,I04)'			
 		RETURN, r_kp
 END   
 

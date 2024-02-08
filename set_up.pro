@@ -44,22 +44,36 @@ PRO set_up
     @set_up_commons
     
     
-    stations    = ['coeneo', 'teoloyucan', 'tucson', 'bsl', 'iturbide']
+    stations    = ['coeneo', 'teoloyucan', 'iturbide']
     n           = N_ELEMENTS(stations)
-    stat_code   = ['coe', 'teo', 'tuc', 'bsl', 'itu']
+    stat_code   = ['coe', 'teo', 'itu']
     
-    node_gic    = ['lav', 'qro', 'maz']
-    m           = N_ELEMENTS(node_gic)   
+    intermagnet_station = ['beijing', 'boulder', 'brandon', 'bstenis', 'cocos', 'cheongyang', 'guimar', $
+    					   'hartebeesthoek', 'islandpascua', 'kakioka', 'kakadu', 'keetmanshoop', $
+    					   'pilar', 'sanjuan', 'tamanraset', 'tristandacunha', 'tucson']
+    m 			= N_ELEMENTS(intermagnet_station)
+    
+    intmag_code			= [ 'bmt', 'bou', 'brd', 'bsl', 'cki', 'cyg', 'gui', 'hbk', 'ipm', 'kak', $
+    						'kdu', 'kmh', 'pil', 'sjg', 'tam', 'tdc', 'tuc']
+    
+    node_gic    = ['lav', 'qro', 'maz', 'rmy']
+    l           = N_ELEMENTS(node_gic)   
     set_var = {local_dir : '/home/isaac/geomstorm/rutidl/', $
-               Mega_dir  : '/home/isaac/MEGAsync/datos/',$
+               Mega_dir  : '/home/isaac/MEGAsync/datos/',$               
+               google_dir  : '/home/isaac/google_sync/datos/',$
                gic_dir   : '/home/isaac/MEGAsync/GICS/gic_rout/',$
                gms       : STRARR(n),$         ;geomagnetic station
-               gms_code  : STRARR(n),$         ;geomagnetic station IAGA code    
-               nod_gic   : STRARR(n)$       
+               gmsi		 : STRARR(m),$         ;geomagnetic station
+               gmsi_code : STRARR(m),$         ;geomagnetic station IAGA code    
+               gms_code  : STRARR(n),$         ;geomagnetic station REGMEX code    
+               nod_gic   : STRARR(l)$          ;gic nodes detection
                 }
-    set_var.gms     = stations[*]
-    set_var.gms_code= stat_code[*]
-    set_var.nod_gic= node_gic[*]
+
+    set_var.gms     	= stations[*]
+    set_var.gms_code	= stat_code[*]
+    set_var.gmsi 		= intermagnet_station[*]
+    set_var.gmsi_code 	= intmag_code[*]
+    set_var.nod_gic		= node_gic[*]
 
 
     RETURN
