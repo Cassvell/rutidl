@@ -1,8 +1,18 @@
-FUNCTION day2day, X, component
+FUNCTION day2day, X, component, date_i, date_f 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 	    @set_up_commons
         set_up
+        
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= date_i[2]	
+
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]
+	
+	file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
 ;###################################################################################################
 ;componente X
     X_hr = FINDGEN(N_ELEMENTS(X)/60)	;Mediana
@@ -32,6 +42,14 @@ FUNCTION day2day, X, component
     TVLCT, R_bak, G_bak, B_bak, /GET        
     LOADCT, 39, /SILENT  
 
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english')
+    new_month = month_name(mh_f, 'english')
+    IF mh_i NE mh_f THEN BEGIN
+    	time_name = 'days of '+old_month+' and '+ new_month
+    ENDIF ELSE BEGIN 
+    	time_name = 'days of '+old_month
+    ENDELSE
 	
 	;WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='X normal dist data'
     ;PLOT, loc, xvar
@@ -50,7 +68,9 @@ FUNCTION day2day, X, component
     ENDFOR
 	X_trend = INTERPOLATE(X_24h, time, CUBIC=-0.5,  /GRID, /MISSING)
     WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE=component +' raw data'
-    PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0, THICK=2
+    PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0, THICK=2, $
+    XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    
     OPLOT, FINDGEN(N_ELEMENTS(X_24h)), X_24h, PSYM=4, SYMSIZE=3, color=254, THICK=4
     OPLOT, time, X_trend, THICK=2, color=70
     
@@ -65,12 +85,15 @@ FUNCTION day2day, X, component
     X_trend = INTERPOLATE(X_24h, time, CUBIC=-0.5,  /GRID, /MISSING)	
     
     WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE=component +' raw data'
-    PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0, THICK=2
+    PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0, THICK=2,$
+    XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    
     OPLOT, FINDGEN(N_ELEMENTS(X_24h)), X_24h, PSYM=4, SYMSIZE=3, color=254, THICK=4
     OPLOT, time, X_trend, color=70, THICK=2
     
     WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE=component +' detrended'
-    PLOT, time, X-X_trend, background=255, color=0, THICK=2	    
+    PLOT, time, X-X_trend, background=255, color=0, THICK=2,$
+    XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label	    
 ;###################################################################################################
 ;###################################################################################################
 	PRINT, "Press N in case of unsatisfactory results. To continue, press any other key"
@@ -87,12 +110,15 @@ FUNCTION day2day, X, component
 			READ, direction, PROMPT = '> '
 			convert_2nan, X_24h, direction
 			WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE=component +' raw data'
-			PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0
+			PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0,$
+   			XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+			
 			OPLOT, FINDGEN(N_ELEMENTS(X_24h)), X_24h, PSYM=4, SYMSIZE=3, color=254, THICK=4
 			OPLOT, time, X_trend, color=70, THICK=2
 		
 			WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE=component +' detrended'
-			PLOT, time, X-X_trend, background=255, color=0, THICK=2
+			PLOT, time, X-X_trend, background=255, color=0, THICK=2,$
+  			XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label	
 		 	
 		 	WAIT, 0.5   
 				; Wait for user input (Ctrl+S)
@@ -107,12 +133,15 @@ FUNCTION day2day, X, component
 	X_24h = fillnan(X_24h)
 	X_trend = INTERPOLATE(X_24h, time, CUBIC=-0.5,  /GRID, /MISSING)
     WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE=component +' raw data'
-	PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0, THICK=2
+	PLOT, time, X, YRANGE=[MIN(X, /NAN), MAX(X, /NAN)], background=255, color=0, THICK=2,$
+    XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
+    
 	OPLOT, FINDGEN(N_ELEMENTS(X_24h)), X_24h, PSYM=4, SYMSIZE=3, color=254, THICK=4
     OPLOT, time, X_trend, color=70, THICK=2
     
     WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE=component +' detrended'
-    PLOT, time, X-X_trend , background=255, THICK=2, color=0
+    PLOT, time, X-X_trend , background=255, THICK=2, color=0,$
+    XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
 ;###################################################################################################
 	X_det = X-X_trend 
 	RETURN, X_det

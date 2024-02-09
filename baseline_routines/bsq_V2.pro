@@ -46,7 +46,7 @@
 ;
 
 
-FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_idx, MAKE_FILE=make_file
+FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_code, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 ;###############################################################################
@@ -66,56 +66,15 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_idx, MAKE_FILE=make_file
 
 
   ;  station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
-		
-;	dat1    = struct_H([yr_i, mh_i, dy_i], station, station_idx, 'min')	
-;	H1      = dat1.H
+  ;  station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 
- ;   dat2    = struct_H([yr_f, mh_f, dy_f], station, station_idx, 'min')
- ;   H2      = dat2.H
-    
-   ; ndays   = ;(JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
     td      = FINDGEN(ndays*1440)/1440.0
     td_h    = FINDGEN(ndays*24)/24.0
     datetime= TIMEGEN(N_ELEMENTS(td), FINAL=JULDAY(mh_f, dy_f, yr_f, 23), $
                 START=JULDAY(mh_i, dy_i, yr_i, 0), UNITS='H')
     CALDAT, datetime, mh, dy, yr, hr
-;###############################################################################                        
-;identifying NAN percentage values in the Time Series    
-    H1 = nanpc(H1, 99999.0, 'gequal')
-    H2 = nanpc(H2, 99999.0, 'gequal')   
-        
-    H1 = add_nan(H1, 99999.0, 'gequal')        
-    H2 = add_nan(H2, 99999.0, 'gequal')            
+;###############################################################################                                  
 ;###############################################################################        
-    ;implementar una función de interpolación en caso de que el porcentaje de 
-    ;nan sea muy bajo       
-    H1_tmp   = H1
-    H1_exist = WHERE(finite(H1_tmp), ngooddata1, complement=baddata1, $
-    ncomplement=nbaddata1)
-
-    H2_tmp   = H2
-    H2_exist = WHERE(finite(H2_tmp), ngooddata2, complement=baddata2, $
-    ncomplement=nbaddata2)
-    
-;    H = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
-;    H_h = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')    
-;###############################################################################                        
-;identifying NAN percentage values in the Time Series    
-;    H = nanpc(H, 99999.0, 'gequal')
-;    H = add_nan(H, 99999.0, 'gequal') 
-
-;    H_h = nanpc(H_h, 99999.0, 'gequal')
-;    H_h = add_nan(H_h, 99999.0, 'gequal') 
-;###############################################################################        
-    ;implementar una función de interpolación en caso de que el porcentaje de 
-    ;nan sea muy bajo       
-    ;H = fillnan(H)
-    ;H_h = fillnan(H_h)
-    
-    H1 = fillnan(H1)
-    H2 = fillnan(H2) 
-   ; PRINT, MAX(H1)
 ;###############################################################################
 ;Extend QDS data ndays for a quadratic interpolation
     QDS1 = REFORM(REBIN(H1, 1440, ndays), N_ELEMENTS(td))

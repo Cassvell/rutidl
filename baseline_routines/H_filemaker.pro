@@ -495,50 +495,39 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 	Z = add_nan(Y, 99999.0, 'equal')
 	Z = add_nan(Y, 9999.0, 'equal')	
 	
-	X_det = day2day(X, 'X')
-	Y_det = day2day(Y, 'Y')
-	Z_det = day2day(Z, 'Z')
-	;print, X_det
-   ; day2day_struct = day2day([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
-  	
-  	;X_trend = day2day_struct.X_trend
- 	;X_24h = day2day_struct.X_24h
+	X_det = day2day(X, 'X',[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+	Y_det = day2day(Y, 'Y',[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+	Z_det = day2day(Z, 'Z',[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+	
 
-  	;Y_trend = day2day_struct.Y_trend
- 	;Y_24h = day2day_struct.Y_24h
-;print,     X_24h
-	print, Z_det
-    STOP, "detención momentanea de prueba" 	
 ;###############################################################################
 ;###############################################################################     
 ;###############################################################################    
 ;###############################################################################    
-    dif_Xdet = TS_DIFF(X_det,1)
-	Xspikes = whitaker_hayer(dif_Xdet, 20)    
-	IF Xspikes[0] NE -1 THEN BEGIN
-		print, 'spikes num: ', N_ELEMENTS(spikes)
-	 ; dif_Hdet[spikes] = !Values.F_NAN
-		X_det[Xspikes] = !Values.F_NAN
-	;dif_Hdet = fillnan(dif_Hdet)	
-		;H_det = fillnan(H_det)		
-	ENDIF ELSE BEGIN
-		MESSAGE, 'no spikes detected in X'	
-	ENDELSE 															 
-;############################################################################### 
-     dif_Ydet = TS_DIFF(Y_det,1)
-	Yspikes = whitaker_hayer(dif_Ydet, 20)    
-	IF Yspikes[0] NE -1 THEN BEGIN
-		print, 'spikes num: ', N_ELEMENTS(Yspikes)
-	 ; dif_Hdet[spikes] = !Values.F_NAN
-		Y_det[Yspikes] = !Values.F_NAN
-	;dif_Hdet = fillnan(dif_Hdet)	
-		;H_det = fillnan(H_det)		
-	ENDIF ELSE BEGIN
-		MESSAGE, 'no spikes detected in Y'	
-	ENDELSE 
+	PRINT, "Press value for Z thershold (50 by default)"
+	Z_Xthreshold = '100'
+	;READ, Z_Xthreshold, PROMPT = '> '	
+	Xspikes = whitaker_hayer(X_det, FIX(Z_Xthreshold), 'X')
+	X_det = fillnan(X_det)
+;###############################################################################
+;###############################################################################     	
+;############################################################################### 	
+	Z_Ythreshold = ''
+	PRINT, "Press value for Z thershold (50 by default)"
+	Z_Ythreshold = '100'
+	;READ, Z_Ythreshold, PROMPT = '> '
+	Yspikes = whitaker_hayer(Y_det, FIX(Z_Ythreshold), 'Y')    	
+	Y_det = fillnan(Y_det)
  ;###############################################################################   
+ ;###############################################################################
+	Z_Zthreshold = ''
+	PRINT, "Press value for Z thershold (50 by default)"
+	Z_Zthreshold = '100'
+	;READ, Z_Ythreshold, PROMPT = '> '
+	Zspikes = whitaker_hayer(Z_det, FIX(Z_Ythreshold), 'Y')    	
+	Z_det = fillnan(Z_det)
  ;###############################################################################   
-
+ ;############################################################################### 
    ; PRINT, MIN(dif_Hdet, /NAN)
 	PRINT, '#################################################################################'	
 	PRINT, 'AVR X0: ', MEAN(X_det, /NAN)
@@ -547,7 +536,6 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 	PRINT, 'MED Y det: ', MEDIAN(Y_det)
 	PRINT, '#################################################################################'	
 	;PRINT, H_det
-
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################   
@@ -564,93 +552,29 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     	time_name = 'days of '+old_month
     ENDELSE
    ; set_plot, 'x'   
-       time = FINDGEN(N_ELEMENTS(H))/1440.0   
+       time = FINDGEN(N_ELEMENTS(X_det))/1440.0   
+;###############################################################################   
+    WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='X'
+    PLOT, time, X_det, YRANGE=[MIN(X_det, /NAN),MAX(X_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, $
+    background=255, color=0, CHARTHICK=2.0, YTITLE = 'X [nT]', XTITLE = time_name, $
+    XTICKS=file_number, XTICKNAME=X_label	
+;###############################################################################    
+    WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='Y'
+    PLOT, time, Y_det, YRANGE=[MIN(X_det, /NAN),MAX(X_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, $
+    background=255, color=0, CHARTHICK=2.0, YTITLE = 'Y [nT]', XTITLE = time_name, $
+    XTICKS=file_number, XTICKNAME=X_label	
 ;###############################################################################
-   WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='X raw data'
-    PLOT, time,X, YRANGE=[MIN(X, /NAN),MAX(X, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BX [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-    
-    OPLOT, time, X_trend, LINESTYLE=2, THICK=2, color=254
-    PLOTS, FINDGEN(file_number), X_24h, PSYM=4, symsize=2, THICK=4, color=0 
-    OPLOT, time, Xl_sup, LINESTYLE=1, THICK=2, color=0
-    OPLOT, time, Xl_inf, LINESTYLE=1, THICK=2, color=0    
-   ; PRINT, H_t
-    
-    WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='X detrended'
-    PLOT, time, X_det, YRANGE=[MIN(X_det, /NAN),MAX(X_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'X [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label	
-;###############################################################################
-   WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='Y raw data'
-    PLOT, time,Y, YRANGE=[MIN(Y, /NAN),MAX(Y, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BY [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-    
-    OPLOT, time, Y_trend, LINESTYLE=2, THICK=2, color=254
-    PLOTS, FINDGEN(file_number), Y_24h, PSYM=4, symsize=2, THICK=4, color=0 
-    OPLOT, time, Yl_sup, LINESTYLE=1, THICK=2, color=0
-    OPLOT, time, Yl_inf, LINESTYLE=1, THICK=2, color=0    
-    
-    WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='Y detrended'
-    PLOT, time, Y_det, YRANGE=[MIN(X_det, /NAN),MAX(X_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'Y [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label	
-;###############################################################################
-   WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H raw data'
-    PLOT, time,H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label
-    
-   ; OPLOT, time, H_trend, LINESTYLE=2, THICK=2, color=254
-   ; PLOTS, FINDGEN(file_number), Y_24h, PSYM=4, symsize=2, THICK=4, color=0 
-   ; OPLOT, time, Yl_sup, LINESTYLE=1, THICK=2, color=0
-   ; OPLOT, time, Yl_inf, LINESTYLE=1, THICK=2, color=0    
-    
-    WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='H detrended'
-    PLOT, time, H_det, YRANGE=[MIN(X_det, /NAN),MAX(X_det,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'H [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label	
-
-
-;Selection of Qdays
-	QD = ['QD1', 'QD2', 'QD3', 'QD4', 'QD5']     
-;###############################################################################
-;Selection of Q days Based on Kmex criteria
-	;fiveQD_1 = getting_local_qdays([yr_i,mh_i,dy_i], station_idx)
-
-   ;PRINT, '                                                                    '
-;PRINT, "Five Qdays according to K criteria"
-
- ;   FOR i=0, 4 DO BEGIN
- ;      PRINT, fiveQD_1.year[i], fiveQD_1.month[i], $
- ;      fiveQD_1.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X, A)'                                 
- ;   ENDFOR
-    
- ;   IF mh_i NE mh_f THEN BEGIN
- ;   	fiveQD_2 = getting_local_qdays([yr_f,mh_f,dy_f], station_idx)
- ;   	PRINT, ''
- ;   	PRINT, ''    
-;		FOR i=0, 4 DO BEGIN
-;		   PRINT, fiveQD_2.year[i], fiveQD_2.month[i], $
-;		   fiveQD_2.day[i], QD[i], FORMAT = '(I4, "-", I02, "-", I02, 4X,  A)'                                 
-;		ENDFOR 
-;	ENDIF	
-
+	QD = ['QLD1', 'QLD2', 'QLD3', 'QLD4', 'QLD5', 'QLD6', 'QLD7', 'QLD8', 'QLD9', 'QLD10']     
 ;###############################################################################
 ;Selection of Q days Based on IQR criteria    
-	fiveQD2_1 = sel_qdayV2([yr_i,mh_i,dy_i], station_idx)  
-	PRINT, "Five Qdays according to IQR criteria"	
-    FOR i=0, 4 DO BEGIN
-       PRINT, STRING(fiveQD2_1.year[i], fiveQD2_1.month[i], fiveQD2_1.day[i], QD[i], fiveQD2_1.iqr[i],$
-      ;  PRINT, y[i], m[i], d[i], IQR_hr[i], $
+	H_det   = (SQRT((X_det)^2 + (Y_det)^2))*(-1)
+	tenQD2_1 = sel_qdayV2(H_det, [yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f], station_code)  
+	PRINT, "Ten local Qdays according to IQR criteria for "	
+    FOR i=0, 9 DO BEGIN
+       PRINT, STRING(tenQD2_1.year[i], tenQD2_1.month[i], tenQD2_1.day[i], QD[i], tenQD2_1.iqr[i],$
+        ;PRINT, y[i], m[i], d[i], IQR_hr[i], $
         FORMAT = '(I4, "-", I02, "-", I02,  4X,A, F6.2)')                                 
     ENDFOR
-    
-    IF 	mh_i NE mh_f THEN BEGIN
-    	fiveQD2_2 = sel_qdayV2([yr_f,mh_f,dy_f], station_idx)
-
-		FOR i=0, 4 DO BEGIN
-		   PRINT, STRING(fiveQD2_2.year[i], fiveQD2_2.month[i], fiveQD2_2.day[i], QD[i], fiveQD2_2.iqr[i],$
-		  ;  PRINT, y[i], m[i], d[i], IQR_hr[i], $
-		    FORMAT = '(I4, "-", I02, "-", I02,  4X,A, F6.2)')                                 
-		ENDFOR
-        	
-    ENDIF	
 ;###############################################################################
 ;###############################################################################
 	qday1 = ''
@@ -665,28 +589,44 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
 	dy_2 	= FIX(qday2)	
 ;###############################################################################
 ;###############################################################################
+
+
 ;Bsq baseline
 	day1_diff = (JULDAY(mh_i,dy_1,yr_i)-JULDAY(mh_i,dy_i,yr_i))
-	day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_f,dy_2,yr_f))
-	
-	H1 = H_det[day1_diff*1440:((day1_diff+1)*1440)-1]
-	H2 = H_det[(file_number-(day2_diff+1))*1440:((file_number-day2_diff)*1440)-1]
-	print, N_ELEMENTS(H2)
-	
-	
-	ndays = (JULDAY(mh_f,dy_2,yr_f)-JULDAY(mh_i,dy_1,yr_i))+1
-	
-	bsq = bsq_V2(H1, H2, [yr_i, mh_i, dy_1], [yr_f, mh_f, dy_2], ndays, station_idx, $
-	MAKE_FILE="make_file")
-	;print, N_ELEMENTS(H_det[10:7])
-	;print, N_ELEMENTS(bsq.m), (file_number-day2_diff)*1440
-	H_clean = H_det[day1_diff*1440:(file_number-day2_diff)*1440] - bsq.m
+	;day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_f,dy_2,yr_f))
 
+	X1 = X_det[day1_diff*1440:((day1_diff+1)*1440)-1]
+	Y1 = Y_det[day1_diff*1440:((day1_diff+1)*1440)-1]
+	;H1 = H_det[day1_diff*1440:((day1_diff+1)*1440)-1]
+	IF 	dy_1 LT dy_2 AND mh_f GT mh_i THEN BEGIN
+		day2_diff = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_i,dy_2,yr_f))
+		ndays = (JULDAY(mh_i,dy_2,yr_f)-JULDAY(mh_i,dy_1,yr_i))+1  	
+		X2 = X_det[(file_number-(day2_diff+1))*1440:((file_number-(day2_diff))*1440)-1]
+		Y2 = Y_det[(file_number-(day2_diff+1))*1440:((file_number-(day2_diff))*1440)-1]
+		H2 = H_det[(file_number-(day2_diff+1))*1440:((file_number-(day2_diff))*1440)-1]
+	ENDIF ELSE BEGIN
+		day2_diff = (JULDAY(mh_i,dy_f,yr_i)-JULDAY(mh_i,dy_2,yr_i))
+		X2 = X_det[(file_number-(day2_diff+1))*1440:((file_number-(day2_diff))*1440)-1]
+		Y2 = Y_det[(file_number-(day2_diff+1))*1440:((file_number-(day2_diff))*1440)-1]	
+		H2 = H_det[(file_number-(day2_diff+1))*1440:((file_number-(day2_diff))*1440)-1]	
+		ndays = (JULDAY(mh_f,dy_2,yr_f)-JULDAY(mh_i,dy_1,yr_i))+1  
+	ENDELSE	
+	bsq_X = bsq_V2(X1, X2, [yr_i, mh_i, dy_1], [yr_f, mh_f, dy_2], ndays, station_code);, $
+	;MAKE_FILE="make_file")
+	bsq_Y = bsq_V2(Y1, Y2, [yr_i, mh_i, dy_1], [yr_f, mh_f, dy_2], ndays, station_code)
+	bsq_H = bsq_V2(Y1, Y2, [yr_i, mh_i, dy_1], [yr_f, mh_f, dy_2], ndays, station_code)
+
+	X_clean = X_det[day1_diff*1440:(file_number-day2_diff)*1440] - bsq_X.m
+	Y_clean = Y_det[day1_diff*1440:(file_number-day2_diff)*1440] - bsq_Y.m
+	H_clean = (SQRT((X_clean)^2 + (Y_clean)^2))*(-1) 
+   ; H_det   = (SQRT((X_det)^2 + (Y_det)^2))*(-1) 
+   ; print, H_det[day1_diff*1440:(file_number-day2_diff)*1440] - bsq_H.m
     X_label2 = xlabel([yr_i, mh_i, dy_1], ndays)
-    WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H cleaned'
-    PLOT, time, H_clean, XSTYLE=1, XRANGE=[day1_diff,(file_number-day2_diff)], $
+   
+   	WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H cleaned'
+    PLOT, time, H_clean, XSTYLE=1,YSTYLE=2, XRANGE=[day1_diff,(file_number-(day2_diff))], $
     YRANGE=[MIN(H_clean, /NAN),MAX(H_clean,/NAN)], CHARSIZE = 1.8, background=255, color=0, $
-    CHARTHICK=2.0, YTITLE = 'H [nT]',XTITLE = time_name, /NODATA, XTICKS=ndays, $
+    CHARTHICK=2.0, YTITLE = 'X [nT]',XTITLE = time_name, /NODATA, XTICKS=ndays, $
     XTICKNAME=X_label2    
 	
 	OPLOT, time[day1_diff*1440:(file_number-day2_diff)*1440], H_clean, COLOR=0, THICK=2
@@ -698,7 +638,7 @@ PRO H_filemaker, date_i, date_f, MAKE_FILE=make_file
     ;  PRINT, y    
     ;ENDWHILE 
     
-
+;STOP, 'detención momentanea'
 
 IF KEYWORD_SET(make_file) THEN BEGIN    
     outfile = STRARR(ndays)    

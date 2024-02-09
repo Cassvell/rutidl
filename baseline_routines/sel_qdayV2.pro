@@ -44,7 +44,7 @@
 ;
 ;   3. bsq_V2.pro,   to generate Bsq files for the following analysis
 ;
-FUNCTION sel_qdayV2, date_i, station_idx
+FUNCTION sel_qdayV2, H, date_i, date_f, station_code
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -54,30 +54,14 @@ FUNCTION sel_qdayV2, date_i, station_idx
         	
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
-	dy_i 	= 1
+	dy_i 	= date_i[2] 
 
-	fday = ''
-	CASE mh_i of
-		1	: fday=31
-		2	: fday=28
-		3	: fday=31
-		4	: fday=30
-		5	: fday=31
-		6	: fday=30
-		7	: fday=31
-		8	: fday=31
-		9	: fday=30
-		10	: fday=31
-		11	: fday=30
-		12	: fday=31
-	ENDCASE	  
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]
 
-	yr_f	= yr_i
-	mh_f	= mh_i
-	dy_f 	= fday
-
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+    ;station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
+    ;station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
         
         file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, 1, yr_i))+1
         data_file_name = STRARR(file_number)
@@ -85,11 +69,11 @@ FUNCTION sel_qdayV2, date_i, station_idx
        
 ; Generate the time series variables 
 ; define H variables                  
-    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx)
-    PRINT, '#######################################################################'
-    H = nanpc(H, 99999.0, 'gequal')
-    H = add_nan(H, 999999.0, 'equal')        
-    H = add_nan(H, 99999.0, 'equal')
+  ;  H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx)
+  ;  PRINT, '#######################################################################'
+  ;  H = nanpc(H, 99999.0, 'gequal')
+  ;  H = add_nan(H, 999999.0, 'equal')        
+  ;  H = add_nan(H, 99999.0, 'equal')
 
 ;Cálculo de las desviaciones estándar en formato horario.
 	    
@@ -127,16 +111,16 @@ FUNCTION sel_qdayV2, date_i, station_idx
     IQR_sorted = SORT(IQR_hr)
     iqr_sort = IQR_hr[IQR_sorted]
        
-    d_sort = d[IQR_sorted[0:4]]
-    m_sort = m[IQR_sorted[0:4]]
-    y_sort = y[IQR_sorted[0:4]]
+    d_sort = d[IQR_sorted[0:9]]
+    m_sort = m[IQR_sorted[0:9]]
+    y_sort = y[IQR_sorted[0:9]]
 	
-	result = {day : INTARR(5), month : INTARR(5), year : INTARR(5), iqr : FLTARR(5)}	               
+	result = {day : INTARR(10), month : INTARR(10), year : INTARR(10), iqr : FLTARR(10)}	               
 ;###############################################twmin################################   
 	result.day[*] = d_sort
 	result.month[*] = m_sort
 	result.year[*] = y_sort
-	result.iqr[*] = iqr_sort[0:4]
+	result.iqr[*] = iqr_sort[0:9]
  ;   DEVICE
      
  ;   WINDOW, 0,  XSIZE=1600, YSIZE=800, TITLE='H'
