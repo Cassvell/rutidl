@@ -45,23 +45,23 @@ IF band_limit EQ 'passband_l' THEN BEGIN
 
     CASE freq of
         '01' : freq = 1.07e-5  ;23:08 hr
-        '02' : freq = 9.5e-6  ;23:08 hr
-        '03' : freq = 8.9e-6  ;23:08 hr listo
+        '02' : freq = 1e-5  ;23:08 hr
+        '03' : freq = 1.15e-5  ;23:08 hr listo
         '04' : freq = 1.05e-5 ;23:08 hr antes 1.05e-5 
         '05' : freq = 1e-5  ;23:08 hr
         '06' : freq = 1.07e-5    ;27:46 hr listo
-        '07' : freq = 1.2e-5  ;23:08 hr listo
-        '08' : freq = 8.9e-6 ;23:08 hr antes 1.1e-5 
+        '07' : freq = 1e-5  ;23:08 hr listo
+        '08' : freq = 1e-5 ;23:08 hr antes 1.1e-5 
         '09' : freq = 9.5e-6  ;23:08 hr antes 1.2
-        '10' : freq = 1.2e-5  ;23:08 hr
+        '10' : freq = 1e-5  ;23:08 hr
         '11' : freq = 1.05e-5  ;23:08 hr
-        '12' : freq = 1.2e-5  ;23:08 hr
+        '12' : freq = 9.8e-6  ;23:08 hr
         '13' : freq = 1.14e-5 ;24:21 hr listo
         '14' : freq = 9.5e-6  ;23:08 hr antes 1.2e-5
-        '15' : freq = 9.7e-6  ;23:08 hr antes 9.5e-6 
+        '15' : freq = 9.e-6  ;23:08 hr antes 9.5e-6 
         '16' : freq = 8.9e-6  ;23:08 hr
-        '17' : freq = 8.9e-6  ;23:08 hr        
-        '18' : freq = 8.9e-6  ;30:51 hr listo
+        '17' : freq = 1.2e-5  ;23:08 hr        
+        '18' : freq = 9.5e-6  ;30:51 hr listo
         '19' : freq = 8.9e-6 ;23:08 hr listo
         '20' : freq = 8.9e-6  ;23:08 hr
         '21' : freq = 0.0000086808842 ;31:59
@@ -74,25 +74,25 @@ ENDIF
 IF band_limit EQ 'passband_u' THEN BEGIN   
 
     CASE freq of
-        '01' : freq = 1.99e-5  ;23:08 hr
-        '02' : freq = 1.8e-5  ;23:08 hr
-        '03' : freq = 3.2e-5  ;23:08 hr listo
-        '04' : freq = 2.42e-5  ;23:08 hr
+        '01' : freq = 1.8e-5  ;23:08 hr
+        '02' : freq = 1.62e-5  ;23:08 hr
+        '03' : freq = 2.3e-5  ;12:31 hr listo
+        '04' : freq = 2.2e-5  ;12:31 hr
         '05' : freq = 1.8e-5  ;23:08 hr
         '06' : freq = 2.5e-5    ;27:46 hr listo
-        '07' : freq = 2.8e-5  ;23:08 hr listo
-        '08' : freq = 2.7e-5  ;23:08 hr
+        '07' : freq = 3e-5  ;23:08 hr listo
+        '08' : freq = 2.6e-5  ;23:08 hr
         '09' : freq = 2.2e-5  ;23:08 hr
-        '10' : freq = 2.4e-5  ;23:08 hr
-        '11' : freq = 2.1e-5  ;23:08 hr
+        '10' : freq = 1.7e-5  ;23:08 hr
+        '11' : freq = 1.6e-5  ;23:08 hr
         '12' : freq = 2.3e-5  ;23:08 hr
         '13' : freq = 2.8e-5 ;24:21 hr listo
         '14' : freq = 2e-5  ;23:08 hr antes 2.15e-5
-        '15' : freq = 2.1e-5  ;23:08 hr
+        '15' : freq = 2.3e-5  ;23:08 hr
         '16' : freq = 2.6e-5  ;23:08 hr
-        '17' : freq = 2.5e-5  ;23:08 hr
-        '18' : freq = 3.4e-5  ;30:51 hr listo 
-        '19' : freq = 3.4e-5 ;23:08 hr listo
+        '17' : freq = 1.8e-5  ;23:08 hr
+        '18' : freq = 2.6e-5  ;30:51 hr listo 
+        '19' : freq = 2.3e-5 ;23:08 hr listo
         '20' : freq = 2.4e-5  ;23:08 hr
         '21' : freq = 0.000025261966 ;10:59
         '22' : freq = 0.000021196104 ;13:06

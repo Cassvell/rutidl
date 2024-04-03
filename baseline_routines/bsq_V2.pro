@@ -74,11 +74,29 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_code, MAKE_FILE=make_fil
                 START=JULDAY(mh_i, dy_i, yr_i, 0), UNITS='H')
     CALDAT, datetime, mh, dy, yr, hr
 ;###############################################################################                                  
-;###############################################################################        
+;###############################################################################
+;fill little gaps in LQD
+	H1 = fillnan(H1)
+	H2 = fillnan(H2)
+	
+;FFT on LQD to get the templates (low pass filter)	
+;	H1_f = FFT(H1)
+;	H2_f = FFT(H2)
+	
+;	coeff1 = COMPLEX(H1_f)
+;	coeff2 = COMPLEX(H2_f)
+	
+;template equation
+;	harm = [0, 1.1574e-5, 2.3148e-5, 3.4722e-5, 4.6296e-5, 5.7870e-5, 6.9444e-5]
+	
+;	T1 = TOTAL(ABS(coeff1[0:6])*cos((!PI*harm*td)/720 + ATAN(coeff1[0:6])))
+;	T2 = TOTAL(ABS(coeff2[0:6])*cos((!PI*harm*td)/720 + ATAN(coeff2[0:6])))
+	
+;	PRINT, REAL_PART(T1)
 ;###############################################################################
 ;Extend QDS data ndays for a quadratic interpolation
-    QDS1 = REFORM(REBIN(H1, 1440, ndays), N_ELEMENTS(td))
-    QDS2 = REFORM(REBIN(H2, 1440, ndays), N_ELEMENTS(td))
+    QDS1 = REFORM(REBIN(REAL_PART(H1), 1440, ndays), N_ELEMENTS(td))
+    QDS2 = REFORM(REBIN(REAL_PART(H2), 1440, ndays), N_ELEMENTS(td))
 ;###############################################################################
 ;Interpolate between the QDS
     slope1   = (td - td[719])

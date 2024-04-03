@@ -63,20 +63,36 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     ;time_h = findgen(file_number*24)/24.0    
     Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
-	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	station_class = ''
+	PRINT, 'Enter GMS class code: 		0:regmex or 1:intermagnet'
+	READ, station_class, PROMPT = '> '
+	
+	CASE station_class of
+		'0' : station_class = 'regmex'
+		'1' : station_class = 'intermagnet'
+		 ELSE : PRINT, 'non avaiable gms class'
+	END
+	PRINT, 'Enter GMS idx: If do not know the GMS idx, please run PRO gms code table'
 	READ, station_idx, PROMPT = '> '
-
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)] 
+	
+    IF station_class EQ 'regmex' THEN  BEGIN    
+    station = set_var.gms[FIX(station_idx)]
+    station_code = set_var.gms_code[FIX(station_idx)]  
+    ENDIF 
+    
+    IF station_class EQ 'intermagnet' THEN  BEGIN 
+    station = set_var.gmsi[FIX(station_idx)] 
+    station_code = set_var.gmsi_code[FIX(station_idx)] 
+    ENDIF
+	PRINT,  'GMS selected: '+station+' IAGA code: '+station_code   	
+;###############################################################################
+;###############################################################################  
 ; Generate the time series variables 
 ; define H variables                  
     dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx), 'H')
- 
-; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')  
+    dat   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'H')
+    H = dat.H
 ;###############################################################################      
 ; IP data
 ; Generate the time variables to plot TEC time series         
@@ -85,15 +101,16 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
     tec_resp    = tec-med          
 ;###############################################################################
 ;identifying NAN percentage values in the Time Series
-    H = nanpc(H, 999999.0, 'equal')
-    H = nanpc(H, 100.0, 'greater')    
+   ; H = nanpc(H, 999999.0, 'equal')
+   ; H = nanpc(H, 100.0, 'greater')    
 ;Identifying the NAN values        
     tec = add_nan(tec, 999.0, 'equal')            
     med = add_nan(med, 999.0, 'equal')                
-    H = add_nan(H, 999999.0, 'equal')
-    H = add_nan(H, 99999.0, 'equal')                   
+
+    dH = add_nan(dH, 100.0, 'greater')
+;    H = add_nan(H, 99999.0, 'equal')                   
 ;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
-  ;  H = fillnan(H)
+    H = fillnan(H)
  ;   PRINT, H;N_ELEMENTS(H), N_ELEMENTS(Bsq)
 ;###############################################################################    
     new_dst = FLTARR(N_ELEMENTS(time))     	    
@@ -122,7 +139,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 
 ; compute and define Power Spectrum
     pws = dionstr.pws
-
+	pws = pws/SQRT(TOTAL(pws^2))
 ; compute diono variables    
     diono = dionstr.diono
   ;  PRINT, dst
@@ -289,7 +306,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                 STRING(old_month, yr_i, FORMAT='(A, X, I4)')    
     periodo = 'Period [h]'        
 ;###############################################################################               
-    cgPLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.07,0.1,0.95,0.9],$
+    cgPLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.1,0.11,0.95,0.89],$
     BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
 
@@ -310,7 +327,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
     
-    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[1], fn], POSITION=[0.07,0.1,0.4,0.9],$
+    cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[1], fn], POSITION=[0.08,0.11,0.4,0.89],$
     YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA,$
     /NOERASE
@@ -320,10 +337,10 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     highpass_l = freq_band(TGM_n, 'highpass_l')
     
     cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='BLK2', /FILL
 
     cgPolygon, [highpass_l, fn, fn, highpass_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='yellow', /FILL
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='BLK2', /FILL
                                              
               
     cgOPLOT, f_k, pws, COLOR='black', THICK=5   
@@ -333,7 +350,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XSTYLE=1,$
                          xTITLE = '',$
                         ; COLOR=negro, $
-                         CHARSIZE = 1.8, $
+                         CHARSIZE = 1.2, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5
                                            
@@ -344,7 +361,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XTICKV=freqs,$                         
                          XTICKN=STRING(periods, FORMAT='(F4.1)'),$
                          XSTYLE=1,$
-                         CHARSIZE = 1.8,$
+                         CHARSIZE = 1.2,$
                        ;  COLOR=negro, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5                     
@@ -354,7 +371,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          ystyle=1,$                          
                         ; COLOR=negro, $
                          /ylog,$
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.5
                         
         AXIS, YAXIS = 1, yrange=[yinf, ysup], $
@@ -362,28 +379,28 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          /ylog,$
                          YTICKFORMAT='(A1)',$ 
                          ystyle=1, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.5
 
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOUTS, X, 0.95, periodo, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5   
+   XYOUTS, X, 0.922, periodo, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, CHARTHICK=1.5   
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOUTS, X, 0.04, 'Frequence [Hz]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.2, CHARTHICK=1.5      
+   XYOUTS, X, 0.065, 'Frequence [Hz]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, CHARTHICK=1.5      
    
    
    y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
-   XYOUTS, 0.03, y, 'Power Spectral Density', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.4, ORIENTATION=90, CHARTHICK=1.5
+   XYOUTS, 0.025, y, 'Power Spectral Density', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.6, ORIENTATION=90, CHARTHICK=1.5
    
    XYOUTS, 0.18, .3, 'Ddyn', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.4, CHARTHICK=1.5     
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5     
    
-   XYOUTS, 0.36, .75, 'DP2', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2.4, CHARTHICK=1.5    
+   XYOUTS, 0.378, .775, 'DP2', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5    
 ;###############################################################################       
      dH = TeXtoIDL('\DeltaH') 
 ;###############################################################################   [0.5,0.7,0.95,0.9]   
@@ -392,12 +409,12 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 
      CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.475,0.7,0.95,0.9], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
      
      d_H = TeXtoIDL('\DeltaH')
      
-     CGOPLOT, time, new_dst, COLOR='green', THICK=4      
+     CGOPLOT, time, new_dst, COLOR='GRN5', THICK=4      
 
      CGOPLOT, time, new_dH, COLOR='black', THICK=2   
          
@@ -431,15 +448,16 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = d_H + ' & Dst [nT]', $                          
+                         YTITLE = 'G. Indices [nT]', $                          
                          ;COLOR=negro, $
                          YSTYLE=2, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6 
                         
         AXIS, YAXIS = 1, YRANGE=[down,up], $
                         ; COLOR=negro, $                                                                      
-                         YSTYLE=2, $
+                         YSTYLE=2, $       
+                         YTICKFORMAT='(A1)',$
                          CHARSIZE = 1.4 ,$
                          CHARTHICK=1.6                                                                                            
 ;###############################################################################                                 
@@ -449,7 +467,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     ; print,  new_idiff
      cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.475,0.5,0.95,0.69], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
+     POSITION=[0.5,0.51,0.95,0.68], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
      THICK=2, /NODATA   
 
@@ -492,25 +510,26 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          YTITLE = ppi+' [nT]', $                          
                    ;      COLOR=negro, $
                          YSTYLE=2, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6
                         
         AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $
                          YTICKS=4, $      
                      ;    COLOR=negro, $
-                         YSTYLE=2, $
-                         CHARSIZE = 1.4,$
+                         YSTYLE=2, $       
+                         YTICKFORMAT='(A1)',$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6                
 ;###############################################################################                
-    IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn+10) ELSE up = max(new_dp2+10)
-    IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn-10) ELSE down = min(new_dp2-10)
+    IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn) ELSE up = max(new_dp2)
+    IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn) ELSE down = min(new_dp2)
 ;###############################################################################
    ; IF upddyn GT updp2 THEN up = upddyn ELSE up=updp2 
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
      cgPLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.475,0.3,0.95,0.49], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.31,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
     
     cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
@@ -528,7 +547,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     cgOPLOT, time, new_dp2, COLOR='red', THICK=1
     cgOPLOT, time[SG_beg*60:SG_end*60], new_dp2[SG_beg*60:SG_end*60], THICK=3, LINESTYLE=0, COLOR='red'       
     
-    cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0], LINESTYLE=1, THICK=4,COLOR='black'
+    cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=4,COLOR='black'
     med_dp2 = MEDIAN(new_dp2)   
  
 
@@ -539,7 +558,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XTICKNAME=X_label, $
                          XTICKFORMAT='(A1)',$
                          COLOR=negro, $
-                         CHARSIZE = 1.6, $
+                         CHARSIZE = 1.2, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.6
                          
@@ -557,15 +576,16 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 
         AXIS, YAXIS = 0, yrange=[down,up], $ 
                          ystyle=2, $  
-                         YTITLE = 'DP2 & Ddyn [nT]', $                          
+                         YTITLE = 'I. Currents [nT]', $                          
                     ;     COLOR=negro, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6
                         
         AXIS, YAXIS = 1, yrange=[down,up], $ 
-                         ystyle=2, $ 
+                         ystyle=2, $        
+                         YTICKFORMAT='(A1)',$
                   ;       COLOR=negro, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6          
 ;###############################################################################                                                                     
 ;###############################################################################
@@ -573,9 +593,9 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     down    = MIN(new_tecresp)
      cgPLOT, time, new_tecresp, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.475,0.1,0.95,0.29], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.11,0.95,0.28], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
-    
+    dtec = TeXtoIDL('\Delta TEC') 
     cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
     [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
     THICK=2, COLOR='black'
@@ -596,7 +616,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XTICKNAME=X_label, $       
                        ;  XTICKFORMAT='(A1)',$
                          COLOR=negro, $
-                         CHARSIZE = 1.8, $
+                         CHARSIZE = 1.2, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.6
                          
@@ -613,49 +633,50 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          CHARTHICK=1.6
 
         AXIS, YAXIS = 0, yrange=[down,up], $ 
-                         ystyle=2, $  
-                         YTITLE = 'TEC diff  [TECu]', $                          
+                         ystyle=1, $  
+                         YTITLE = dtec+' [TECu]', $                          
                     ;     COLOR=negro, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6
                         
         AXIS, YAXIS = 1, yrange=[down,up], $ 
-                         ystyle=2, $ 
+                         ystyle=2, $        
+                         YTICKFORMAT='(A1)',$
                   ;       COLOR=negro, $
-                         CHARSIZE = 1.4,$
+                         CHARSIZE = 1.2,$
                          CHARTHICK=1.6       
 ;###############################################################################
 ;first panel legend 
-        cgPolygon, [0.88,0.91,0.91,0.88], [0.804,0.804,0.807,0.807], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.88,0.91,0.91,0.88], [0.754,0.754,0.757,0.757], color = 'green', /NORMAL , /FILL  
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.804,0.804,0.807,0.807], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.767,0.767,0.770,0.770], color = 'GRN5', /NORMAL , /FILL  
         
-        XYOUTS, 0.84, 0.795 , /NORMAL, d_H, CHARSIZE = 2, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.87, 0.8 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.84, 0.74 , /NORMAL, 'Dst', CHARSIZE = 2, CHARTHICK=chr_thick1  
+        XYOUTS, 0.87, 0.762 , /NORMAL, 'Dst', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 ;###############################################################################                     
 ;second panel legend                   
-        cgPolygon, [0.89,0.92,0.92,0.89], [0.461,0.461,0.464,0.464], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.89,0.92,0.92,0.89], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
+        cgPolygon, [0.91,0.94,0.94,0.91], [0.461,0.461,0.464,0.464], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.91,0.94,0.94,0.91], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
         
-        XYOUTS, 0.84, 0.455 , /NORMAL, 'Ddyn', CHARSIZE = 2, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.87, 0.456 , /NORMAL, 'Ddyn', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.84, 0.415 , /NORMAL, 'DP2', CHARSIZE = 2, CHARTHICK=chr_thick1     
+        XYOUTS, 0.87, 0.42 , /NORMAL, 'DP2', CHARSIZE = 1.2, CHARTHICK=chr_thick1     
                 
 ;###############################################################################                                                            
   !P.Font = 1
-  XYOuts, 0.52, 0.75, '(a)', /Normal, $
+  XYOuts, 0.53, 0.735, '(a)', /Normal, $
     Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font= 3 
    
    XYOuts, 0.91, 0.54, '(b)', /Normal, $
    Alignment=0.5, Charsize=3.2, CHARTHICK= 10, font=1  
    
-   XYOuts, 0.52, 0.33, '(c)', /Normal, $
+   XYOuts, 0.53, 0.335, '(d)', /Normal, $
    Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font=1  
    
-   XYOuts, 0.11, 0.8, '(d)', /Normal, $
+   XYOuts, 0.11, 0.82, '(c)', /Normal, $
    Alignment=0.5, Charsize=3.8, CHARTHICK= 10;, font=1  
    
-   XYOuts, 0.91, 0.15, '(e)', /Normal, $
+   XYOuts, 0.91, 0.235, '(e)', /Normal, $
    Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font=1    
    !P.Font = 0
 ;###############################################################################   
@@ -720,7 +741,7 @@ PRO make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_
     
     periodo = 'Period [h]'        
 ;###############################################################################               
-    PLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.07,0.1,0.95,0.9],$
+    PLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.1,0.1,0.95,0.9],$
     BACKGROUND = blanco, COLOR=negro, $
     CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
 
@@ -799,7 +820,7 @@ PRO make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, CHARTHICK=1.5   
    
    y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
-   XYOUTS, 0.02, y, 'Power Spectral density [nT]', /NORMAL, CHARSIZE=2.5, ALIGNMENT=0.5, $
+   XYOUTS, 0.02, y, 'Power Spectral density [nT]', /NORMAL, CHARSIZE=2, ALIGNMENT=0.5, $
    ORIENTATION=90, CHARTHICK=1.5        
 ;###############################################################################       
      dH = TeXtoIDL('\DeltaH') 

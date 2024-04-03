@@ -37,7 +37,7 @@
 ;       1. having Bsq data files (run the Bsq routines)
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
-PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq 
+PRO PWS_windowed, date_i, date_f, PS=ps;, Bsq=Bsq 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -53,13 +53,31 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 	@set_up_commons
 	set_up
         
-	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
-	READ, station_idx, PROMPT = '> '
+	station_class = ''
+	PRINT, 'Enter GMS class code: 		0:regmex or 1:intermagnet'
+	READ, station_class, PROMPT = '> '
 	
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
-    	
+	CASE station_class of
+		'0' : station_class = 'regmex'
+		'1' : station_class = 'intermagnet'
+		 ELSE : PRINT, 'non avaiable gms class'
+	END
+	PRINT, 'Enter GMS idx: If do not know the GMS idx, please run PRO gms code table'
+	READ, station_idx, PROMPT = '> '
+;###############################################################################
+;###############################################################################  
+    IF station_class EQ 'regmex' THEN  BEGIN    
+    station = set_var.gms[FIX(station_idx)]
+    station_code = set_var.gms_code[FIX(station_idx)]  
+    ENDIF 
+    
+    IF station_class EQ 'intermagnet' THEN  BEGIN 
+    station = set_var.gmsi[FIX(station_idx)] 
+    station_code = set_var.gmsi_code[FIX(station_idx)] 
+    ENDIF
+	PRINT,  'GMS selected: '+station+' IAGA code: '+station_code   
+;###############################################################################	
+;###############################################################################     	
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
 ;###############################################################################
     idate0 = string(yr_i, mh_i, format='(I4,I02)')
@@ -72,18 +90,17 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 ; define H variables                  
   ;  dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
   ;  dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')
+    data   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
+    H = data.H
     sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
 
 
 ; define Bsq 
-    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')    
+   ; Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')    
 
 ; Generate the time variables to plot TEC time series         
 ;###############################################################################
-;identifying NAN percentage values in the Time Series
-    H = nanpc(H, 999999.0, 'equal')
-    H = nanpc(H, 100.0, 'greater')    
+;identifying NAN percentage values in the Time Series 
 ;Identifying the NAN values        
 ;    tec = add_nan(tec, 999.0, 'equal')            
 ;    med = add_nan(med, 999.0, 'equal')                
@@ -91,7 +108,7 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     H = add_nan(H, 99999.0, 'equal')                   
 ;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
     H = fillnan(H)
-
+;   print, H
 ; define frequencies
     l            = 28.06  
     mlat         = l*!pi
@@ -99,7 +116,7 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     p_a          = sym*ld
     baseline     = p_a;Bsq + p_a Desde la actualización, Bsq ya está restado de H
     Bdiono       = H-baseline
-    Bdiono2	     = H-p_a+Bsq	; Al no tener Bsq desde el inicio, aquí se suma
+    ;Bdiono2	     = H-p_a+Bsq	; Al no tener Bsq desde el inicio, aquí se suma
     n            = N_ELEMENTS(Bdiono) 
     
     time_res    = 'm'
@@ -113,7 +130,7 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 
     fny      = FLOAT(1.0/(2.0*time)) ; frecuencia de Nyquist
     y        = FFT(Bdiono)            ; Compute Fast Fourie Transform from diono time series
-	y2 		 = FFT(Bdiono2)
+	;y2 		 = FFT(Bdiono2)
     power_s = ABS(y[0:n/2])^2
    ; pws_s   = SMOOTH(pws, 1)
 
@@ -125,8 +142,8 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
     y_w = FFT(hann_w*Bdiono)
     pws_w = (ABS(y_w[0:n/2])^2)/w_ss 
 
-    y_w2 = FFT(hann_w*Bdiono2)
-    pws_w2 = (ABS(y_w2[0:n/2])^2)/w_ss 
+   ; y_w2 = FFT(hann_w*Bdiono2)
+   ; pws_w2 = (ABS(y_w2[0:n/2])^2)/w_ss 
 ;###############################################################################
     freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
               1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0), 1.0/(0.5*3600.0)]
@@ -157,7 +174,7 @@ PRO PWS_windowed, date_i, date_f, PS=ps, Bsq=Bsq
 
 	pws_w = pws_w/SQRT(TOTAL(pws_w^2))	;se normaliza el espectro de potencia
 	;PRINT, SQRT(MEDIAN(pws_w[limP0:limP1]))
-	pws_w2 = pws_w2/SQRT(TOTAL(pws_w2^2))	;se normaliza el espectro de potencia
+;	pws_w2 = pws_w2/SQRT(TOTAL(pws_w2^2))	;se normaliza el espectro de potencia
     ysup = MAX(pws_w[MIN(i):fn])
     yinf = MIN(pws_w[MIN(i):fn])
 ;###############################################################################
@@ -194,7 +211,13 @@ P_err1 = P_err1*SQRT(TOTAL(pws_w[limP0:limP1]^2))
 
 P_err2 = err2.P
 P_err2 = P_err2*SQRT(TOTAL(pws_w[limP0:limP1]^2))
+
 ;###############################################################################
+;###############################################################################
+;###############################################################################
+;lineas de tolerancia
+;usar el error^2 de alfa
+a_err = SQRT(0.0706783)   
 ;###############################################################################
 ;LS-log curve fitting, CURVA 2
 c2 = 12.4164
@@ -226,22 +249,29 @@ PRINT, a2, ABS(a_l2), ABS(a_lw2)
 PRINT, ''
 PRINT, 'N, least square result ALOG(LSR), (LSR weighted): '
 PRINT, N2, ABS(N_l2), (ABS(N_lw2))
-;###############################################################################
-;###############################################################################
-;###############################################################################
-;lineas de tolerancia
-;usar el error^2 de alfa
-a_err = SQRT(0.0706783)   
-;###############################################################################
+
 
 
 ;###############################################################################
 ;###############################################################################
     
     IF keyword_set(ps) THEN BEGIN
-    	make_psfig, fk, fny, pws_w, pws_w2, P, P2,P_err1, P_err2, P2_err1, P2_err2, a, a2, $
-    	[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
+    	path = set_var.local_dir+'output/pws/'+station_code+'/'
+    	test = FILE_TEST(path, /DIRECTORY) 
+		IF test EQ 0 THEN BEGIN
+			FILE_MKDIR, path
+			PRINT, 'PATH directory '+path
+			PRINT, 'created'
+		ENDIF ELSE BEGIN
+			PRINT, ''
+			
+		ENDELSE
+    	make_psfig, fk, fny, pws_w, P ,P2, P_err1, P_err2, P2_err1, P2_err2, a, a2, $
+    	[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path    
     ENDIF
+
+;f_k, fn, pws, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1, a2, $
+;				date_i, date_f, path
 
     DEVICE, true=24, retain=2, decomposed=0
     TVLCT, R_bak, G_bak, B_bak, /GET        
@@ -359,7 +389,8 @@ WINDOW,2,  XSIZE=600, YSIZE=600, TITLE='LS fit PSD'
 	alfa = TeXtoIDL('\alpha')	
 END
 
-PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1, a2, date_i, date_f
+PRO make_psfig, f_k, fn, pws, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1, a2, $
+				date_i, date_f, path
         @set_up_commons
         set_up
 	On_error, 2
@@ -376,9 +407,6 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
     TGM_n = event_case([yr_i,mh_i,dy_i])    	
 ;############################################################################### 
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
-
-    ;path = '../rutidl/output/article1events/diono_ev/'
-    path = set_var.local_dir+'/output/article2/pws/'
     psfile =  path+'diono_PWS_powerL_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
@@ -519,88 +547,7 @@ PRO make_psfig, f_k, fn, pws, pws2, P, P2, P_err1, P_err2, P2_err1, P2_err2, a1,
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
 ;############################################################################### 
-    cgPLOT, f_k, pws2, /XLOG, /YLOG, XRANGE = [freqs[0], 2.7e-3], POSITION=[0.07,0.05,0.9,0.45],$
-    YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
-    CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=1, /NODATA, /NOERASE
-
-    passband_l = freq_band(TGM_n, 'passband_l')
-    passband_u = freq_band(TGM_n, 'passband_u')
-    highpass_l = freq_band(TGM_n, 'highpass_l')
-    
-  ;  IF TGM_n NE 'fuera de rango' THEN BEGIN
-    cgPolygon, [f_k[limP0], f_k[limP1] ,f_k[limP1], f_k[limP0]], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], Color='grey', /FILL
-
-    cgPolygon, [f_k[limP], f_k[limP2] ,f_k[limP2], f_k[limP]], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], Color='light grey', /FILL
-                                             
-    ;ENDIF
-
-   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.47   
-   XYOUTS, X, y, periodo, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
-
-   CGTEXT, 0.19, 0.23, 'a1= '+STRING(a1, FORMAT='(F4.1)'), /Normal, $
-   Alignment=0.5, Charsize=1.4, CHARTHICK= 5, COLOR='red' 
-
-
-   CGTEXT, X+0.05, 0.42, 'a2= '+STRING(a2, FORMAT='(F4.1)'), /Normal, $
-   Alignment=0.5, Charsize=1.4, CHARTHICK= 5 , COLOR='red'
-
-   CGTEXT, 0.8, 0.34, 'con '+sq, /Normal, $
-   Alignment=0.5, Charsize=2, CHARTHICK= 5, COLOR='blue' 
-
-    cgOPLOT, f_k[limP:limP2], pws2[limP:limP2], PSYM=4, Color='yellow', THICK=1
-    
-    cgOPLOT, f_k, pws2, COLOR='black', THICK=1 
-	cgOPLOT, f_k[limP0:limP1], P_err1, LINESTYLE=2, Color='red', THICK=1 
-    cgOPLOT, f_k[limP0:limP1], P_err2, LINESTYLE=2, Color='red', THICK=1    
-    cgOPLOT, f_k[limP0:limP1], pws2[limP0:limP1], PSYM=4, Color='yellow', THICK=1
-    
-    cgOPLOT, f_k[limP0:limP1], P, COLOR='red', THICK=3
-
- 	 
-	cgOPLOT, f_k[limP:limP2], P2_err1, LINESTYLE=2, Color='red', THICK=1 
-    cgOPLOT, f_k[limP:limP2], P2_err2, LINESTYLE=2, Color='red', THICK=1    
-    cgOPLOT, f_k[limP:limP2], P2, COLOR='red', THICK=3
-    
-        AXIS, XAXIS = 0, XRANGE=[freqs[0], 2.7e-3], $
-                         /XLOG,$
-                         XSTYLE=1,$
-                         xTITLE = 'Frequence [Hz]',$
-                        ; COLOR=negro, $
-                         CHARSIZE = 1.4, $
-                         TICKLEN=0.04,$
-                         CHARTHICK=1.5
-                                           
-        AXIS, XAXIS = 1, XRANGE=[freqs[0], 2.7e-3], $;.0/(!X.CRANGE), $
-                         /XLOG,$
-                         XTICKS=6,$
-                         XMINOR=4,$
-                         XTICKV=freqs,$                         
-                         XTICKN=STRING(periods, FORMAT='(I2)'),$
-                         XSTYLE=1,$
-                         CHARSIZE = 1.4,$
-                       ;  COLOR=negro, $
-                         TICKLEN=0.04,$
-                         CHARTHICK=1.5                     
-
-        AXIS, YAXIS = 0, yrange=[yinf, ysup], $
-                         YTITLE = '', $
-                         ystyle=1,$                          
-                        ; COLOR=negro, $
-                         /ylog,$
-                         CHARSIZE = 1.4,$
-                         CHARTHICK=1.5
-                        
-        AXIS, YAXIS = 1, yrange=[yinf, ysup], $
-                        ; COLOR=negro, $
-                         /ylog,$
-                         YTICKFORMAT='(A1)',$ 
-                         ystyle=1, $
-                         CHARSIZE = 1.4,$
-                         CHARTHICK=1.5                          
+  
 ;###############################################################################                          
 ;###############################################################################                     
 ;second panel legend                     

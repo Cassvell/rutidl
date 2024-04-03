@@ -55,26 +55,45 @@ PRO diono_valid, date_i, date_f, PNG = png, PS=ps
     idate0 = STRING(yr_i, mh_i, format='(I4,I02)')
     TGM_n  = event_case([yr_i,mh_i,dy_i])
 ;###############################################################################
-	station_idx = ''
-	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
+	station_class = ''
+	PRINT, 'Enter GMS class code: 		0:regmex or 1:intermagnet'
+	READ, station_class, PROMPT = '> '
+	
+	CASE station_class of
+		'0' : station_class = 'regmex'
+		'1' : station_class = 'intermagnet'
+		 ELSE : PRINT, 'non avaiable gms class'
+	END
+	PRINT, 'Enter GMS idx: If do not know the GMS idx, please run PRO gms code table'
 	READ, station_idx, PROMPT = '> '
-
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)] 
+	
+    IF station_class EQ 'regmex' THEN  BEGIN    
+    station = set_var.gms[FIX(station_idx)]
+    station_code = set_var.gms_code[FIX(station_idx)]  
+    ENDIF 
+    
+    IF station_class EQ 'intermagnet' THEN  BEGIN 
+    station = set_var.gmsi[FIX(station_idx)] 
+    station_code = set_var.gmsi_code[FIX(station_idx)] 
+    ENDIF
+	PRINT,  'GMS selected: '+station+' IAGA code: '+station_code   
+;###############################################################################
+;###############################################################################
 ; Generate the time series variables 
 ;Generate the time series
 
 ; define Dst and dH variables
     dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    H   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx), 'H')
+    dat   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'H')
+    H = dat.H
     
 ; define K variables   
     kp      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'kp')
 
     k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k', station, FIX(station_idx))    
     k_mex   = add_nan(k_mex, 9.0, 'greater') 
-	print, k_mex
+	;print, k_mex
     k_days  = FINDGEN(file_number*8)/8. 
 ; define Bsq 
 ;    Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'H')
@@ -254,7 +273,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
      diono_effect= dionstr.p_a+dp2+ddyn
      diono_effect_tot=dionstr.p_a+diono
      
-     CGOPLOT, tot_days, dst, COLOR='green', THICK=4  
+     CGOPLOT, tot_days, dst, COLOR='GRN5', THICK=4  
      CGOPLOT, tot_days[SG_beg:SG_end], diono_effect[SG_beg:SG_end], COLOR='red', THICK=4         
     ; OPLOT, tot_days, diono_effect_tot, COLOR=azul, THICK=4
     window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
@@ -334,13 +353,13 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
                          YTITLE = '', $                          
                          ;COLOR=negro, $
                          YSTYLE=2, $
-                         CHARSIZE = 2.6 ,$
+                         CHARSIZE = 2.2 ,$
                          CHARTHICK=3.5 
                         
         AXIS, YAXIS = 1, YRANGE=[down,up], $
                         ; COLOR=negro, $                                                                      
                          YSTYLE=2, $
-                         CHARSIZE = 2.6 ,$
+                         CHARSIZE = 2.2 ,$
                          CHARTHICK=3.5                                                                                        
 ;###############################################################################    
      CGPLOT, k_days, k_mex, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
@@ -348,7 +367,7 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
      POSITION=[0.1,0.13,0.9,0.51], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 5,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[0,9], THICK=4, /NOERASE
      
-     CGOPLOT, k_days, kp, COLOR='green', LINESTYLE=0, THICK=4
+     CGOPLOT, k_days, kp, COLOR='GRN5', LINESTYLE=0, THICK=4
      A = FINDGEN(17) * (!PI*2/16.)
      USERSYM, COS(A), SIN(A), /FILL     
   
@@ -373,18 +392,18 @@ PRO makefig_ps, tot_days, dH, dst, kp, k_mex, k_days, Bsq, H, new_kmex1,new_kmex
 
      k_days_w = k_days[GS_ini:GS_end]  
        
-     CGOPLOT, k_days_w, k_w, COLOR='black', PSYM=8, THICK=4, symsize=1 
+  ;   CGOPLOT, k_days_w, k_w, COLOR='black', PSYM=8, THICK=4, symsize=1 
           
-FOR i=0, N_ELEMENTS(k_w)-1 DO BEGIN                
-     IF k_w[i] GT km_w[i] THEN BEGIN        
-        ERRPLOT,k_days_w[i], km1_w[i], k_w[i], THICK=4
-        ERRPLOT, k_days_w[i], k_w[i], km2_w[i], LINESTYLE=0, THICK=1
-    ENDIF  
-        IF k_w[i] LT km_w[i] THEN BEGIN
-        ERRPLOT,k_days_w[i], km1_w[i], k_w[i], LINESTYLE=0, THICK=1
-        ERRPLOT, k_days_w[i], k_w[i], km2_w[i], THICK=4
-    ENDIF
-ENDFOR                  
+;FOR i=0, N_ELEMENTS(k_w)-1 DO BEGIN                
+   ;  IF k_w[i] GT km_w[i] THEN BEGIN        
+  ;      ERRPLOT,k_days_w[i], km1_w[i], k_w[i], THICK=4
+ ;       ERRPLOT, k_days_w[i], k_w[i], km2_w[i], LINESTYLE=0, THICK=1
+;    ENDIF  
+    ;    IF k_w[i] LT km_w[i] THEN BEGIN
+   ;     ERRPLOT,k_days_w[i], km1_w[i], k_w[i], LINESTYLE=0, THICK=1
+  ;      ERRPLOT, k_days_w[i], k_w[i], km2_w[i], THICK=4
+ ;   ENDIF
+;ENDFOR                  
 ;###############################################################################                         
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
                          XTICKS=file_number, $
@@ -392,7 +411,7 @@ ENDFOR
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          ;COLOR=negro, $
-                         CHARSIZE = 3.0 , $
+                         CHARSIZE = 2.2 , $
                          TICKLEN=0.04,$
                          CHARTHICK=3.5 
                          
@@ -412,13 +431,13 @@ ENDFOR
                          YTITLE = '', $                          
                         ; COLOR=negro, $
                          YSTYLE=1, $
-                         CHARSIZE = 2.6 ,$
+                         CHARSIZE = 2.2 ,$
                          CHARTHICK=3.5 
                         
         AXIS, YAXIS = 1, YRANGE=[0,9], $
                         ; COLOR=negro, $                     
                          YSTYLE=1, $
-                         CHARSIZE = 2.6 ,$
+                         CHARSIZE = 2.2 ,$
                          CHARTHICK=3.5                                                 
 ;###############################################################################
    x = (!X.WINDOW[1] - !X.WINDOW[0]) / 2. + !X.WINDOW[0]
@@ -436,30 +455,30 @@ ENDFOR
   ; XYOUTS, 0.14, 0.41, '(b)', /NORMAL, color=negro, Alignment=0.5, Charsize=1.8, CHARTHICK= 4          
 ;###############################################################################                     
 ;first panel legend                   
-        cgPolygon, [0.74,0.77,0.77,0.74], [0.694,0.694,0.697,0.697], color = 'black', /NORMAL, /FILL
-        cgPolygon, [0.74,0.77,0.77,0.74], [0.644,0.644,0.647,0.647], color = 'red', /NORMAL  , /FILL      
-        cgPolygon, [0.74,0.77,0.77,0.74], [0.594,0.594,0.597,0.597], color = 'green', /NORMAL , /FILL  
+        cgPolygon, [0.76,0.79,0.79,0.76], [0.694,0.694,0.697,0.697], color = 'black', /NORMAL, /FILL
+        cgPolygon, [0.76,0.79,0.79,0.76], [0.644,0.644,0.647,0.647], color = 'red', /NORMAL  , /FILL      
+        cgPolygon, [0.76,0.79,0.79,0.76], [0.594,0.594,0.597,0.597], color = 'GRN5', /NORMAL , /FILL  
         
-        XYOUTS, 0.78, 0.685 , /NORMAL, d_H, CHARSIZE = 2.4, CHARTHICK=chr_thick1 
+        XYOUTS, 0.8, 0.685 , /NORMAL, d_H, CHARSIZE = 2.4, CHARTHICK=chr_thick1 
                 
-        XYOUTS, 0.78, 0.635 , /NORMAL, dst_l, CHARSIZE = 2.4, CHARTHICK=chr_thick1   
+        XYOUTS, 0.8, 0.635 , /NORMAL, dst_l, CHARSIZE = 2.4, CHARTHICK=chr_thick1   
                 
-        XYOUTS, 0.78, 0.585 , /NORMAL, 'Dst', CHARSIZE = 2.4, CHARTHICK=chr_thick1     
+        XYOUTS, 0.8, 0.585 , /NORMAL, 'Dst', CHARSIZE = 2.4, CHARTHICK=chr_thick1     
                 
 ;second panel legend  
-        cgPolygon, [0.74,0.77,0.77,0.74], [0.444,0.444,0.447,0.447], color = 'black', /NORMAL, /FILL
-        cgPolygon, [0.74,0.77,0.77,0.74], [0.4,0.4,0.403,0.403], color = 'green', /NORMAL , /FILL 
+        cgPolygon, [0.76,0.79,0.79,0.76], [0.444,0.444,0.447,0.447], color = 'black', /NORMAL, /FILL
+        cgPolygon, [0.76,0.79,0.79,0.76], [0.4,0.4,0.403,0.403], color = 'GRN5', /NORMAL , /FILL 
 
-        XYOUTS, 0.78, 0.442 , /NORMAL, 'Kmex', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
+        XYOUTS, 0.8, 0.442 , /NORMAL, 'Kmex', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
                 
-        XYOUTS, 0.78, 0.39 , /NORMAL, 'Kp', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
+        XYOUTS, 0.8, 0.39 , /NORMAL, 'Kp', CHARSIZE = 2.4, CHARTHICK=chr_thick1   
 ;###############################################################################                
    y = (0.9 - 0.55) / 2. + 0.55 
-   XYOUTS, 0.02, y, '[nT]', /NORMAL, $
+   XYOUTS, 0.03, y, 'G. indices [nT]', /NORMAL, $
    ALIGNMENT=0.5, CHARSIZE=2.4, ORIENTATION=90, CHARTHICK=3.5    
    
    y = (0.51 - 0.1) / 2. + 0.1 
-   XYOUTS, 0.04, y, 'K index', /NORMAL, $
+   XYOUTS, 0.04, y, 'K indices', /NORMAL, $
    ALIGNMENT=0.5, CHARSIZE=2.6, ORIENTATION=90, CHARTHICK=3.5     
 ;###############################################################################
 ; saving png

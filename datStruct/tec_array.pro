@@ -46,11 +46,18 @@ FUNCTION tec_data, idate
         header = 1      ; Defining number of lines of the header 
         path='/home/isaac/MEGAsync/datos'
         idate = string(iyear, imonth, iday, format = '(I4, "-", I02, "-", I02)')
-		file_name = path+'/tec/'+'tec_'+idate+'.txt'
+		ext = '.txt'
+		file_name = path+'/tec/'+'tec_'+idate+ext
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
-
+		
+		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
+			ext = '.txt'
+		    file_name = path+'/tec/'+'tec_'+idate+ext
+		    file = FILE_SEARCH(file_name, COUNT=opened_files)
+		ENDIF 
+		
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
 
@@ -58,11 +65,18 @@ FUNCTION tec_data, idate
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-
+;		IF ext EQ 'txt' THEN BEGIN
         DStruct = {doy : 0, tec : 0., med : 0.}                                   
 		r_tec = REPLICATE(DStruct, number_of_lines-header)	      
 		READS, data[header:number_of_lines-1], r_tec, $
-	format='(F3, X, F5, X, F5)'		
+	format='(F3, X, F5, X, F5)'
+	;	ENDIF ELSE BEGIN
+	;	        DStruct = {doy : 0, tec : 0.}                                   
+	;	r_tec = REPLICATE(DStruct, number_of_lines-header)	      
+	;	READS, data[header:number_of_lines-1], r_tec, $
+	;format='(I03, X, F5)'
+	;ENDELSE
+	
 		RETURN, r_tec
 END
 

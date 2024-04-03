@@ -1,0 +1,19 @@
+index	station			code  		mlat  hem   	UTC
+0		beijing			bmt			31.00 N			8:00
+1		boulder			bou			57.64 N			-7:00	-6:00
+2		brandon			brd			47.50 N			-6:00
+3		bstenis			bsl			99.99 N			-6:00
+4		cocos			cki			21.16 S			6:30
+5		cheongyang		cyg			27.45 N			9:00
+6		guimar			gui			27.91 N			0:00	1:00
+7		hartebeesthoek	hbk			27.03 S			2:00
+8		islandpascua	ipm			19.52 S			-6:00   -5:00
+9		kakioka			kak			28.17 N			9:00
+10		kakadu			kdu			20.91 S			8:00
+11		keetmanshoop	kmh			26.14 S			2:00			GFZ
+12		pilar			pil			22.38 S			-3:00
+13		sanjuan			sjg			27.15 N			-5:00	-4:00
+14		tamanraset		tam			24.23 N			1:00
+15		tristandacunha 	tdc			31.94 S			0:00
+16		tucson			tuc			99.99 N			-7:00
+

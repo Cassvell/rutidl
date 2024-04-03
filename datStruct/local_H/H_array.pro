@@ -41,12 +41,13 @@
 ;   Dec, 2022
 ;   Feb, 2023
 ;   Jun, 2023
+;	feb, 2024
 ;note
 ;   For following analysis, this routine has to be run to create clean H obs data
 ;
 
 
-FUNCTION struct_H, date, station, idx, resolution
+FUNCTION struct_H, date, station_code, resolution
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -61,14 +62,18 @@ FUNCTION struct_H, date, station, idx, resolution
         
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')		
         str_year = STRING(year, FORMAT = '(I4)')	
-        station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu		
 
-
-    IF resolution EQ 'min' THEN BEGIN     
+           ;regmex		  0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+           ;intermagnet bmt:0, bou:1, brd:2, bsl:3, cki:4, cyg:5, gui:6, hbk:7, ipm:8, kak:9, $
+    					;kdu:10, kmh:11, pil:12, sjg:13, tam:14, tdc:15, tuc:16
+		gms_class = gms_class(station_code)
+	
+	extension = ''
+	IF resolution EQ 'min' THEN extension = 'm.dat' ELSE extension = 'h.dat'
+		   
        ; sts  = string(stats, format = '(A5)')
-        dir = set_var.Mega_dir+station
-		data_dir = set_var.Mega_dir+station+'/min/'
-		file_name = data_dir+station_code+'_'+date+'m.dat'
+        dir = set_var.Mega_dir+'/'+gms_class+'/'+station_code+'/min/'
+		file_name = dir+station_code+'_'+date+extension
 ;		print, file_name
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -84,44 +89,33 @@ FUNCTION struct_H, date, station, idx, resolution
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ;extracting data and denfining an structure data
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        DStruct = {H : 0.}
+	IF resolution EQ 'min' THEN BEGIN
+        DStruct = {X : FLTARR(1440), Y : FLTARR(1440), H : FLTARR(1440), Z : FLTARR(1440)}
+        struct = {comp : FLTARR(1440)}
+        H_mag = REPLICATE(struct, 4) 
 
-		H_mag = REPLICATE(DStruct, number_of_lines)	  
-		READS, data[0:number_of_lines-1], H_mag, FORMAT='(F9)'	
-    ENDIF
-    
-    IF resolution EQ 'H' THEN BEGIN     
-       ; sts  = string(stats, format = '(A5)')
-        dir = set_var.Mega_dir+station
-		data_dir = set_var.Mega_dir+station+'/hourly/'
-		file_name = data_dir+station_code+'_'+date+'h.dat'
-;		print, file_name
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
+;		 = REPLICATE(DStruct, number_of_lines)	  
+		READS, data, H_mag, FORMAT='(1440(F10))'	
+	ENDIF ELSE BEGIN
+        DStruct = {X : FLTARR(24), Y : FLTARR(24), H : FLTARR(24), Z : FLTARR(24)}
+        struct = {comp : FLTARR(24)}
+        H_mag = REPLICATE(struct, 4) 
 
-		number_of_lines = FILE_LINES(file)
+;		 = REPLICATE(DStruct, number_of_lines)	  
+		READS, data, H_mag, FORMAT='(24(F10))'	
+	ENDELSE
+	
+		DStruct.X[*]    = H_mag[0].comp 
+		DStruct.Y[*]    = H_mag[1].comp  
+		DStruct.H[*]    = H_mag[2].comp
+		DStruct.Z[*]	= H_mag[3].comp
 
-		data = STRARR(number_of_lines)
-
-		OPENR, lun, file, /GET_LUN, ERROR=err
-		READF, lun, data, FORMAT = '(A)'
-		CLOSE, lun
-		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        DStruct = {H : 0.}
-
-		H_mag = REPLICATE(DStruct, number_of_lines)	  
-		READS, data[0:number_of_lines-1], H_mag, FORMAT='(F9)'	
-    ENDIF    
-    		    	
-		RETURN, H_mag		
+		RETURN, DStruct		
 END
 
 
 
-FUNCTION H_array, date_i, date_f, station, idx, resolution 
+FUNCTION H_array, date_i, date_f, station_code, resolution 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
         @set_up_commons
@@ -135,16 +129,16 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
 	
-	station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+	;station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 ;############################################################################### 
-
+	gms_class = gms_class(station_code)
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 	
 ;###############################################################################
 ; define H variables
 
         string_date        = STRARR(file_number)               
         data_file_name  = STRARR(file_number)                                
-        dir = set_var.Mega_dir+station              
+        dir = set_var.Mega_dir+'/'+gms_class+'/'+station_code+'/min/'              
         
     IF resolution EQ 'min' THEN BEGIN        
         FOR i=0ll, file_number-1 DO BEGIN
@@ -155,13 +149,7 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')       
-                data_file_name[i]  = dir+'/min/'+station_code+'_'+string_date[i]+'m.dat'              
-
-		      ;  file_h  = FILE_SEARCH(data_file_name_h[i], COUNT=opened_files)
-
-	      ;      IF opened_files NE N_ELEMENTS(file_h) THEN begin
-	       ;         data_file_name_h[i] = data_path+'/teoloyucan/min/'+'teo_'+string_date[i]+'m23.dat'   
-	        ;    ENDIF	            	                            
+                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'m.dat'                          	                            
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)
@@ -170,27 +158,35 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
         
         IF capable_to_plot NE N_ELEMENTS(data_file_name) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
-                PRINT, FORMAT="('                missing GMS_YYYYMMDD.H data.',A,' impossible to plot all data.')"              
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.magnetic XYZH ',A,' impossible to plot all data.')"              
         ENDIF
 
 ;###############################################################################
 ; Generate the time variables to plot H time series                     
-        H    = FLTARR(file_number*1440)                       
+        H    = FLTARR(file_number*1440)                               
+        X    = FLTARR(file_number*1440) 
+        Y    = FLTARR(file_number*1440)
+        Z    = FLTARR(file_number*1440)                    
         FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
                 IF exist_data_file[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, STRING(idx), resolution)
+                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station_code, resolution)
                         
                         H[i*1440:(i+1)*1440-1] = d_h.H[*]
-                                                                                                                       
+                        X[i*1440:(i+1)*1440-1] = d_h.X[*]  
+                        Y[i*1440:(i+1)*1440-1] = d_h.Y[*]        
+                        Z[i*1440:(i+1)*1440-1] = d_h.Z[*]
                 ENDIF ELSE BEGIN
                         H[i*1440:(i+1)*1440-1] = 99999.0
+                        X[i*1440:(i+1)*1440-1] = 99999.0
+                        Y[i*1440:(i+1)*1440-1] = 99999.0         
+                        Z[i*1440:(i+1)*1440-1] = 99999.0                        
                 ENDELSE                
         ENDFOR
-     ;   PRINT, N_ELEMENTS(H)
+
     ENDIF
 
 
@@ -204,43 +200,52 @@ FUNCTION H_array, date_i, date_f, station, idx, resolution
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')       
-                data_file_name[i]  = dir+'/hourly/'+station_code+'_'+string_date[i]+'h.dat'              
-		        
-		      ;  file_h  = FILE_SEARCH(data_file_name_h[i], COUNT=opened_files)
-
-	      ;      IF opened_files NE N_ELEMENTS(file_h) THEN begin
-	       ;         data_file_name_h[i] = data_path+'/teoloyucan/min/'+'teo_'+string_date[i]+'m23.dat'   
-	        ;    ENDIF	            	                            
+                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'h.dat'                          	                            
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)
-        capable_to_plot   = N_ELEMENTS(WHERE(exist_data_file EQ 1))
-      
+        capable_to_plot   = N_ELEMENTS(WHERE(exist_data_file EQ 1))      
         
         IF capable_to_plot NE N_ELEMENTS(data_file_name) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
-                PRINT, FORMAT="('                missing GMS_YYYYMMDD.H data.',A,' impossible to plot all data.')"              
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.magnetic XYZH data.',A,' impossible to plot all data.')"              
         ENDIF
 
 ;###############################################################################
 ; Generate the time variables to plot H time series                     
-        H    = FLTARR(file_number*24)                       
+        H    = FLTARR(file_number*24)                               
+        X    = FLTARR(file_number*24) 
+        Y    = FLTARR(file_number*24)
+        Z    = FLTARR(file_number*24)                          
         FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
                 IF exist_data_file[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station, STRING(idx), resolution)
+                        d_h = struct_H([tmp_year, tmp_month, tmp_day], station_code, resolution)
                         
                         H[i*24:(i+1)*24-1] = d_h.H[*]
+                    	X[i*24:(i+1)*24-1] = d_h.X[*]
+                        Y[i*24:(i+1)*24-1] = d_h.Y[*]
+                        Z[i*24:(i+1)*24-1] = d_h.Z[*]
                                                                                                                        
                 ENDIF ELSE BEGIN
                         H[i*24:(i+1)*24-1] = 99999.0
+                        X[i*24:(i+1)*24-1] = 99999.0
+                        Y[i*24:(i+1)*24-1] = 99999.0
+                        Z[i*24:(i+1)*24-1] = 99999.0
                 ENDELSE                
-        ENDFOR
-     ;   PRINT, N_ELEMENTS(H)        
+        ENDFOR       
     ENDIF
-
-	RETURN, H
+	
+        mag_data = {H : FLTARR(N_ELEMENTS(H)), X : FLTARR(N_ELEMENTS(X)), Y : FLTARR(N_ELEMENTS(Y)), $
+        			Z : FLTARR(N_ELEMENTS(Z))}
+        			
+        mag_data.H = H[*]
+        mag_data.X = X[*]
+        mag_data.Y = Y[*]
+        mag_data.Z = Z[*]
+        
+	RETURN, mag_data
 END

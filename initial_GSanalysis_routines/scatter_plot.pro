@@ -54,9 +54,10 @@
 
 
 PRO scatter_plot, PNG=png, PS=ps
-
-        input_dir  = '/home/isaac/MEGAsync/datos/tgm/article_events/'
-        path       = input_dir
+	@set_up_commons
+	set_up
+        input_dir  = set_var.Mega_dir+'/article_events/dst_lambda/'
+        path       = set_var.local_dir+'output/'
 
 	;iyr	= idate[0]
 	;imh	= idate[1]
@@ -72,7 +73,7 @@ PRO scatter_plot, PNG=png, PS=ps
       ;  fdate = string(fyr, fmh, fdy, format = '(I4, I02, I02)')
                 
         
-        data_files         = FILE_SEARCH(input_dir+'tgmdata'+'?????????????????'+'.txt')
+        data_files         = FILE_SEARCH(input_dir+'tgmdata'+'?????????????????'+'.dat')
          
         files_lines_number = FILE_LINES(data_files)
         MX_latitude        = 28.06*!Pi/180.
@@ -142,8 +143,8 @@ PRO scatter_plot, PNG=png, PS=ps
         idx = WHERE(dst GE -20 AND dst LT 60)      
         j =   WHERE(dst LT -20 AND dst GE -250)
 
-        idx2 = WHERE(dst GE -70 AND dst LT 60)      
-        j2 =   WHERE(dst LT -70 AND dst GE -250)
+        idx2 = WHERE(dst GE -50 AND dst LT 60)      
+        j2 =   WHERE(dst LT -50 AND dst GE -250)
  
         idx3 = WHERE(dst GE -100 AND dst LT 60)      
         j3 =   WHERE(dst LT -100 AND dst GE -250)
@@ -156,7 +157,7 @@ PRO scatter_plot, PNG=png, PS=ps
 
         corr1 = CORRELATE(dh[idx2], dst[idx2])^2
         corr2 =  CORRELATE(dh[j2], dst[j2])^2
-        PRINT, 'límite, -70 nT'
+        PRINT, 'límite, -50 nT'
         PRINT, corr1
         PRINT, corr2
 
@@ -206,14 +207,14 @@ PRO scatter_plot, PNG=png, PS=ps
     ENDIF
 
     IF keyword_set(ps) THEN BEGIN
-    makefig_ps, dst, dh, med, desv, path
+    makefig_ps, dst, dh, med, corr1, corr2, desv, path
     ENDIF
      
 RETURN
 END
 
 
-PRO makefig_ps, dst, dh, med, desv, path
+PRO makefig_ps, dst, dh, med, R1, R2, desv, path
 
  ;   LOADCT, 0, /SILENT
 
@@ -244,8 +245,8 @@ cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encaps
    ; POLYFILL, [!X.CRANGE[0], -75, -75, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -75, -75], $
    ; COLOR=amarillo, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=0.03, SPACING=0.3                
 
-   ; cgPolygon, [!X.CRANGE[0], -50, -50, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -50, -50], $
-   ; Color = cgColor("GRN2"),  /FILL
+;    cgPolygon, [!X.CRANGE[0], -50, -50, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -50, -50], $
+ ;   Color = cgColor("GRN2"),  /FILL
 
     cgPolygon, [!X.CRANGE[0], -100, -100, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -100, -100], $
     Color = cgColor("GRN3"), /FILL
@@ -280,7 +281,7 @@ cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encaps
     med = texToidl('R^2 = ')
         XYOUTS, 0.2, 0.75 , /NORMAL, $
              ;   med, COLOR=negro, $
-                STRING(med, 0.77, FORMAT='(A, F4.2)') , $
+                STRING(med, R1, FORMAT='(A, F4.2)') , $
                 CHARSIZE = 1.2, $
                 CHARTHICK=chr_thick1   
                 
@@ -294,7 +295,7 @@ cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encaps
     med = texToidl('R^2 = ')
         XYOUTS, 0.63, 0.25 , /NORMAL, $
              ;   med, COLOR=negro, $
-                STRING(med, 0.42, FORMAT='(A, F4.2)') , $
+                STRING(med, R2, FORMAT='(A, F4.2)') , $
                 CHARSIZE = 1.3, $
                 CHARTHICK=chr_thick1   
                 
@@ -307,7 +308,7 @@ cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encaps
                 
     d_H = TeXtoIDL('\DeltaH [nT]')
     dt = TeXtoIDL('\DeltaT')
-    dstlbd = TeXtoIDL('Dst [nT]')
+    dstlbd = TeXtoIDL('Dst_\lambda [nT]')
 
     
     y = (.75 - 0.25) / 2. + 0.25
@@ -379,8 +380,8 @@ PRO makefig_png, dst, dh, med, desv, path
    ; POLYFILL, [!X.CRANGE[0], -20, -75, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -75, -75], $
    ; COLOR=amarillo, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=0.03, SPACING=0.3
     
-   ; POLYFILL, [!X.CRANGE[0], -75, -75, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -75, -75], $
-   ; COLOR=amarillo, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=0.03, SPACING=0.3                
+    POLYFILL, [!X.CRANGE[0], -75, -75, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -75, -75], $
+    COLOR='yellow', /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=0.03, SPACING=0.3                
 
   ;  POLYFILL, [!X.CRANGE[0], -50, -50, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -50, -50], $
   ;  COLOR=amarillo
@@ -456,7 +457,7 @@ PRO makefig_png, dst, dh, med, desv, path
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         PRINT, '        Setting PNG as default file type.'
         WRITE_PNG, path+'dispersion_general_dst.png', Image, reds,greens,blues
-                PRINT, '        Saving: '+path+'dispersion_general_dst.png'
+                PRINT, '        Saving: '+path+'dispersion_general_dst_ld.png'
                 PRINT, ''
     RETURN
 END

@@ -1,6 +1,6 @@
 
 ;DATOS DE CAMPO MAGNETICO (TEOLOYUCAN?)
-PRO wave_test, H, date_i, date_f, PS=ps
+PRO wave_test, H, date_i, date_f, station_code, PS=ps
 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
@@ -11,7 +11,9 @@ PRO wave_test, H, date_i, date_f, PS=ps
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
-	
+;###############################################################################
+	@set_up_commons
+	set_up	
 ;se lee el archivo de datos
 ;readcol,'teo20030526_20030608.dat',bfield,format='f' 
 bfield = H
@@ -37,10 +39,6 @@ dt= 1.  ;resolucion de 1 minuto
 
 
 aa=bfield
-
-
-
-
        
 ; Note: for accurate reconstruction and variance computation, set: 
 ; s0 = dt    for Morlet
@@ -106,8 +104,19 @@ nscale = N_ELEMENTS(period)
 ;==============================================================================
 ;==============================================================================
     IF keyword_set(ps) THEN BEGIN
-    	make_psfig, power, wave, times, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    
-		make_psfig2, power, wave, times, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]    	
+    
+    path = set_var.local_dir+'output/wavelet/'+station_code+'/'	
+    	test = FILE_TEST(path, /DIRECTORY) 
+		IF test EQ 0 THEN BEGIN
+			FILE_MKDIR, path
+			PRINT, 'PATH directory '+path
+			PRINT, 'created'
+		ENDIF ELSE BEGIN
+			PRINT, ''
+			
+		ENDELSE    
+    	make_psfig, power, wave, times, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path,  station_code   
+		make_psfig2, power, wave, times, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code	
     ENDIF
 
 ;WINDOW,0, XSIZE=1000, YSIZE=500
@@ -136,15 +145,20 @@ fk     = (1+FINDGEN(n))/(n*60)
 y  = fft(bfield)
 fny = FLOAT(1.0/(2.0*60))
 pws = (ABS(y))^2
-pws =pws/SQRT(TOTAL(pws^2))	
-global_ws = global_ws/recon_variance
-;PRINT, 
-erase
-WINDOW,1, XSIZE=500, YSIZE=500
-PLOT, fk, global_ws, /XLOG, /YLOG,  XRANGE=[MIN(fk), fny], YRANGE=[MIN(pws), MAX(1/global_ws)]
-OPLOT, fk, pws, linestyle=0
+
+WINDOW,1, XSIZE=500, YSIZE=500, TITLE='global_ws'
+PLOT, period, global_ws, /XLOG, /YLOG,  XRANGE=[MIN(period), MAX(period)], YRANGE=[MIN(global_ws), MAX(global_ws)]
+OPLOT, period, pws, linestyle=1
 ;OPLOT, fk, global_ws
 
+WINDOW,3, XSIZE=500, YSIZE=500, TITLE='signif vs WTP'
+PLOT, fk, power, /XLOG, /YLOG,  XRANGE=[MIN(fk), fny], YRANGE=[MIN(pws), MAX(pws)]
+OPLOT, fk, pws, linestyle=1
+OPLOT, fk, 1/global_ws, linestyle=2
+;OPLOT, fk, signif, linestyle=3
+
+PRINT, 'Variance: ', recon_variance
+;print, period
 ;loadct,0
 ;AXIS, YAXIS=1, YRANGE=[min(1./period),max(1./period)],ystyle=1,/ylog,color=0,$
 ;      ytitle='Frequency [Hz]',ytickformat='exponent',charsize=1.7
@@ -153,7 +167,7 @@ OPLOT, fk, pws, linestyle=0
 ;PRINT, period
 END
 
-PRO make_psfig, power, wave, times, period, coi, date_i, date_f
+PRO make_psfig, power, wave, times, period, coi, date_i, date_f, path, station_code	
         @set_up_commons
         set_up
 	On_error, 2
@@ -173,11 +187,11 @@ PRO make_psfig, power, wave, times, period, coi, date_i, date_f
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 	X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     ;path = '../rutidl/output/article1events/diono_ev/'
-    path = set_var.local_dir+'/output/article2/wavelet/'
+    ;path = set_var.local_dir+'/output/wavelet/'+station_code	
     psfile =  path+'power_'+Date+'.uncut.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
-    /nomatch, XSize=10, YSize=6
+    /nomatch, XSize=10, YSize=7
     old_month = month_name(mh_i, 'english') 
  ;   	print, TGM_n
     time_title = ' UT [days]'
@@ -220,118 +234,132 @@ LOADCT,23
 period_m = [(6e2), (6e3), (6e4), (6e5)]
 period_h = [10/60., 720/60., 1440/60., 2880/60.]
 
+date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
+					FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
+date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])					
+
 period2 = FIX(ALOG(period)/ALOG(2))
-cgCONTOUR,power,times,period, $
-       XSTYLE=1,YTITLE='', title='', XTICKN=X_label, POSITION=[.11, .12, .92, .91],$
-       ystyle=5,C_COLORS=colors, XTICKS=file_number, ytickformat='exponent',$   ;*** Large-->Small period
-       /YTYPE, LEVELS=levels,xrange=[times[0],times[N_ELEMENTS(times)-1]],$    ;*** make y-axis logarithmic
-       yrange=[10,max(period)],$;yrange=[60, 3000],$;
-       NLEVELS=24,/FILL;, AXISCOLOR='white'
+CGCONTOUR,power,date_time,period, $
+	XSTYLE=1,YTITLE='', title='', POSITION=[.11, .25, .92, .91],$
+      ; YSTYLE=5,C_COLORS=colors, XTICKS=file_number, XMINOR=8,YTICKFORMAT='exponent',$   ;*** Large-->Small period
+	YSTYLE=5,C_COLORS=colors, XMINOR=8,YTICKFORMAT='exponent',$ 
+      ;/YTYPE, LEVELS=levels, XRANGE=[times[0],times[N_ELEMENTS(times)-1]],$    ;*** make y-axis logarithmic
+	/YTYPE, LEVELS=levels, yrange=[30,4000], NLEVELS=24,/FILL, $
+	XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
+	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
+      
+	CGPLOTS, max(date_time), 2880, PSYM=4, COLOR='white'
+	CGPLOTS, max(date_time), 1440, PSYM=4, COLOR='white'
+	CGPLOTS, max(date_time), 720, PSYM=4, COLOR='white'
+	CGPLOTS, max(date_time), 240, PSYM=4, COLOR='white'
+  
+   CGTEXT, MAX(date_time), 2880  , ' 48',$
+   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65;, ORIENTATION=90   
 
-CGPLOTS, max(times), 2880, PSYM=4, COLOR='white'
-CGPLOTS, max(times), 1440, PSYM=4, COLOR='white'
-CGPLOTS, max(times), 720, PSYM=4, COLOR='white'
-CGPLOTS, max(times), 240, PSYM=4, COLOR='white'
-
+   CGTEXT, MAX(date_time), 1440  , ' 24', $
+   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65
+   
+   CGTEXT, MAX(date_time), 720  , ' 12', $
+   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65
+   
+   CGTEXT, MAX(date_time), 240  , '  4', $
+   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65
+   
+	CGTEXT, MAX(date_time), 60  , '  1', $
+   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65    
+;##################################################
+   CGTEXT, MIN(date_time), 950, '1.7E-04', $
+   COLOR='black', ALIGNMENT=1.0, CHARSIZE=1.2
+   
+   CGTEXT, MIN(date_time), 95  , '1.7E-03',$
+   COLOR='black', ALIGNMENT=1.0, CHARSIZE=1.2
 
 ; cone-of-influence, anything "below" is dubious
-	x = [times[0],times,MAX(times)]
+	x = [date_time[0],date_time,MAX(date_time)]
 	y = [MAX(period),coi,MAX(period)]
 
 	cgPolygon,x,y,ORIEN=+45,SPACING=0.5,NOCLIP=0, LINESTYLE=0, FCOLOR='gray', /FILL
 	cgPolygon,x,y,ORIEN=-45,SPACING=0.5,NOCLIP=0, LINESTYLE=0,FCOLOR='gray', /FILL
 
-        CGAXIS, XAXIS = 0, XRANGE=[times[0],times[N_ELEMENTS(times)-1]], $                       
+        CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
                          COLOR='white', $
                          XSTYLE=1,$ 
                          XMINOR=8,$
                          XTICKS=file_number,$
-                         ;xTITLE = 'Time [days]',$
+                         ;xTITLE = 'Time [days]',$ 
                          CHARSIZE = 1.4, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5,$
                          XTICKFORMAT='(A1)'
                                            
-        CGAXIS, XAXIS = 1, XRANGE=[times[0],times[N_ELEMENTS(times)-1]], $;.0/(!X.CRANGE), $                        
+        CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.0/(!X.CRANGE), $                    (!X.CRANGE+date_time[1440]-0.25)    
                          COLOR='white', $
+                         XSTYLE=1,$
                          XTICKS=file_number,$
                          XMINOR=8,$
-                         XTICKFORMAT='(A1)'
+                         XTICKFORMAT=['LABEL_DATE'],$
+                         XTICKUNITS=['day']                         
 
-        cgAxis,YAxis=0, yrange=[10,max(period)], $
+        cgAxis,YAxis=0, yrange=[30,4000], $
                          YTITLE = '', $
                          ystyle=1,$  
                          ;TEXT_COLOR = 'black',$
                          COLOR='white', $                
                          YTICKV=1/period_m,$                         
                          YTICKN=STRING(1/period_m, FORMAT='(E7.1)'),$
+                         YTICKFORMAT='(A1)',$ 
                          /ylog,$
                          CHARSIZE = 1.2,$
                          CHARTHICK=1.5
                         
-        cgAxis, YAxis=1, yrange=[10,max(period)], $
+        cgAxis, YAxis=1, yrange=[30,4000], $
                          /ylog,$                          
                          COLOR='white', $
                          YTICKFORMAT='(A1)',$ 
                          ystyle=1, $
                          CHARSIZE = 1.4,$
                          CHARTHICK=1.5
+                                            
 ;###############################################################################
 ;###############################################################################
+;###############################################################################
+
+;###############################################################################
+
+   
+ ;  CGTEXT, x, 10   , '1.7E-03', $
+;   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2
+   
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################                          
 ;###############################################################################   
-   x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
+   class = gms_class(station_code)
+   info = stationlist(class, station_code)
+   title = STRING(STRUPCASE(station_code), info.mlat, info.hem, ", UTC: ", info.utc,' h', $
+   FORMAT='(A, ", magnetic lat: ", F7.2, " ", A, A, " ", I02, A)')
+  
+  
+  x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.93   
-   XYOUTS, X, y, 'Ionospheric Magnetic Field data, '+window_title, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65      
+   XYOUTS, X, y, title, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65     
 
    x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.02   
-   XYOUTS, X, y, 'Time [days]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4  
+;   XYOUTS, X, y, 'Time [days]', /NORMAL, $
+;   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4  
 
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.025   
-   XYOUTS, x, y,'Freq [Hz]', /NORMAL, $
+   CGTEXT, x, y,'Freq [Hz]', /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.985   
-   XYOUTS, x, y,'Period [h]', /NORMAL, $
+   CGTEXT, x, y,'Period [h]', /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 
-   x = MAX(times)+(MAX(times)*0.02)
-   CGTEXT, x, 2880  , ' 48', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65;, ORIENTATION=90   
-
-   CGTEXT, x, 1440  , ' 24', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65
-   
-   CGTEXT, x, 720  , ' 12', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65
-   
-   CGTEXT, x, 240  , '  4', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65
-   
-   CGTEXT, x, 60  , '  1', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65   
-;###############################################################################
-   x = MIN(times)-1000 
-   CGTEXT, x, 1e4  , '1.7E-06', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2;, ORIENTATION=90   
-
-   CGTEXT, x, 1e3  , '1.7E-05', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2
-   
-   CGTEXT, x, 1e2  , '1.7E-04', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2
-   
-   CGTEXT, x, 10   , '1.7E-03', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2
-   
-;###############################################################################
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################   
@@ -340,7 +368,7 @@ CGPLOTS, max(times), 240, PSYM=4, COLOR='white'
     RETURN  
 END 
 
-PRO make_psfig2, power, wave, times, period, coi, date_i, date_f
+PRO make_psfig2, power, wave, times, period, coi, date_i, date_f, path, station_code
         @set_up_commons
         set_up
 	On_error, 2
@@ -359,17 +387,16 @@ PRO make_psfig2, power, wave, times, period, coi, date_i, date_f
 ;############################################################################### 
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 	X_label = xlabel([yr_i, mh_i, dy_i], file_number)
-    ;path = '../rutidl/output/article1events/diono_ev/'
-    path = set_var.local_dir+'/output/article2/wavelet/'
+
     psfile =  path+'wave_'+Date+'.uncut.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
-    /nomatch, XSize=10, YSize=6
+    /nomatch, XSize=10, YSize=7
     old_month = month_name(mh_i, 'english') 
  ;   	print, TGM_n
-    time_title = ' UT [days]'
+   ; time_title = ' UT [days]'
    ; IF TGM_n NE 'fuera de rango' THEN BEGIN    
-    	window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')
+  ;  	window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')
     
     ;ENDIF ELSE BEGIN
 	;    window_title = 'Quiet Period, '+ $
@@ -397,57 +424,74 @@ PRO make_psfig2, power, wave, times, period, coi, date_i, date_f
 	;limP  = MIN([k])
 	;limP1  = MIN([n])
 	;limP0 = MIN([m])
-
  ;###############################################################################  
 
 LOADCT,23
-
-;!P.POSITION=[.1, .55, .92, .9]
-
 period_m = [(6e2), (6e3), (6e4), (6e5)]
 ;period_m = [(6e5), (6e4), (6e3), (6e2)]
 period_h = [10/60., 720/60., 1440/60., 2880/60.]
 
+date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
+					FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
+date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])		
+
 ;period2 = FIX(ALOG(period)/ALOG(2))
 ;ytickv = 2.^(period2(UNIQ(period2)))
-cgCONTOUR,wave,times,period, $
-       XSTYLE=1,YTITLE='', title='', XTICKN=X_label, POSITION=[.11, .12, .92, .91],$
-       ystyle=5,C_COLORS=colors, XTICKS=file_number, ytickformat='exponent',$   ;*** Large-->Small period
-       /YTYPE, LEVELS=levels,xrange=[times[0],times[N_ELEMENTS(times)-1]],$    ;*** make y-axis logarithmic
-       yrange=[10,max(period)],$;yrange=[60, 3000],$;
-       NLEVELS=24,/FILL;, AXISCOLOR='white'
+	cgCONTOUR,wave,date_time,period, $
+	XSTYLE=1,YTITLE='', title='', POSITION=[.11, .25, .92, .91],$
+      ; YSTYLE=5,C_COLORS=colors, XTICKS=file_number, XMINOR=8,YTICKFORMAT='exponent',$   ;*** Large-->Small period
+	YSTYLE=5,C_COLORS=colors, XMINOR=8,YTICKFORMAT='exponent',$ 
+      ;/YTYPE, LEVELS=levels, XRANGE=[times[0],times[N_ELEMENTS(times)-1]],$    ;*** make y-axis logarithmic
+	/YTYPE, LEVELS=levels, yrange=[30,4000], NLEVELS=24,/FILL, $
+	XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
+	XTICKINTERVAL = 1, xTITLE = 'Time [days]'
 
-CGPLOTS, max(times), 2880, PSYM=4, COLOR='white'
-CGPLOTS, max(times), 1440, PSYM=4, COLOR='white'
-CGPLOTS, max(times), 720, PSYM=4, COLOR='white'
-CGPLOTS, max(times), 240, PSYM=4, COLOR='white'
+	CGPLOTS, MAX(date_time), 2880, PSYM=4, COLOR='white'
+	CGPLOTS, MAX(date_time), 1440, PSYM=4, COLOR='white'
+	CGPLOTS, MAX(date_time), 720, PSYM=4, COLOR='white'
+	CGPLOTS, MAX(date_time), 240, PSYM=4, COLOR='white'
 
+    x = MAX(date_time)+(MAX(date_time)*0.02) 
+    CGTEXT, MAX(date_time), 2880  , ' 48',$
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65;, ORIENTATION=90   
+
+    CGTEXT, MAX(date_time), 1440  , ' 24', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65
+   
+    CGTEXT, MAX(date_time), 720  , ' 12', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65
+   
+    CGTEXT, MAX(date_time), 240  , '  4', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65
+   
+    CGTEXT, MAX(date_time), 60  , '  1', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65    
 
 ; cone-of-influence, anything "below" is dubious
-	x = [times[0],times,MAX(times)]
+	x = [date_time[0],date_time,MAX(date_time)]
 	y = [MAX(period),coi,MAX(period)]
 
 	cgPolygon,x,y,ORIEN=+45,SPACING=0.5,NOCLIP=0, LINESTYLE=0, FCOLOR='dark gray', /FILL
 	cgPolygon,x,y,ORIEN=-45,SPACING=0.5,NOCLIP=0, LINESTYLE=0,FCOLOR='dark gray', /FILL
 
-        CGAXIS, XAXIS = 0, XRANGE=[times[0],times[N_ELEMENTS(times)-1]], $                       
+        CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
                          COLOR='black', $
                          XSTYLE=1,$ 
                          XMINOR=8,$
                          XTICKS=file_number,$
-                         xTITLE = 'Time [days]',$
+                      ;   xTITLE = 'Time [days]',$
                          CHARSIZE = 1.4, $
                          TICKLEN=0.04,$
                          CHARTHICK=1.5,$
                          XTICKFORMAT='(A1)'
                                            
-        CGAXIS, XAXIS = 1, XRANGE=[times[0],times[N_ELEMENTS(times)-1]], $;.0/(!X.CRANGE), $                        
+        CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.0/(!X.CRANGE), $                        
                          COLOR='black', $
                          XTICKS=file_number,$
                          XMINOR=8,$
                          XTICKFORMAT='(A1)'
 
-        cgAxis,YAxis=0, yrange=[10,max(period)], $
+        cgAxis,YAxis=0, yrange=[30,4000], $
                          YTITLE = '', $
                          ystyle=1,$                  
                          COLOR='black', $                         
@@ -458,7 +502,7 @@ CGPLOTS, max(times), 240, PSYM=4, COLOR='white'
                          CHARSIZE = 1.2,$
                          CHARTHICK=1.5
 
-        cgAxis, YAxis=1, yrange=[10,max(period)], $
+        cgAxis, YAxis=1, yrange=[30,4000], $
                          /ylog,$                          
                          COLOR='black', $
                          YTICKFORMAT='(A1)',$ 
@@ -470,12 +514,17 @@ CGPLOTS, max(times), 240, PSYM=4, COLOR='white'
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################                          
-;###############################################################################   
+;###############################################################################      
+   class = gms_class(station_code)
+   info = stationlist(class, station_code)
+   title = STRING(STRUPCASE(station_code), info.mlat, info.hem, ", UTC: ", info.utc,' h', $
+   FORMAT='(A, ", magnetic lat: ", F7.2, " ", A, A, " ", I02, A)')    
+
    x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.93   
-   XYOUTS, X, y, 'Ionospheric Magnetic Field data, '+window_title, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65      
-   
+   XYOUTS, X, y, title, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65    
+
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.025   
    XYOUTS, x, y,'Freq [Hz]', /NORMAL, $
@@ -485,22 +534,6 @@ CGPLOTS, max(times), 240, PSYM=4, COLOR='white'
    x = 0.985   
    XYOUTS, x, y,'Period [h]', /NORMAL, $
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
-
-   x = MAX(times)+(MAX(times)*0.02) 
-   CGTEXT, x, 2880  , ' 48', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65;, ORIENTATION=90   
-
-   CGTEXT, x, 1440  , ' 24', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65
-   
-   CGTEXT, x, 720  , ' 12', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65
-   
-   CGTEXT, x, 240  , '  4', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65
-   
-    CGTEXT, x, 60  , '  1', $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65  
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################

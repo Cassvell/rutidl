@@ -44,7 +44,7 @@
 ;
 ;   3. bsq_V2.pro,   to generate Bsq files for the following analysis
 ;
-FUNCTION sel_qdayV2, H, date_i, date_f, station_code
+FUNCTION sel_qdayV2, date_i, date_f, station_code
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -69,9 +69,14 @@ FUNCTION sel_qdayV2, H, date_i, date_f, station_code
        
 ; Generate the time series variables 
 ; define H variables                  
-  ;  H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx)
+    data  = rawmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
+    H = data.H
   ;  PRINT, '#######################################################################'
-  ;  H = nanpc(H, 99999.0, 'gequal')
+    nan_indices = WHERE(~finite(H), ncount)
+	prcent_nan = FLOAT(ncount)*100.0
+    PRINT,'porcentaje de valores NaN es de: ', prcent_nan/N_ELEMENTS(H),'%'   
+    
+    ;H = nanpc(H, 99999.0, 'gequal')
   ;  H = add_nan(H, 999999.0, 'equal')        
   ;  H = add_nan(H, 99999.0, 'equal')
 
