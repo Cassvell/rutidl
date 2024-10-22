@@ -146,18 +146,18 @@ y  = fft(bfield)
 fny = FLOAT(1.0/(2.0*60))
 pws = (ABS(y))^2
 
-WINDOW,1, XSIZE=500, YSIZE=500, TITLE='global_ws'
-PLOT, period, global_ws, /XLOG, /YLOG,  XRANGE=[MIN(period), MAX(period)], YRANGE=[MIN(global_ws), MAX(global_ws)]
-OPLOT, period, pws, linestyle=1
+;WINDOW,1, XSIZE=500, YSIZE=500, TITLE='global_ws'
+;PLOT, period, global_ws, /XLOG, /YLOG,  XRANGE=[MIN(period), MAX(period)], YRANGE=[MIN(global_ws), MAX(global_ws)]
+;OPLOT, period, pws, linestyle=1
 ;OPLOT, fk, global_ws
 
-WINDOW,3, XSIZE=500, YSIZE=500, TITLE='signif vs WTP'
-PLOT, fk, power, /XLOG, /YLOG,  XRANGE=[MIN(fk), fny], YRANGE=[MIN(pws), MAX(pws)]
-OPLOT, fk, pws, linestyle=1
-OPLOT, fk, 1/global_ws, linestyle=2
+;WINDOW,3, XSIZE=500, YSIZE=500, TITLE='signif vs WTP'
+;PLOT, fk, power, /XLOG, /YLOG,  XRANGE=[MIN(fk), fny], YRANGE=[MIN(pws), MAX(pws)]
+;OPLOT, fk, pws, linestyle=1
+;OPLOT, fk, 1/global_ws, linestyle=2
 ;OPLOT, fk, signif, linestyle=3
 
-PRINT, 'Variance: ', recon_variance
+;PRINT, 'Variance: ', recon_variance
 ;print, period
 ;loadct,0
 ;AXIS, YAXIS=1, YRANGE=[min(1./period),max(1./period)],ystyle=1,/ylog,color=0,$
@@ -188,7 +188,7 @@ PRO make_psfig, power, wave, times, period, coi, date_i, date_f, path, station_c
 	X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     ;path = '../rutidl/output/article1events/diono_ev/'
     ;path = set_var.local_dir+'/output/wavelet/'+station_code	
-    psfile =  path+'power_'+Date+'.uncut.eps'    
+    psfile =  path+'power_'+Date+'V2.uncut.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=10, YSize=7
@@ -239,20 +239,53 @@ date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
 date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])					
 
 period2 = FIX(ALOG(period)/ALOG(2))
+; Define the levels and colors used in CGCONTOUR
+          ; Data range for the colorbar
+
 CGCONTOUR,power,date_time,period, $
-	XSTYLE=1,YTITLE='', title='', POSITION=[.11, .25, .92, .91],$
+	XSTYLE=1,YTITLE='', title='', POSITION=[.1, .26, .92, .92],$
       ; YSTYLE=5,C_COLORS=colors, XTICKS=file_number, XMINOR=8,YTICKFORMAT='exponent',$   ;*** Large-->Small period
 	YSTYLE=5,C_COLORS=colors, XMINOR=8,YTICKFORMAT='exponent',$ 
-      ;/YTYPE, LEVELS=levels, XRANGE=[times[0],times[N_ELEMENTS(times)-1]],$    ;*** make y-axis logarithmic
+   ; LABELS=levels, CHARTHICK=1.2, CHARSIZE=1.0 ,$    ;*** make y-axis logarithmic
 	/YTYPE, LEVELS=levels, yrange=[30,4000], NLEVELS=24,/FILL, $
 	XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
 	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
-      
-	CGPLOTS, max(date_time), 2880, PSYM=4, COLOR='white'
-	CGPLOTS, max(date_time), 1440, PSYM=4, COLOR='white'
-	CGPLOTS, max(date_time), 720, PSYM=4, COLOR='white'
-	CGPLOTS, max(date_time), 240, PSYM=4, COLOR='white'
-  
+
+    l1 = 1750.0
+    l2 = 1200.0
+    l3 = 680.0
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l1,l1], color='yellow', thick=2
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l2,l2], color='yellow', thick=2
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l3,l3], color='yellow', thick=2
+
+    print, 'frequency ranges of significant Ddyn [Hz]:'
+    print,  string(1.0/l1, 1.0/l2, 1.0/l3,  FORMAT='(E12.5, X, E12.5, X, E12.5)')
+
+    print, 'period ranges of significant Ddyn [Hz]:'
+    print,  string(l1/60.0, l2/60.0, l3/60.0, FORMAT='(F7.1, X, F7.1, X, F7.1)')
+
+    p2 = 1520.0
+    p1 = 1400.0
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p1,p1], color='red', thick=2
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p2,p2], color='red', thick=2
+
+    print, 'frequency ranges of Ddyn peak energy:'
+    print,  string(1.0/p2, 1.0/p1, FORMAT='(E12.5, X, E12.5)')
+
+    print, 'period ranges of Ddyn peak energy:'
+    print,  string(p2/60.0, p1/60.0, FORMAT='(F7.1, X, F7.1)')
+; Check that colors and levels are properly defined before passing to cgColorbar
+peak = max(power, i)
+
+;print, 'pico de potencia, rango de frecuencia, rango de periodo'
+
+
+	CGPLOTS, max(date_time), 2880, PSYM=4, COLOR='white', thick=4
+	CGPLOTS, max(date_time), 1440, PSYM=4, COLOR='white', thick=4
+	CGPLOTS, max(date_time), 720, PSYM=4, COLOR='white', thick=4
+	CGPLOTS, max(date_time), 240, PSYM=4, COLOR='white', thick=4
+  	CGPLOTS, max(date_time), 60, PSYM=4, COLOR='white', thick=4
+
    CGTEXT, MAX(date_time), 2880  , ' 48',$
    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.65;, ORIENTATION=90   
 
@@ -305,8 +338,8 @@ CGCONTOUR,power,date_time,period, $
                          ystyle=1,$  
                          ;TEXT_COLOR = 'black',$
                          COLOR='white', $                
-                         YTICKV=1/period_m,$                         
-                         YTICKN=STRING(1/period_m, FORMAT='(E7.1)'),$
+                         YTICKV=[1e-3, 1e-4, 1e-5],$;1/period_m,$                         
+                         YTICKN=STRING([1e-3, 1e-4, 1e-5], FORMAT='(E7.1)'),$
                          YTICKFORMAT='(A1)',$ 
                          /ylog,$
                          CHARSIZE = 1.2,$
@@ -363,8 +396,10 @@ CGCONTOUR,power,date_time,period, $
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################   
-
+    print, psfile    
+;spawn, 'evice psfile'
     cgPS_Close, density = 300, width = 1600 ;, /PNG  
+
     RETURN  
 END 
 

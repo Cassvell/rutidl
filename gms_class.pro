@@ -25,6 +25,13 @@ CASE gms_code of
 		'tam'   : class = 'intermagnet'
 		'tdc'	: class = 'intermagnet'
         'tuc'   : class = 'intermagnet'
+		'hon'   : class = 'intermagnet'
+		'kny'   : class = 'intermagnet'
+		'jai'   : class = 'intermagnet'
+		'lzh'   : class = 'intermagnet'
+		'mlt'   : class = 'intermagnet'
+		'abg'   : class = 'intermagnet'
+		'qsb'   : class = 'intermagnet'
         ELSE : PRINT, 'non avaiable gms data'
     ENDCASE
 

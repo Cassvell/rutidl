@@ -1,0 +1,139 @@
+###########################
+Update LOG-file
+Local time: 2022/08/25 17:29
+UTC   time: 2022/08/25 22:29
+###########################
+        * Preparing common variables.
+        * Reading data from system file: setup.config.
+        * Checking input directory-tree [~/DATA/input].
+        * Checking output directory-tree [~/DATA/output].
+        * Reading data from system file: gms.config.
+        * Setting planetary as GMS station!
+        * Geomagnetic station PLANETARY ready.
+        * Data loaded from planetary.dates file.
+        Index [early] files date-range: 20210401-20220825
+        Index [final] files date-range: 20210401-20220825
+        Magnetic data date-range:       20140131-20220831
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+
+        A total of            1 data-file(s) are going to be rewriten.
+        WARNING: Previous data will be PERMANENTLY lost if proceed!
+
+        Copying 2020-decade data file.
+
+        A total of            1 [qdYYY0yy.txt] files were saved.
+
+        Updated qdays.dates file.
+                Date range: [20000101-20220731]
+
+        Q-days data files updated!
+
+        A total of            1 days of data-file(s) are going to be rewriten.
+        WARNING: Previous data will be PERMANENTLY lost if proceed!
+
+        Copying 202208 data files.
+                Errors during adquisition or storing data-files!
+
+        A total of            1 [kpYYMM.wdc] and            1 [dstYYMM.dat] files were saved.
+        Saving: ~/DATA/input/data_source/planetary/pla20220825rK.min
+
+
+        Magnetic data files updated!
+
+        A total of            1 file(s) need to be updated.
+        Extracting data from: pla20220825rK.min
+        - Saving: pla_20220825.dat
+        Extracting data from: pla_20220825.dat
+        - Saving: pla_20220825.clean.dat
+
+        Data-file(s) ready for computing!
+
+        A total of            1 file(s) need to be updated.
+
+        Gathering data for 2022/08/25:
+        Saving: ~/DATA/output/processed/planetary/pla_20220825.data
+        Saving: ~/DATA/output/processed/planetary/pla_20220825.differences
+
+
+        Data files processed!
+        A total of            1 file(s) need to be updated.
+        Saving: pla_20220825.k_index
+        Saving: pla_20220825.delta_H
+
+        Magnetic-Index files updated!
+Input Warning: Invalid values, replacing conflictive values with data gaps.
+               missing GMS_YYYYMMDD.delta_H.
+        Saving: pla_202208.delta_H
+
+Input Warning: Invalid values, replacing conflictive values with data gaps.
+               missing GMS_YYYYMMDD.k_index.
+        Saving: pla_202208.k_index
+
+
+        delta H-Plot files updated!
+Inconsistency Warning: Incomplete index data files for selected GMS [planetary
+                       It is requaried to manualy UPDATE the index files.
+        * Updated planetary.dates file.
+        Index [early] files date-range: 20210401-20220825
+        Index [final] files date-range: 20210401-20220825
+        Magnetic data date-range:       20140131-20220831
+
+        * Data loaded from planetary.dates file.
+        Index [early] files date-range: 20210401-20220825
+        Index [final] files date-range: 20210401-20220825
+        Magnetic data date-range:       20140131-20220831
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+        Setting PNG as default file type.
+        Saving: pla_20220825_01days.k
+
+        Setting PNG as default file type.
+        Saving: pla_20220823_03days.k
+
+        Setting PNG as default file type.
+        Saving: pla_20220819_07days.k
+
+
+        Kmex-Plot files updated!
+        * Data loaded from planetary.dates file.
+        Index [early] files date-range: 20210401-20220825
+        Index [final] files date-range: 20210401-20220825
+        Magnetic data date-range:       20140131-20220831
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+        Setting PNG as default file type.
+        Saving: pla_20220825_01days.dH
+
+        Setting PNG as default file type.
+        Saving: pla_20220823_03days.dH
+
+        Setting PNG as default file type.
+        Saving: pla_20220819_07days.dH
+
+
+        delta H-Plot files updated!
+        * Data loaded from planetary.dates file.
+        Index [early] files date-range: 20210401-20220825
+        Index [final] files date-range: 20210401-20220825
+        Magnetic data date-range:       20140131-20220831
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+
+        pla_202208.delta_H file upload success!
+
+        pla_202208.k_index file upload success!
+
+        latest_dst.png file upload success!
+
+        latest_kp.png file upload success!
+###########################
+###########################

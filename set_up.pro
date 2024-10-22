@@ -50,16 +50,19 @@ PRO set_up
     
     intermagnet_station = ['beijing', 'boulder', 'brandon', 'bstenis', 'cocos', 'cheongyang', 'guimar', $
     					   'hartebeesthoek', 'islandpascua', 'kakioka', 'kakadu', 'keetmanshoop', $
-    					   'pilar', 'sanjuan', 'tamanraset', 'tristandacunha', 'tucson']
+    					   'pilar', 'sanjuan', 'tamanraset', 'tristandacunha', 'tucson', 'honolulu', $
+                           'kanoya', 'jaipur', 'lanzhou', 'misalat', 'qsaybeh', 'alibag']
+
     m 			= N_ELEMENTS(intermagnet_station)
     
     intmag_code			= [ 'bmt', 'bou', 'brd', 'bsl', 'cki', 'cyg', 'gui', 'hbk', 'ipm', 'kak', $
-    						'kdu', 'kmh', 'pil', 'sjg', 'tam', 'tdc', 'tuc']
+    						'kdu', 'kmh', 'pil', 'sjg', 'tam', 'tdc', 'tuc', 'hon', 'kny', 'jai', $
+                            'lzh', 'mlt', 'qsb', 'abg']
     
     node_gic    = ['lav', 'qro', 'maz', 'rmy']
     l           = N_ELEMENTS(node_gic)   
     set_var = {local_dir : '/home/isaac/geomstorm/rutidl/', $
-               Mega_dir  : '/home/isaac/MEGAsync/datos/',$               
+               Mega_dir  : '/home/isaac/datos/',$               
                google_dir  : '/home/isaac/google_sync/datos/',$
                gic_dir   : '/home/isaac/MEGAsync/GICS/gic_rout/',$
                gms       : STRARR(n),$         ;geomagnetic station

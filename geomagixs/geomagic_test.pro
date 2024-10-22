@@ -1,5 +1,6 @@
 PRO geomagic_test, initial_date, final_date
-
+On_error, 2
+COMPILE_OPT idl2, HIDDEN
 	yr_i	= initial_date[0]
 	mh_i	= initial_date[1]
 	dy_i 	= initial_date[2]	
@@ -27,9 +28,9 @@ PRO geomagic_test, initial_date, final_date
 
 	
     
-	geomagixs_magneticindex_plotk2, initial_date, final_date, STATION=gms[system.gms].name, /force_all, REAL_TIME=real_time
+	geomagixs_magneticindex_plotk, initial_date, final_date, STATION=gms[system.gms].name, /force_all, REAL_TIME=real_time
 	
-    geomagixs_magneticindex_plotdh2, initial_date, final_date, STATION=gms[system.gms].name, /force_all, REAL_TIME=real_time
+    geomagixs_magneticindex_plotdh, initial_date, final_date, STATION=gms[system.gms].name, /force_all, REAL_TIME=real_time
         
 	;geomagixs_magneticindex_plotb, initial_date, final_date, STATION=gms[system.gms].name, /force_all, REAL_TIME=real_time    
 

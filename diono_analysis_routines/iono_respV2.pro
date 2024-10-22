@@ -89,10 +89,11 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 ;###############################################################################  
 ; Generate the time series variables 
 ; define H variables                  
-    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
+    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
     dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    dat   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'H')
+    dat   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
     H = dat.H
+
 ;###############################################################################      
 ; IP data
 ; Generate the time variables to plot TEC time series         
@@ -162,6 +163,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
 ;###############################################################################    
     dst_min = MIN(dst,i)    
     t0 = 0
+    
     CASE TGM_n of
         1   :   t0 = 18
         2   :   t0 = 38
@@ -209,7 +211,7 @@ PRO iono_respV2, date_i, date_f, PNG = png, PS=ps
         20  :   tf = 22        
         ELSE: PRINT, 'evento no disponible'   
     ENDCASE
-
+    print, i
     SG_beg = i-t0
     IF tf NE 0 THEN BEGIN
     SG_end = i+tf
@@ -407,7 +409,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
       up = MAX(new_dH)
      down=MIN(new_dH)
 
-     CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
      COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
      POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
@@ -417,7 +419,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
      CGOPLOT, time, new_dst, COLOR='GRN5', THICK=4      
 
      CGOPLOT, time, new_dH, COLOR='black', THICK=2   
-         
+         print, SG_beg
     cgOPLOT, [time[SG_beg*60],time[SG_beg*60]], $ ;referencia para el inicio de la Tormenta
     [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
     THICK=2, COLOR='black'

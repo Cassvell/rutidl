@@ -32,9 +32,15 @@ FUNCTION day2day, X, component, date_i, date_f
     n = FINDGEN(N_ELEMENTS(xvar))    
 	x_median = MEDIAN(X_IQR)
     z_scorex = x_median + ((STDDEV(X_IQR, /NAN)/3)*1.3490)
+  ;	desvest = STDDEV(X_IQR, /NAN)*1.3490
+	;A_0 = 1/(desvest*SQRT(2*!PI))	; magnitud/altura de gauss
+	;A_0 = coeff[0]
 
     threshold_X = z_scorex
-
+	;threshold_X = TOTAL(X_IQR, /NAN)/file_number
+	;print, threshold_X
+	;print, '##################################'
+	;print, X_IQR
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################   

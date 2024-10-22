@@ -96,11 +96,14 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 ; define H variables                  
   ;  dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
   ;  dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
-    data   = H_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
+    data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
     H = data.H
-    sym = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'sym')
+    idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    symH = idx.symH
 
-
+    correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    ;print, correctedsymH.symH_0
+    symH_0 = correctedsymH.symH_0
 ; define Bsq 
  ;   Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')    
 
@@ -125,18 +128,14 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     set_plot, 'x'   
        time = FINDGEN(N_ELEMENTS(H))/1440.0   
        
- ;  	WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='H component'
-  ;  PLOT, time, H, XSTYLE=1,YSTYLE=2, XRANGE=[0,file_number], $
-  ;  YRANGE=[MIN(H),MAX(H)], CHARSIZE = 1.8, background=255, color=0, $
-  ;  CHARTHICK=2.0, YTITLE = 'H [nT]',XTITLE = time_name, XTICKS=file_number, $
-  ;  XTICKNAME=X_label    
+ 
 
 
 ; define frequencies
     l            = 28.06  
     mlat         = l*!pi
     ld           = cos(mlat/180)
-    p_a          = sym*ld
+    p_a          = symH*ld
     baseline     = p_a;Bsq + p_a Desde la actualización, Bsq ya está restado de H
     Bdiono       = H-baseline
    ; Bdiono2	     = H-p_a+Bsq	; Al no tener Bsq desde el inicio, aquí se suma
@@ -158,12 +157,55 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 
 
 ;###############################################################################    
-	;PRINT, "Press value for Z thershold (100 by default)"
-	;Z_Hthreshold = ''
-	; = '100'
-	;READ, Z_Xthreshold, PROMPT = '> '	
-	;Hspikes = whitaker_hayer(H, FIX(Z_Hthreshold), 'H')
-	;H_det = fillnan(H_det)	
+    date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
+                        FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
+    date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	
 
-	wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    class = gms_class(station_code)
+    info = stationlist(class, station_code)
+
+    print, 'UTC: ', info.utc
+
+    CALDAT, date_time, mh, dy, yr, hr, min
+    
+
+    ; First 3 days of data
+    H1 = H[0:1440*3]
+    min1 = min(H1, i)
+
+    ; Beginning of GS
+    str = max(H, i2)
+    print, 'beg of GS: '
+    print, string(dy[i2], hr[i2], min[i2], format = '(I02, X, I02, ":", I02)')    
+
+    ; Minimum of GS
+    print, 'min of GS: '
+    print, min1
+    print, string(dy[i], hr[i], min[i], format = '(I02, X, I02, ":", I02)')
+
+    H2 = H[1440*3: n_elements(H)-1]
+    str2 = max(H2, j2)
+    min2 = min(H2, j)
+    date_time2 = date_time[1440*3: n_elements(date_time)-1]
+    CALDAT, date_time2, mh2, dy2, yr2, hr2, min2
+
+
+    print, 'second min of GS: '
+    print, min(H2, j)
+    print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
+
+    
+    DEVICE, true=24, retain=2, decomposed=0
+    TVLCT, R_bak, G_bak, B_bak, /GET     
+    LOADCT, 39
+    WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
+
+    plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
+	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
+    oplot, [date_time[i], date_time[i]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
+	oplot, [date_time[1440*3+j], date_time[1440*3+j]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
+
+	oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
+    
+    ;wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
 END

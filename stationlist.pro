@@ -37,7 +37,7 @@
 ;note
 ;   
 
-FUNCTION stationlist, class,station_code
+FUNCTION stationlist, class, station_code
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN    
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-

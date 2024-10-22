@@ -46,66 +46,36 @@
 ;
 
 
-FUNCTION bsq, H1, H2, date_i, date_f, ndays, station_code, MAKE_FILE=make_file
+FUNCTION bsq, H, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 ;###############################################################################
         @set_up_commons
         set_up
-	yr_i	= date_i[0]
-	mh_i	= date_i[1]
-	dy_i 	= date_i[2]	
-
-	yr_f	= date_f[0]
-	mh_f	= date_f[1]
-	dy_f 	= date_f[2]
         
-;	station_idx = ''
-;	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
-;	READ, station_idx, PROMPT = '> '
-
-
-  ;  station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-  ;  station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
-
-    td      = FINDGEN(ndays*1440)/1440.0
-    td_h    = FINDGEN(ndays*48)/48.0
-    datetime= TIMEGEN(N_ELEMENTS(td), FINAL=JULDAY(mh_f, dy_f, yr_f, 23), $
-                START=JULDAY(mh_i, dy_i, yr_i, 0), UNITS='H')
-    CALDAT, datetime, mh, dy, yr, hr
 ;###############################################################################                                  
 ;###############################################################################        
 ;###############################################################################
-	qdl_mean = FLTARR(48)
-	avr_H1	 = FLTARR(48)
-	avr_H2	 = FLTARR(48)
-	FOR i = 0, 47 DO BEGIN
-		avr_H1[i]  	= MEDIAN(H1[i*30:(i+1)*30-1])
-		avr_H2[i]  	= MEDIAN(H2[i*30:(i+1)*30-1])
-		qdl_mean[i] = (avr_H1[i]+avr_H2[i])/2
-	ENDFOR
-	x_30min = FINDGEN(48)
-	x_1min  = FINDGEN(1440)
-	;print, avr_H1
-	
-	;print, qdl_mean
-	QDL_avr = REFORM(REBIN(qdl_mean, 48, ndays), N_ELEMENTS(td_h))
-	qdl  = INTERPOL(QDL_avr, N_ELEMENTS(td), /QUADRATIC)
+ndays = N_ELEMENTS(H)/1440
 
-	qdl = SMOOTH(qdl, 60, /EDGE_TRUNCATE, /NAN)
+FOR  i = 0, ndays-1 DO BEGIN
+    stacked_data = H[i*1440:(i+1)*1440-1]
+    ; If the current day is not the first day, stack the data from the previous day
+    IF i NE 0 THEN BEGIN
+        stacked_data = [data[i-1], stacked_data]
+    ENDIF
+    
+    ; If the current day is not the last day, stack the data from the next day
+    IF i NE n_days - 1 THEN BEGIN
+        stacked_data = [stacked_data, data[i+1]]
+    ENDIF    
+ENDFOR
+
+;
 ;###############################################################################    
     ;DEVICE, true=24, retain=2, decomposed=0
     ;TVLCT, R_bak, G_bak, B_bak, /GET        
     ;LOADCT, 39, /SILENT
-        
-    X_label = xlabel([yr_i, mh_i, dy_i], ndays)
-    old_month = month_name(mh_i, 'english')
-    new_month = month_name(mh_f, 'english')
-    IF mh_i NE mh_f THEN BEGIN
-    	time_name = 'days of '+old_month+' and '+ new_month
-    ENDIF ELSE BEGIN 
-    	time_name = 'days of '+old_month
-    ENDELSE
     
 
    ; WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'

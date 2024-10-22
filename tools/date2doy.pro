@@ -1,6 +1,9 @@
-	FUNCTION Date2DOY, idate, DOY, yr
-		On_error, 2
-	compile_opt idl2, HIDDEN
+FUNCTION date2doy, idate
+On_error, 2
+COMPILE_OPT idl2, HIDDEN
+
+@set_up_commons
+set_up 
 ;	------------------------------------------------------------
 ;+							18-Sep-91
 ;	NAME: 
@@ -29,13 +32,13 @@
 
 ;	Check data type of input set ascII flag and convert to yy,mm,dd:
 	info = SIZE(idate)
-	IF (info(0) eq 0) THEN BEGIN
+	IF (info[0] eq 0) THEN BEGIN
 	  scalar = 1				;scalar flag set
 	ENDIF ELSE BEGIN
 	  scalar = 0				;vector input
 	ENDELSE
 
-	IF (info(info(0) + 1) eq 7) THEN BEGIN
+	IF (info[info[0] + 1] eq 7) THEN BEGIN
 	  ascII = 1				;ascII input flag set
 	  yy = FIX(STRMID(idate,0,2))		;extract year
 	  mm = FIX(STRMID(idate,2,2))		;extract month
@@ -52,29 +55,43 @@
 ;       	      J   F   M   A   M   J   J   A   S   O   N   D
 	imonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-	IF (scalar) THEN BEGIN			;scalar input
-	  IF ((yy MOD 4) eq 0) THEN BEGIN	;leap year
-	    imonth[2] = 29			;set feb
-	  ENDIF
-	  DOY = FIX( TOTAL(imonth[0:mm-1]) ) + dd
-	ENDIF ELSE BEGIN
-	  DOY = dd				;set correct len on vector
-	  leapYrs = WHERE( (yy MOD 4) eq 0)	;index of leap years
-	  nonLeap = WHERE( (yy MOD 4) ne 0)	;index of non-leap years
-	  IF (nonLeap(0) ne -1) THEN BEGIN
-	    FOR i=0, N_elements(nonLeap)-1 DO BEGIN
-	      DOY[nonLeap[i]] = FIX( TOTAL(imonth[0:mm(nonLeap[i])-1]) ) + $
-				dd(nonLeap(i))
-	    ENDFOR
-	  ENDIF
-	  IF (leapYrs(0) ne -1) THEN BEGIN
-	    imonth[2] = 29			;set feb
-	    FOR i =0, N_elements(leapYrs)-1 DO BEGIN
-	      DOY[leapYrs[i]] = FIX( TOTAL(imonth[0:mm(leapYrs[i])-1]) ) + $
-				dd(leapYrs[i])
-	    ENDFOR
-	  ENDIF
-	ENDELSE
+	IF (scalar) THEN BEGIN          ; scalar input
+		IF ((yy MOD 4) EQ 0) THEN BEGIN   ; leap year
+		  imonth[2] = 29                 ; set feb to 29 days
+		ENDIF
+		IF (mm GT 1) THEN BEGIN          ; If month > January
+		  DOY = FIX(TOTAL(imonth[0:mm-1])) + dd
+		ENDIF ELSE BEGIN                 ; For January, DOY is just the day of the month
+		  DOY = dd
+		ENDELSE
+	  ENDIF ELSE BEGIN
+		DOY = dd                          ; Set correct length on vector
+		leapYrs = WHERE((yy MOD 4) EQ 0)  ; Index of leap years
+		nonLeap = WHERE((yy MOD 4) NE 0)  ; Index of non-leap years
+	  
+		; Process non-leap years
+		IF (nonLeap[0] NE -1) THEN BEGIN
+		  FOR i = 0, N_ELEMENTS(nonLeap) - 1 DO BEGIN
+			IF (mm[nonLeap[i]] GT 1) THEN BEGIN
+			  DOY[nonLeap[i]] = FIX(TOTAL(imonth[0:mm[nonLeap[i]]-1])) + dd[nonLeap[i]]
+			ENDIF ELSE BEGIN
+			  DOY[nonLeap[i]] = dd[nonLeap[i]]  ; For January, set DOY to day of the month
+			ENDELSE
+		  ENDFOR
+		ENDIF
+	  
+		; Process leap years
+		IF (leapYrs[0] NE -1) THEN BEGIN
+		  imonth[2] = 29                   ; set feb to 29 days
+		  FOR i = 0, N_ELEMENTS(leapYrs) - 1 DO BEGIN
+			IF (mm[leapYrs[i]] GT 1) THEN BEGIN
+			  DOY[leapYrs[i]] = FIX(TOTAL(imonth[0:mm[leapYrs[i]]-1])) + dd[leapYrs[i]]
+			ENDIF ELSE BEGIN
+			  DOY[leapYrs[i]] = dd[leapYrs[i]]  ; For January, set DOY to day of the month
+			ENDELSE
+		  ENDFOR
+		ENDIF
+	  ENDELSE
 
 	IF (N_PARAMS() EQ 3) THEN BEGIN         ;pass year back to caller
           IF (ascII) THEN BEGIN
@@ -88,6 +105,7 @@
 	    DOY = STRTRIM( STRING(DOY), 2)	;convert to string
 	  ENDIF
 	ENDELSE
-	RETURN, DOY  
+	;print, uint(DOY)  
+	return, DOY
 
-	END
+END

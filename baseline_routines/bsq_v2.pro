@@ -78,7 +78,30 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_code, MAKE_FILE=make_fil
 ;fill little gaps in LQD
 	H1 = fillnan(H1)
 	H2 = fillnan(H2)
+
+;###############################################################################    
+    DEVICE, true=24, retain=2, decomposed=0
+    TVLCT, R_bak, G_bak, B_bak, /GET        
+    LOADCT, 39, /SILENT
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1          
+    X_label = xlabel([yr_i, mh_i, dy_i], file_number)
+    old_month = month_name(mh_i, 'english')
+    new_month = month_name(mh_f, 'english')
+    IF mh_i NE mh_f THEN BEGIN
+    	time_name = 'UT'
+    ENDIF ELSE BEGIN 
+    	time_name = 'UT'
+    ENDELSE
+
+IF MIN(H1) LT MIN(H2) THEN linf = MIN(H1) ELSE linf =MIN(H2)
+IF MAX(H1) LT MAX(H2) THEN lsup = MAX(H1) ELSE lsup =MAX(H2)
+    WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='Local Quiet Days'
+    PLOT, FINDGEN(N_ELEMENTS(H1))/60, H1, XSTYLE=1, background=255, color=0, XRANGE=[linf,lsup],$
+    CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'H component [nT]', XTITLE = time_name,THICK=2
 	
+	OPLOT, FINDGEN(N_ELEMENTS(H1))/60, H2, LINESTYLE=0, color=254
+	;OPLOT, x[0:719], H1, color=254
+	;OPLOT, x[0:719], H1-Bsq[0:719], color=76
 ;FFT on LQD to get the templates (low pass filter)	
 ;	H1_f = FFT(H1)
 ;	H2_f = FFT(H2)
@@ -135,24 +158,12 @@ FUNCTION bsq_V2, H1, H2, date_i, date_f, ndays, station_code, MAKE_FILE=make_fil
         Bsq_H[i] = MEDIAN(Bsq[i*60:(i+1)*60-1]) 
     ENDFOR
 
- ;   file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
+
     time = FINDGEN(N_ELEMENTS(Bsq_H))
 
     Bsq_trendH = INTERPOLATE(Bsq_24h, time, CUBIC=-0.5,  /GRID)
     Bsq_detH =  Bsq_H-Bsq_trend  
-;###############################################################################    
-    ;DEVICE, true=24, retain=2, decomposed=0
-    ;TVLCT, R_bak, G_bak, B_bak, /GET        
-   ; LOADCT, 39, /SILENT
-        
-  ;  X_label = xlabel([yr_i, mh_i, dy_i], file_number)
- ;   old_month = month_name(mh_i, 'english')
-;    new_month = month_name(mh_f, 'english')
-    ;IF mh_i NE mh_f THEN BEGIN
-   ; 	time_name = 'days of '+old_month+' and '+ new_month
-  ;  ENDIF ELSE BEGIN 
- ;   	time_name = 'days of '+old_month
-;    ENDELSE
+
     
 
   ;  WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='Bsq DQL1[m]'

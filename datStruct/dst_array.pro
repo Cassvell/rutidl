@@ -46,7 +46,7 @@ FUNCTION dst_data, date
 	day 	= date[2]	
 ;###############################################################################
 ;reading data files
-        path='/home/isaac/MEGAsync/datos'
+        path='/home/isaac/datos'
         date = STRING(year, month, day, format = '(I4,"-",I02,"-",I02)')
 		file_name = path+'/dst/daily/dst_'+date+'.txt'
 
@@ -85,7 +85,7 @@ FUNCTION dst_array, date_i, date_f, variable, HELP=help
 ;###############################################################################    
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
 ; define DH variables
-        data_path='/home/isaac/MEGAsync/datos'
+        data_path='/home/isaac/datos'
 
         string_date_2      = STRARR(file_number)
         data_file_name_dst = STRARR(file_number)                 

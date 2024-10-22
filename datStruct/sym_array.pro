@@ -46,11 +46,13 @@ FUNCTION sym_data, date
 	day 	= date[2]	
 ;###############################################################################
 ;reading data files
-        path='/home/isaac/MEGAsync/datos'
+    @set_up_commons
+    set_up 
+        path=set_var.Mega_dir
         date = STRING(year, month, day, format = '(I4,"-",I02,"-",I02)')
 		file_name = path+'/sym/daily/sym_'+date+'m_D.dat'
 
-        header = 1             ; Defining number of lines of the header 
+        header = 0             ; Defining number of lines of the header 
 ;###############################################################################
 ;reading data files
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
@@ -79,14 +81,14 @@ FUNCTION sym_data, date
 		CLOSE, lun
 		FREE_LUN, lun
 
-        DataStruct = {SYM_H : 0}
+        DataStruct = {ASY_D : 0, ASY_H : 0, SYM_D : 0, SYM_H : 0}
 		r_sym = REPLICATE(DataStruct, number_of_lines-header)	        
        ; PRINT, data[header:number_of_lines-1]
-		READS, data[header:number_of_lines-1], r_sym, FORMAT='(I4)'
+		READS, data[header:number_of_lines-1], r_sym, FORMAT='(I4, X, I4, X, I5, X, I5)'
 		RETURN, r_sym
 END
 
-FUNCTION sym_array, date_i, date_f, variable, HELP=help
+FUNCTION sym_array, date_i, date_f, HELP=help
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN 
 
@@ -98,9 +100,12 @@ FUNCTION sym_array, date_i, date_f, variable, HELP=help
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]  
 ;###############################################################################    
+    @set_up_commons
+    set_up 
+
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
 ; define DH variables
-        data_path='/home/isaac/MEGAsync/datos'
+        data_path=set_var.Mega_dir
 
         string_date_2      = STRARR(file_number)
         data_file_name_sym = STRARR(file_number)                 
@@ -136,7 +141,10 @@ FUNCTION sym_array, date_i, date_f, variable, HELP=help
         ENDIF           
 ;###############################################################################
 ;sym Data                       
-        sym    = FLTARR(file_number*1440) 
+        tmp_symH    = FLTARR(file_number*1440)
+        tmp_symD    = FLTARR(file_number*1440)
+        tmp_AsyH    = FLTARR(file_number*1440)
+        tmp_AsyD    = FLTARR(file_number*1440) 
      ;   asym   = FLTARR(file_number*1440)                                      
         FOR i = 0, N_ELEMENTS(exist_data_file_sym)-1 DO BEGIN
                 IF exist_data_file_sym[i] EQ 1 THEN BEGIN
@@ -149,19 +157,19 @@ FUNCTION sym_array, date_i, date_f, variable, HELP=help
                 string_date_2[i] = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')                
                         dat = sym_data([tmp_year, tmp_month, tmp_day])
                         
-                        sym[i*1440:(i+1)*1440-1] = dat.SYM_H[*]                                                
-                     ;   asym[i*1440:(i+1)*1440-1] = dat.ASY_H[*]                                                                      
+                        tmp_symH[i*1440:(i+1)*1440-1] = dat.SYM_H[*]                                                
+                        tmp_AsyH[i*1440:(i+1)*1440-1] = dat.ASY_H[*]     
+                        tmp_symD[i*1440:(i+1)*1440-1] = dat.SYM_D[*]                                                
+                        tmp_AsyD[i*1440:(i+1)*1440-1] = dat.ASY_D[*]                                                                                         
                 ENDIF ELSE BEGIN
-                         sym[i*1440:(i+1)*1440-1] = 999999.0
-                        ; asym[i*1440:(i+1)*1440-1] =999999.0                      
+                        tmp_symH[i*1440:(i+1)*1440-1] = 9999
+                        tmp_AsyH[i*1440:(i+1)*1440-1] = 9999         
+                        tmp_symD[i*1440:(i+1)*1440-1] = 9999                                            
+                        tmp_AsyD[i*1440:(i+1)*1440-1] = 9999                        
                 ENDELSE                
         ENDFOR
         
-    CASE variable of
-        'sym'    : variable = sym 
-     ;   'asym'    : variable = asym
-        ELSE : PRINT, 'variable selected is not avaiable or valid'
-    ENDCASE    
+        variable = {symH : tmp_symH, symD : tmp_AsyH, asyH : tmp_AsyH, asyD : tmp_AsyD}
 
     RETURN, variable        
     

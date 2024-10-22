@@ -215,13 +215,9 @@ FUNCTION kmex_array, date_i, date_f, variable, station, idx, HELP=help
                         a_mex[i*8:(i+1)*8-1] = d_km.a_mex[*]
                 ENDIF             
         ENDFOR
- 
-    CASE variable of    
-        'k'    : variable = k_mex 
-        'a'    : variable = a_mex
-        ELSE : PRINT, 'variable selected is not avaiable or valid'                 
-    ENDCASE
+    
+        var = {k : k_mex, a : a_mex}
 
-    RETURN, variable
+    RETURN, var
 
 END  

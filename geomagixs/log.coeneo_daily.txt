@@ -1,0 +1,209 @@
+###########################
+Update LOG-file
+Local time: 2022/08/25 16:08
+UTC   time: 2022/08/25 21:08
+###########################
+        * Preparing common variables.
+        * Reading data from system file: setup.config.
+        * Checking input directory-tree [~/DATA/input].
+        * Checking output directory-tree [~/DATA/output].
+        * Reading data from system file: gms.config.
+        * Setting coeneo as GMS station!
+        * Geomagnetic station COENEO ready.
+        * Data loaded from coeneo.dates file.
+        Index [early] files date-range: 20201210-20220824
+        Index [final] files date-range:    00000-   00000
+        Magnetic data date-range:       20201210-20220824
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+
+        A total of            1 data-file(s) are going to be rewriten.
+        WARNING: Previous data will be PERMANENTLY lost if proceed!
+
+        Copying 2020-decade data file.
+
+        A total of            1 [qdYYY0yy.txt] files were saved.
+
+        Updated qdays.dates file.
+                Date range: [20000101-20220731]
+
+        Q-days data files updated!
+Input Warning: conflict with input date(s), data inconsistent or invalid.
+               final date should be previous to 2022/08/24.
+
+        A total of            2 days of data-file(s) are going to be rewriten.
+        WARNING: Previous data will be PERMANENTLY lost if proceed!
+
+        Copying 20220824 data files.
+        Extracting data from: coe24aug.22m
+        Saving: ~/DATA/input/data_source/coeneo/coe20220824rK.min
+
+                The data-file was correctly stored.
+
+        Copying 20220825 data files.
+        Extracting data from: coe25aug.22m
+        Saving: ~/DATA/input/data_source/coeneo/coe20220825rK.min
+
+                The data-file was correctly stored.
+
+        A total of            4 [gmsDDmmm.YY(m/v)] files were saved.
+
+        Magnetic data files updated!
+Input Warning: conflict with input date(s), data inconsistent or invalid.
+               final date should be previous to 2022/08/24.
+
+        A total of            2 file(s) need to be updated.
+        Extracting data from: coe20220824rK.min
+        - Saving: coe_20220824.dat
+        - Saving: coe_20220824.clean.dat
+
+        Extracting data from: coe20220825rK.min
+        - Saving: coe_20220825.dat
+        - Saving: coe_20220825.clean.dat
+          Raw data-file missed  177 minutes of data.
+
+
+        Data-file(s) ready for computing!
+
+        A total of            2 file(s) need to be updated.
+
+        Gathering data for 2022/08/24:
+                      EARLY MODE: using data from previous month.
+        Saving: ~/DATA/output/processed/coeneo/coe_20220824.data.early
+        Saving: ~/DATA/output/processed/coeneo/coe_20220824.differences.early
+
+        Gathering data for 2022/08/25:
+                      EARLY MODE: using data from previous month.
+        Saving: ~/DATA/output/processed/coeneo/coe_20220825.data.early
+        Saving: ~/DATA/output/processed/coeneo/coe_20220825.differences.early
+
+
+        Data files processed!
+        A total of            2 file(s) need to be updated.
+        Saving: coe_20220824.k_index.early
+        Saving: coe_20220824.delta_H.early
+        Saving: coe_20220824.profiles.early
+        Saving: coe_20220825.k_index.early
+        Saving: coe_20220825.delta_H.early
+        Saving: coe_20220825.profiles.early
+
+        Magnetic-Index files updated!
+Input Warning: conflict with input date(s), data inconsistent or invalid.
+               final date should be previous to 2022/08/24.
+Input Warning: Invalid values, replacing conflictive values with data gaps.
+               missing GMS_YYYYMMDD.delta_H.early.
+        Saving: coe_202208.delta_H.early
+
+Input Warning: Invalid values, replacing conflictive values with data gaps.
+               missing GMS_YYYYMMDD.k_index.early.
+        Saving: coe_202208.k_index.early
+
+
+        delta H-Plot files updated!
+Inconsistency Warning: Incomplete final index data files for selected GMS [coeneo].
+                       It is requaried to manualy UPDATE the index files.
+Inconsistency Warning: Incomplete magnetic data files for selected GMS [coeneo].
+                       GEOMAGIXS system will take as gaps the missing data files.
+        * Updated coeneo.dates file.
+        Index [early] files date-range: 20201210-20220825
+        Index [final] files date-range:    00000-   00000
+        Magnetic data date-range:       20201210-20220825
+
+        * Data loaded from coeneo.dates file.
+        Index [early] files date-range: 20201210-20220825
+        Index [final] files date-range:    00000-   00000
+        Magnetic data date-range:       20201210-20220825
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+        Setting PNG as default file type.
+        Saving: coe_20220824_01days.k.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220822_03days.k.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220818_07days.k.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220825_01days.k.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220823_03days.k.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220819_07days.k.early
+
+
+        Kmex-Plot files updated!
+        * Data loaded from coeneo.dates file.
+        Index [early] files date-range: 20201210-20220825
+        Index [final] files date-range:    00000-   00000
+        Magnetic data date-range:       20201210-20220825
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+        Setting PNG as default file type.
+        Saving: coe_20220824_01days.dH.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220822_03days.dH.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220818_07days.dH.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220825_01days.dH.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220823_03days.dH.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220819_07days.dH.early
+
+
+        delta H-Plot files updated!
+        * Data loaded from coeneo.dates file.
+        Index [early] files date-range: 20201210-20220825
+        Index [final] files date-range:    00000-   00000
+        Magnetic data date-range:       20201210-20220825
+
+        * Data loaded from qdays.dates file.
+        Quiet Days date-range:    20000101-20220731
+
+        Setting PNG as default file type.
+        Saving: coe_20220824_01days.B.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220822_03days.B.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220818_07days.B.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220825_01days.B.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220823_03days.B.early
+
+        Setting PNG as default file type.
+        Saving: coe_20220819_07days.B.early
+
+
+        Magnetic-profiles Plot files updated!
+
+        coe_202208.delta_H.early file upload success!
+
+        coe_202208.k_index.early file upload success!
+
+        latest_coe_dh.png file upload success!
+
+        latest_coe_k.png file upload success!
+
+        latest_coe_B.png file upload success!
+###########################
+###########################

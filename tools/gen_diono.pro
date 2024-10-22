@@ -64,6 +64,8 @@
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
 FUNCTION n_terms, wdiff, A, n
+On_error, 2
+COMPILE_OPT idl2, HIDDEN
     M = ROUND((42/(2.285*wdiff))+1)
     N_terms = (M*2)+1
     

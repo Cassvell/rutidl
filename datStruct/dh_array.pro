@@ -34,7 +34,7 @@
 ;version
 ; Dec, 2022
 
-FUNCTION DH_data, date, station, idx, resolution
+FUNCTION DH_data, date, idx
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -68,7 +68,7 @@ FUNCTION DH_data, date, station, idx, resolution
 	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
     	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  	    
 	    ENDIF
-
+		print, file_name
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
 
@@ -78,17 +78,23 @@ FUNCTION DH_data, date, station, idx, resolution
 		FREE_LUN, lun
 ;###############################################################################
 ;extracting data and denfining an structure data
-        DStruct = {hora : 0, D_stdesv : 0., D : 0., H_stdesv : 0., H : 0., $
-        Z_stdesv : 0., Z : 0., N_stdesv : 0., N : 0., F_stdesv : 0., F : 0.}
-
-		dh_mag = REPLICATE(DStruct, number_of_lines)	
-  
-		READS, data[0:number_of_lines-1], dh_mag, $
-		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'		
-		RETURN, dh_mag		
+		index_str      =  {d_h     : FLTARR(24), $
+						d_h_sum  : 0.0, $
+                        d_sigma      : FLTARR(24), $
+						d_sigma2      : 0.0}
+        
+        struct = {x : FLTARR(24), y : 0}        
+        tmp_var = REPLICATE(struct, 2)
+		READS, data, tmp_var, FORMAT='(25(F9))'
+		
+		index_str.d_h[*]   = tmp_var[0].x
+		index_str.d_sigma[*]   = tmp_var[1].x
+        index_str.d_h_sum  = tmp_var[0].y
+        index_str.d_sigma2      = tmp_var[1].y				
+		RETURN, index_str		
 END
 
-FUNCTION dh_array, date_i, date_f, station, idx;, resolution 
+FUNCTION dh_array, date_i, date_f, idx;, resolution 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 	
@@ -108,7 +114,7 @@ FUNCTION dh_array, date_i, date_f, station, idx;, resolution
 ; define DH variables
 	station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
     dir = set_var.Mega_dir+'dH_'+STRLOWCASE(station_code)+'/'      
-    ;    data_path='/home/isaac/MEGAsync/datos'
+
         
         string_date        = STRARR(file_number)                
         data_file_name_dh  = STRARR(file_number) 
@@ -123,15 +129,13 @@ FUNCTION dh_array, date_i, date_f, station, idx;, resolution
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')	   
                                
                 ;data_file_name_dh[i] = data_path+'/dH_teo/teo_'+string_date[i]+'.dst.early'
-                data_file_name_dh[i] = dir+STRLOWCASE(station_code)+'_'+string_date[i]+'.dst.early'
-               ; print, data_file_name_dh[i]
-                file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
-		        		        
-	            IF opened_files NE N_ELEMENTS(file_dh) THEN begin
-	                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'    
-	            ENDIF
-        	                            
-        ENDFOR
+                data_file_name_dh[i] = dir+STRLOWCASE(station_code)+'_'+string_date[i]+'.delta_H.early'
+              ;  print, data_file_name_dh[i]
+            ;    file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
+		    ENDFOR    		        
+	  ;           IF opened_files NE N_ELEMENTS(file_dh) THEN begin
+	   ;             data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'    
+	         ;   ENDIF
 
 
         exist_data_file_dh   = FILE_TEST(data_file_name_dh)
@@ -150,13 +154,15 @@ FUNCTION dh_array, date_i, date_f, station, idx;, resolution
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_dh = DH_data([tmp_year, tmp_month, tmp_day], station, STRING(idx))
+                        d_dh = DH_data([tmp_year, tmp_month, tmp_day], STRING(idx))
                         
-                        dH[i*24:(i+1)*24-1] = d_dh.H[*]
+                        dH[i*24:(i+1)*24-1] = d_dh.d_h[*]
                                                                                                                        
                 ENDIF ELSE BEGIN
                         dH[i*24:(i+1)*24-1] = 999999.0
                 ENDELSE                
         ENDFOR
     RETURN, dH
+
+	dH = add_nan(dH, 999999.0, 'equal')
 END

@@ -303,6 +303,97 @@ PRO list_dst, date_i, date_f
     PRINT, 'límites de ventana del tiempo en formato DOY entorno a cada evento'     
 END 
 
+PRO list_symh, date_i, date_f
+	On_error, 2
+	COMPILE_OPT idl2, HIDDEN
+
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= date_i[2]	
+
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]	
+
+ ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
+        @set_up_commons
+        set_up	
+;###############################################################################
+
+        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1     
+;###############################################################################
+;Dst Data                       
+    symh = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f], 'sym')            
+        
+    symh_min = FINDGEN(N_ELEMENTS(symh)/1440)
+    hr_min= INDGEN(N_ELEMENTS(symh)/1440)
+
+    time_w = TIMEGEN(N_ELEMENTS(file_number), final=JULDAY(mh_f, dy_f, yr_f, 23), $
+                start=JULDAY(mh_i, dy_i, yr_i, 0) , units='D')
+                
+    CALDAT, time_w, m, d, y
+
+    FOR i=0, N_ELEMENTS(symh_min)-1 DO BEGIN
+        symh_min[i] = MIN(symh[i*1440:(i+1)*1440-1], j, /NAN)
+        hr_min[i]= j
+    ENDFOR
+
+	PRINT, 'Enter threshold index for dH local equal or lower than -30: '
+	threshold = ''
+	READ, threshold, PROMPT = '> '
+	
+    idx = WHERE(symh_min LE threshold, count)
+	IF count LE 0 THEN MESSAGE, 'ERROR' 
+           	
+    y_idx      = y[idx]   
+    m_idx      = m[idx]
+    d_idx      = d[idx]
+    dst_idx    = symh_min[idx]
+    hr_idx     = hr_min[idx]
+      
+    Date    = STRING(yr_i)
+    outfile = '../rutidl/output/'+'symh_'+Date[0]+'TGM.txt'   ; defining the output file
+    ;names and path directories
+   
+ ;   OPENW, lun, Outfile, /GET_LUN
+   
+    PRINT, '###################################################################'
+    PRINT, 'lista de eventos de tormenta geomagnética '
+    PRINT, '###################################################################'
+    PRINT, '                                                                    '
+    PRINT, 'Descripción: Identificación de la fecha y hora en formato '
+    PRINT, 'fecha yy/mm/dd hh, día del año de cuando el índice Dst descendió por'
+    PRINT, 'debajo de -150 nT, lo que es un indicativo de la ocurrencia de un '
+    PRINT, 'un evento de tormenta geomagnética intensa y de interés  '
+    PRINT, '                                                                   '
+    PRINT, FORMAT='("Fecha", 6X, "Hora", 8X, "Indice Sym-H")'
+   
+    FOR i=0, N_ELEMENTS(idx)-1 DO BEGIN
+
+           IF d_idx[i] NE 0 THEN BEGIN
+
+            ;idx_kp[idx] = idx_kp[i]
+
+                PRINT, y_idx[i], m_idx[i], d_idx[i], hr_idx[i], dst_idx[i], $
+                             FORMAT = '(I4, "-", I02, "-", I02, 2X, I02, 3X, I)'  
+               ; PRINTF, lun, year_tmp[i], month_tmp[i], day_tmp[i], hour_tmp[i], doy_tmp[i], idx_dst_tmp[i], $
+                ;            FORMAT = '(I4, X, I02, X, I02, 2X, I02, 2X, I03, X, I4)'             
+            ENDIF 
+   
+        ;PRINTF, lun, year[i], month[i], day[i], hour[i], doy[i], idx_kp[i], $
+        ;FORMAT = '(I4, "/", I02, "/", I02, X, I02, 2X, I03, 4X, I)'       
+    ENDFOR
+    
+  ;  CLOSE,lun
+   ; FREE_LUN, lun
+   ;PRINT, DATETIME[i], Dst[i], format = "(A29)"
+    PRINT, '                                                                    '
+    PRINT, '###################################################################'
+    PRINT, 'A continuación, ejecutar el procedimiento plotting eligiendo dos'
+    PRINT, 'límites de ventana del tiempo en formato DOY entorno a cada evento'     
+END 
+
+
 PRO list_dh, date_i, date_f
 
 	On_error, 2
@@ -325,13 +416,11 @@ PRO list_dh, date_i, date_f
 	station_idx = ''
 	PRINT, 'Enter GMS idx: 0:coe, 1:teo, 2:tuc, 3:bsl, 4:itu'
 	READ, station_idx, PROMPT = '> '
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 ;###############################################################################
 ; reading data files
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1    
     
-    H  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, FIX(station_idx))
+    H  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], FIX(station_idx))
  
     H = add_nan(H, 999999.0, 'equal')          
     time_w = TIMEGEN(N_ELEMENTS(file_number), final=JULDAY(mh_f, dy_f, yr_f, 23), $
@@ -360,7 +449,7 @@ PRO list_dh, date_i, date_f
     H_idx    = H_min[idx]
     hr_idx   = hr_min[idx]
     
-    outfile='/home/isaac/geomstorm/rutidl/output/DH_list_TGM.dat'
+    outfile='/home/isaac/geomstorm/rutidl/output/DH_list_TGM_2024.dat'
      ;   OPENW, lun, outfile, /GET_LUN, /append
         
     PRINT, '###################################################################'
