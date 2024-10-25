@@ -67,6 +67,7 @@ IF band_limit EQ 'passband_l' THEN BEGIN
         '21' : freq = 0.0000086808842 ;31:59
         '22' : freq = 0.0000081777351 ;33:58
         '23' : freq = 0.0000073394733 ;37:50
+        '30' : freq = (6.25e-4)/60
         ELSE: PRINT, 'fuera de rango'
     ENDCASE 
 ENDIF     
@@ -96,7 +97,8 @@ IF band_limit EQ 'passband_u' THEN BEGIN
         '20' : freq = 2.4e-5  ;23:08 hr
         '21' : freq = 0.000025261966 ;10:59
         '22' : freq = 0.000021196104 ;13:06
-        '23' : freq = 0.000020048564 ;13:51        
+        '23' : freq = 0.000020048564 ;13:51 
+        '30' : freq = (1.04e-03)/60       
         ELSE: PRINT, 'fuera de rango'
     ENDCASE 
 ENDIF     
@@ -127,7 +129,8 @@ IF band_limit EQ 'highpass_l' THEN BEGIN
         '20' : freq = 9.25e-5  ;23:08 hr
         '21' : freq = 0.000081112629 ;03:25
         '22' : freq = 0.000098254002 ;02:52
-        '23' : freq = 0.000095262271 ;02:54         
+        '23' : freq = 0.000095262271 ;02:54   
+        '30' : freq = 6.9e-5      
         ELSE: PRINT, 'fuera de rango'
     ENDCASE
 ENDIF

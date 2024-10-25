@@ -101,9 +101,9 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
 
-    correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    ;correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;print, correctedsymH.symH_0
-    symH_0 = correctedsymH.symH_0
+    ;symH_0 = correctedsymH.symH_0
 ; define Bsq 
  ;   Bsq     = SQbaseline_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx, 'min')    
 
@@ -111,7 +111,10 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 ;###############################################################################
 ;identifying NAN percentage values in the Time Series                
 ;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
-    H = fillnan(H)
+
+H = add_nan(H, 99999.0, 'equal')   
+
+H = fillnan(H)
 
 ;    DEVICE, true=24, retain=2, decomposed=0
   ;  TVLCT, R_bak, G_bak, B_bak, /GET        
@@ -175,24 +178,24 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 
     ; Beginning of GS
     str = max(H, i2)
-    print, 'beg of GS: '
-    print, string(dy[i2], hr[i2], min[i2], format = '(I02, X, I02, ":", I02)')    
+    ;print, 'beg of GS: '
+    ;print, string(dy[i2], hr[i2], min[i2], format = '(I02, X, I02, ":", I02)')    
 
     ; Minimum of GS
     print, 'min of GS: '
-    print, min1
-    print, string(dy[i], hr[i], min[i], format = '(I02, X, I02, ":", I02)')
+    ;print, min1
+    ;print, string(dy[i], hr[i], min[i], format = '(I02, X, I02, ":", I02)')
 
-    H2 = H[1440*3: n_elements(H)-1]
-    str2 = max(H2, j2)
-    min2 = min(H2, j)
-    date_time2 = date_time[1440*3: n_elements(date_time)-1]
-    CALDAT, date_time2, mh2, dy2, yr2, hr2, min2
+    ;H2 = H[1440*3: n_elements(H)-1]
+    ;str2 = max(H2, j2)
+    ;min2 = min(H2, j)
+    ;date_time2 = date_time[1440*3: n_elements(date_time)-1]
+    ;CALDAT, date_time2, mh2, dy2, yr2, hr2, min2
 
 
-    print, 'second min of GS: '
-    print, min(H2, j)
-    print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
+    ;print, 'second min of GS: '
+    ;print, min(H2, j)
+    ;print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
 
     
     DEVICE, true=24, retain=2, decomposed=0
@@ -202,10 +205,12 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 
     plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
 	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
-    oplot, [date_time[i], date_time[i]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
-	oplot, [date_time[1440*3+j], date_time[1440*3+j]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
+    oplot,date_time, symH, color=120, thick = 2
 
-	oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
+    ;oplot, [date_time[i], date_time[i]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
+	;oplot, [date_time[1440*3+j], date_time[1440*3+j]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
+
+	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
     
-    ;wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
 END

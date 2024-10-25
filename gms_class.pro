@@ -8,6 +8,7 @@ FUNCTION gms_class, gms_code
 CASE gms_code of
         'coe'   : class = 'regmex'
         'teo'   : class = 'regmex'
+		'itu'   : class = 'regmex'
 		'bmt'   : class = 'intermagnet'
 		'bou'   : class = 'intermagnet'
 		'brd'   : class = 'intermagnet'

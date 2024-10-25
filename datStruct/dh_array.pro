@@ -34,7 +34,7 @@
 ;version
 ; Dec, 2022
 
-FUNCTION DH_data, date, idx
+FUNCTION DH_data, date, station_code
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -47,27 +47,28 @@ FUNCTION DH_data, date, idx
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
         str_year = STRING(year, FORMAT = '(I4)')	
-        station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+        ;station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
         
         dir = set_var.Mega_dir+'dH_'+STRLOWCASE(station_code)+'/'        
 
-	IF station_code EQ 'teo' THEN BEGIN
-		file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.final'
-	ENDIF ELSE BEGIN
+	;IF station_code EQ 'teo' THEN BEGIN
+	;	file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.final'
+	;ENDIF ELSE BEGIN
 	 	file_name = dir+STRLOWCASE(station_code)+'_'+date+'.delta_H.final'
-	ENDELSE
+	;ENDELSE
 	 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 	    IF opened_files NE N_ELEMENTS(file) THEN BEGIN
-			IF station_code EQ 'teo' THEN BEGIN
-				file_name = dir+STRLOWCASE(station_code)+'_'+date+'.dst.early'
-			ENDIF ELSE BEGIN
-	 			file_name = dir+STRLOWCASE(station_code)+'_'+date+'.delta_H.early'
-			ENDELSE	    	        
+	;		IF station_code EQ 'teo' THEN BEGIN
+				file_name = dir+STRLOWCASE(station_code)+'_'+date+'.delta_H.early'
+				file = FILE_SEARCH(file_name, COUNT=opened_files)
+			ENDIF ;ELSE BEGIN
+	; 			file_name = dir+STRLOWCASE(station_code)+'_'+date+'.delta_H.early'
+	;		ENDELSE	    	        
 	        ;name = STRLOWCASE(station_code)+'_'+date+'.index'+status
-	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
-    	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  	    
-	    ENDIF
+	;        file = FILE_SEARCH(file_name, COUNT=opened_files) 
+    ;	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  	    
+	;    ENDIF
 		print, file_name
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
@@ -94,7 +95,7 @@ FUNCTION DH_data, date, idx
 		RETURN, index_str		
 END
 
-FUNCTION dh_array, date_i, date_f, idx;, resolution 
+FUNCTION dh_array, date_i, date_f, station_code;, resolution 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 	
@@ -112,7 +113,7 @@ FUNCTION dh_array, date_i, date_f, idx;, resolution
            
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 ; define DH variables
-	station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+	;station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
     dir = set_var.Mega_dir+'dH_'+STRLOWCASE(station_code)+'/'      
 
         
@@ -154,7 +155,7 @@ FUNCTION dh_array, date_i, date_f, idx;, resolution
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_dh = DH_data([tmp_year, tmp_month, tmp_day], STRING(idx))
+                        d_dh = DH_data([tmp_year, tmp_month, tmp_day], STRING(station_code))
                         
                         dH[i*24:(i+1)*24-1] = d_dh.d_h[*]
                                                                                                                        
