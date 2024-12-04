@@ -51,13 +51,13 @@ PRO set_up
     intermagnet_station = ['beijing', 'boulder', 'brandon', 'bstenis', 'cocos', 'cheongyang', 'guimar', $
     					   'hartebeesthoek', 'islandpascua', 'kakioka', 'kakadu', 'keetmanshoop', $
     					   'pilar', 'sanjuan', 'tamanraset', 'tristandacunha', 'tucson', 'honolulu', $
-                           'kanoya', 'jaipur', 'lanzhou', 'misalat', 'qsaybeh', 'alibag']
+                           'kanoya', 'jaipur', 'lanzhou', 'misalat', 'qsaybeh', 'alibag', 'iznik']
 
     m 			= N_ELEMENTS(intermagnet_station)
     
     intmag_code			= [ 'bmt', 'bou', 'brd', 'bsl', 'cki', 'cyg', 'gui', 'hbk', 'ipm', 'kak', $
     						'kdu', 'kmh', 'pil', 'sjg', 'tam', 'tdc', 'tuc', 'hon', 'kny', 'jai', $
-                            'lzh', 'mlt', 'qsb', 'abg']
+                            'lzh', 'mlt', 'qsb', 'abg', 'izn']
     
     node_gic    = ['lav', 'qro', 'maz', 'rmy']
     l           = N_ELEMENTS(node_gic)   

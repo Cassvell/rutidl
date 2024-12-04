@@ -33,6 +33,7 @@ CASE gms_code of
 		'mlt'   : class = 'intermagnet'
 		'abg'   : class = 'intermagnet'
 		'qsb'   : class = 'intermagnet'
+		'izn'   : class = 'intermagnet'
         ELSE : PRINT, 'non avaiable gms data'
     ENDCASE
 

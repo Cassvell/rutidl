@@ -253,10 +253,10 @@ CGCONTOUR,power,date_time,period, $
 
     l1 = 1600.0
     l2 = 1100.0
-    l3 = 680.0
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l1,l1], color='yellow', thick=2
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l2,l2], color='yellow', thick=2
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l3,l3], color='yellow', thick=2
+    l3 = 675.0
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l1,l1], color='yellow', thick=2
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l2,l2], color='yellow', thick=2
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l3,l3], color='yellow', thick=2
 
     print, 'frequency ranges of significant Ddyn [Hz]:'
     print,  string(1.0/l1, 1.0/l2, 1.0/l3,  FORMAT='(E12.5, X, E12.5, X, E12.5)')
@@ -264,16 +264,15 @@ CGCONTOUR,power,date_time,period, $
     print, 'period ranges of significant Ddyn [Hz]:'
     print,  string(l1/60.0, l2/60.0, l3/60.0, FORMAT='(F7.1, X, F7.1, X, F7.1)')
 
-    ;p2 = 1600.0
-    ;p1 = 1400.0
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p1,p1], color='red', thick=2
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p2,p2], color='red', thick=2
+    p2 = 1400.0
+    p1 = 1100.0
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p1,p1], color='red', thick=2
+    cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p2,p2], color='red', thick=2
 
     print, 'frequency ranges of Ddyn peak energy:'
-    ;print,  string(1.0/p2, 1.0/p1, FORMAT='(E12.5, X, E12.5)')
-
+    print,  string(1.0/p2, 1.0/p1, FORMAT='(E12.5, X, E12.5)')
     print, 'period ranges of Ddyn peak energy:'
-    ;print,  string(p2/60.0, p1/60.0, FORMAT='(F7.1, X, F7.1)')
+    print,  string(p2/60.0, p1/60.0, FORMAT='(F7.1, X, F7.1)')
 ; Check that colors and levels are properly defined before passing to cgColorbar
 peak = max(power, i)
 

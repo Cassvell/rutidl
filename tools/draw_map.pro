@@ -42,64 +42,66 @@ END
 
 
 PRO make_psfig
-
+On_error, 2
+COMPILE_OPT idl2, HIDDEN
     path = '../rutidl/'
     psfile =  path+'map.eps'
+
+
+    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
     /nomatch, XSize=16, YSize=10
     
-    cgMap_set, 10, -90, /CONTINENTS, /FILL_CONTINENTS, /HORIZON, $
-    ISOTROPIC=ISOTROPIC, /MOLLWEIDE, /GRID, CON_COLOR  = cgColor("GRN3")
-    
-    CGPLOTS, -99.19325, 19.74586111, PSYM = 4, SYMSIZE=1.4, COLOR = 'Blue', THICK=6      
-    cgPS_Close, density = 300, width = 1000
-    RETURN
-END
-
-PRO make_psfig2
-    LOADCT, 39, /SILENT
-    path = '../rutidl/'
-    psfile =  path+'map_mex.eps'
-    n = 1000
-    X = FINDGEN(n)
-    
-    Y = COS(X)
-        
-    cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
-    /nomatch, XSize=16, YSize=10
-    
-    
-    CGPlot, x, y, Color='red', Thick=2, XRANGE=[0,2000], YRANGE=[-20,20]
-    ;cgMap_set, 32, -100, /CONTINENTS, /FILL_CONTINENTS,  LIMIT=[14,-120,33,-80],$
-    ;ISOTROPIC=ISOTROPIC, /AZIM, /GRID, CON_COLOR  = cgColor("GRN3"), GLINESTYLE = 0, /ADVANCE, $
-    ;/COUNTRIES
-
-    ;MAP_GRID, /LABEL, LATLAB=-120, LONLAB=15, COLOR=0.
-    ;CGPLOTS, -99.19325, 19.74586111, PSYM = 4, SYMSIZE=1.4, COLOR = 'Blue', THICK=6    
-     
-    ;CGTEXT, .495, .28,  'TEO', /NORMAL, CHARSIZE=2.0, COLOR = 'Navy';, CHARTHICK=3.5
-       
-    cgPS_Close, density = 300, width = 1000;, /PNG
-    
+    cgMap_set, 10, 30, /CONTINENTS, /FILL_CONTINENTS, /HORIZON, $
+    ISOTROPIC=ISOTROPIC, /MOLLWEIDE, /GRID, CON_COLOR  = cgColor("gray"), BACKGROUND = "cyan"
    
+    x = [0, 0.5, 0, -0.5]
+    y = [0.5, 0, -0.5, 0]
+    
+    ; Load the symbol into IDL
+    USERSYM, x, y, /FILL
+
+    teo = obscoord('teo')
+    CGPLOTS, -teo.longeo, teo.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Red', THICK=12     
+    
+    sjg = obscoord('sjg')
+    CGPLOTS, -sjg.longeo, sjg.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'red', THICK=12         
+    
+    gui = obscoord('gui')
+    CGPLOTS, -gui.longeo, gui.latgeo, PSYM =8, SYMSIZE=4, COLOR = 'Blue', THICK=12  
+
+    tam = obscoord('tam')
+    CGPLOTS, tam.longeo, tam.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Blue', THICK=12   
+
+    jai = obscoord('jai')
+    CGPLOTS, jai.longeo, jai.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Green', THICK=12  
+
+    lzh = obscoord('lzh')
+    CGPLOTS, lzh.longeo, lzh.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12  
+
+    bmt = obscoord('bmt')
+    CGPLOTS, bmt.longeo, bmt.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12  
+
+    cyg = obscoord('cyg')
+    CGPLOTS, cyg.longeo, cyg.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12 
+
+    kny = obscoord('kny')
+    CGPLOTS, kny.longeo, kny.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12  
+
+    kak = obscoord('kak')
+    CGPLOTS, kak.longeo, kak.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12  
+
+    hon = obscoord('hon')
+    CGPLOTS, hon.longeo, hon.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'orange', THICK=12  
+
+
+
+
+    cgPS_Close, density = 300, width = 1000
+
+  
     RETURN
 END
 
 
-
-PRO make_pngfig
-
-    ;cgDisplay, 1750, 500, Title='Filled Area Under a Curve'
-    set_plot, 'z'
-    cgMap_set, 32, -100, /CONTINENTS, /FILL_CONTINENTS,  LIMIT=[14,-120,33,-80],$
-    ISOTROPIC=ISOTROPIC, /AZIM, /GRID, CON_COLOR  = cgColor("GRN3"), GLINESTYLE = 0, /ADVANCE, $
-    /COUNTRIES
-
-    MAP_GRID, /LABEL, LATLAB=-120, LONLAB=15;, COLOR=0.
-    CGPLOTS, -99.19325, 19.74586111, PSYM = 4, SYMSIZE=1.4, COLOR = cgColor('Blue'), THICK=6    
-     
-    CGTEXT, .495, .28,  'TEO', /NORMAL, CHARSIZE=2.0, COLOR = cgColor("Navy");, CHARTHICK=3.5
-
-    write_png,'map.png',tvrd(/true,/order) 
-END

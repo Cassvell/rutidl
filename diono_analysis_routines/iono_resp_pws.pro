@@ -90,53 +90,21 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
 ; Generate the time series variables 
 ; define H variables                  
 
-    dH  = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
     ;dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
     data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
     H = data.H
-    print, dH
 
-;###############################################################################      
-; IP data
-; Generate the time variables to plot TEC time series         
-    ;tec         = tec_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'tec'): freq = 6.9e-5
-    ;med         = tec_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'med') 
-    ;tec_resp    = tec-med          
-;###############################################################################
-;identifying NAN percentage values in the Time Series
-   ; H = nanpc(H, 999999.0, 'equal')
-   ; H = nanpc(H, 100.0, 'greater')    
-;Identifying the NAN values        
-    ;tec = add_nan(tec, 999.0, 'equal')            
-    ;med = add_nan(med, 999.0, 'equal')                
-
-    dH = add_nan(dH, 100.0, 'greater')
-;    H = add_nan(H, 99999.0, 'equal')                   
-;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
+  
     H = fillnan(H)
  ;   PRINT, H;N_ELEMENTS(H), N_ELEMENTS(Bsq)
 ;###############################################################################    
-    ;new_dst = FLTARR(N_ELEMENTS(time))     	    
-    ;tmp_dst  = INTERPOL(dst, N_ELEMENTS(time))
-    ;new_dst = tmp_dst 
-    
-    ;new_H = FLTARR(N_ELEMENTS(time))     	    
-    ;tmp_H  = INTERPOL(H, N_ELEMENTS(time))
-    ;new_H = tmp_H       
-;###############################################################################      
-    new_dH = FLTARR(N_ELEMENTS(time))     	    
-    tmp_dH  = INTERPOL(dH, N_ELEMENTS(time))
-    new_dH = tmp_dH 
-    
-    ;new_tecresp = FLTARR(N_ELEMENTS(time))     	    
-    ;tmp_tecresp  = INTERPOL(tec_resp, N_ELEMENTS(time))
-    ;new_tecresp = tmp_tecresp 
-    ;new_tecresp = add_nan(new_tecresp, 0.0, 'equal')             
+;###############################################################################             
 ;###############################################################################
 ; Import the structure of diono generated variables   
-    dionstr = gen_diono(symH, H, 28.06, 'm', TGM_n, DIG_FILTER = 'dig_filter')
+
+    dionstr = gen_diono(symH, H, 28.06, 'm', TGM_n, station_code, DIG_FILTER = 'dig_filter')
  ;   PRINT, Bsq
 ; compute frequencies 
     f_k   = dionstr.f_k
@@ -150,91 +118,8 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
   ;  PRINT, dst
     dp2   = dionstr.dp2
     ddyn  = dionstr.ddyn
-    
-;############################################################################### 
-;###############################################################################    
-    dst_min = MIN(symH,i)    
-    t0 = 0
-    
-    CASE TGM_n of
-        1   :   t0 = 18
-        2   :   t0 = 38
-        3   :   t0 = 14
-        4   :   t0 = 124
-        5   :   t0 = 36
-        6   :   t0 = 20
-        7   :   t0 = 11
-        8   :   t0 = 18
-        9   :   t0 = 14
-        10  :   t0 = 10
-        11  :   t0 = 17
-        12  :   t0 = 18
-        13  :   t0 = 17
-        14  :   t0 = 26
-        15  :   t0 = 35
-        16  :   t0 = 30
-        17  :   t0 = 22
-        18  :   t0 = 18
-        19  :   t0 = 5
-        20  :   t0 = 19
-        21  :   t0 = 0
-        22  :   t0 = 0
-        23  :   t0 = 0
-        30  :   t0 = 9*60
-        ELSE: PRINT, 'evento no disponible'   
-    ENDCASE
-    tf = 0
-    CASE TGM_n of
-        1   :   tf = 183
-        2   :   tf = 186
-        3   :   tf = 52
-        4   :   tf = 36
-        5   :   tf = 70
-        6   :   tf = 66
-        7   :   tf = 60
-        8   :   tf = 123
-        9   :   tf = 38
-        10  :   tf = 146
-        11  :   tf = 82
-        12  :   tf = 34
-        13  :   tf = 71
-        14  :   tf = 60
-        15  :   tf = 42
-        16  :   tf = 120
-        17  :   tf = 144
-        18  :   tf = 19
-        19  :   tf = 34
-        20  :   tf = 22       
-        21  :   tf = 100
-        22  :   tf = 100
-        23  :   tf = 100
-        30  :   tf = (33)*60           
-        ELSE: PRINT, 'evento no disponible'   
-    ENDCASE
-    print, i
-    SG_beg = i-t0
-    IF tf NE 0 THEN BEGIN
-    SG_end = i+tf
-    ENDIF ELSE BEGIN
-    SG_end = N_ELEMENTS(dH)-10
-    ENDELSE 
-;###############################################################################    
-    med_ddyn = MEDIAN(ddyn)
-   ; std_ddyn = STDDEV(new_ddyn, /NAN)
-    
-    IQR = PERCENTILES(ddyn, CONFLIMIT=0.5) 
-    IQR_n = (IQR[1]-IQR[0])*1
-    
-    ddyn_out = WHERE(ddyn GE med_ddyn+IQR_n OR ddyn LE med_ddyn-IQR_n)
-    ddyn_in  = WHERE(ddyn LE med_ddyn+IQR_n AND ddyn GE med_ddyn-IQR_n)
-    
-    ddyn_diff_out = ddyn
-    ddyn_diff_out[ddyn_in]=!Values.F_NAN
-    
-    ddyn_diff_in  = ddyn
-    ddyn_diff_in[ddyn_out]=!Values.F_NAN    
-;###############################################################################
-    med_dp2 = MEDIAN(dp2)                       
+
+;###############################################################################         
 ;###############################################################################
 ; define device and color parameters 
 ;###############################################################################
@@ -262,8 +147,19 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
         ;                 CHARTHICK=1.8
 
     IF keyword_set(ps) THEN BEGIN
-    make_psfig, f_k, fn, pws, symH, new_dH, diono, ddyn, dp2, time,$
-        SG_beg, SG_end, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code   
+        path = set_var.local_dir+'output/diono_recons/'+station_code+'/'	
+        test = FILE_TEST(path, /DIRECTORY) 
+        IF test EQ 0 THEN BEGIN
+            FILE_MKDIR, path
+            PRINT, 'PATH directory '+path
+            PRINT, 'created'
+        ENDIF ELSE BEGIN
+            PRINT, ''
+            
+        ENDELSE   
+
+    make_psfig, f_k, fn, pws, symH, H, diono, ddyn, dp2, time,$
+        path, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code   
     ENDIF
 
     IF keyword_set(png) THEN BEGIN        
@@ -271,15 +167,16 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
         SG_beg, SG_end, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]               
     ENDIF 
 
-
 END
 
+
 PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, time,$
-        SG_beg, SG_end, date_i, date_f, station_code
+        path, date_i, date_f, station_code
 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
-	
+    @set_up_commons
+    set_up			
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -293,19 +190,22 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
     ;path = '../rutidl/output/article1events/diono_ev/'
-    path = '../rutidl/output/'
     psfile =  path+'iono_PI_'+Date+'_'+station_code+'.eps'    
    ; LOADCT, 39
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=16, YSize=10
-
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english') 
     
+    class = gms_class(station_code)
+    info = stationlist(class, station_code)
+
     time_title = ' UT [days]'
-    window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
-                STRING(old_month, yr_i, FORMAT='(A, X, I4)')    
+    title = STRING(STRUPCASE(station_code), info.mlat, info.hem, ", UTC: ", info.utc,' h', $
+    FORMAT='(A, ", magnetic lat: ", F7.2, " ", A, A, " ", I3, A)')
+    ;window_title = 'Event '+ STRING(TGM_n, FORMAT='(I2)')+', '+ $
+     ;           STRING(old_month, yr_i, FORMAT='(A, X, I4)')    
     periodo = 'Period [h]'        
 ;###############################################################################     
     chr_size1 = 0.9
@@ -316,7 +216,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.95   
-   XYOUTS, X, y, window_title, /NORMAL, $
+   XYOUTS, X, y, title, /NORMAL, $
    ALIGNMENT=0.5, CHARSIZE=2.8, CHARTHICK=1.5               
 ;###############################################################################               
     freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
@@ -332,14 +232,20 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
     
     cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[1], fn], POSITION=[0.08,0.11,0.4,0.89],$
-    YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
+    YRANGE=[yinf, ysup], BACKGROUND ='white', COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA,$
     /NOERASE
+
+    i = freq_cuts(TGM_n, station_code)
+    ;passband_l = (i.ddyn_lfc)/60
+
+    ;passband_u = (i.ddyn_hfc)/60
+    ;highpass_l = (i.dp2_lfc)/60
 
     passband_l = freq_band(TGM_n, 'passband_l')
     passband_u = freq_band(TGM_n, 'passband_u')
     highpass_l = freq_band(TGM_n, 'highpass_l')
-    
+    print, passband_l, passband_u
     cgPolygon, [passband_l, passband_u ,passband_u, passband_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], COLOR='BLK2', /FILL
 
@@ -418,19 +324,9 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
      POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
      
-
-     
-     CGOPLOT, time, new_dst, COLOR='GRN5', THICK=4      
-
-     CGOPLOT, time, new_dH, COLOR='black', THICK=2   
-         print, SG_beg
-    cgOPLOT, [time[SG_beg],time[SG_beg]], $ ;referencia para el inicio de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'
-    
-    cgOPLOT, [time[SG_end],time[SG_end]], $ ;referencia para el final de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'      
+     cgOPlot, time, new_dH, color = 'black', thick=3, linestyle=0
+     cgOPlot, time, new_dst, color = 'GRN5', thick=3, linestyle=0     
+   
         AXIS, XAXIS = 0, XRANGE=[0,file_number],$
                          ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
                          XTICKS=file_number, $
@@ -471,24 +367,13 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
      up_diono=max(new_idiff)
      down_diono=min(new_idiff)
     ; print,  new_idiff
-     cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
      COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
      POSITION=[0.5,0.51,0.95,0.68], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
      THICK=2, /NODATA   
 
-    cgOPLOT, time, new_idiff, THICK=1, LINESTYLE=0, COLOR='black'     
-    cgOPLOT, time[SG_beg:SG_end], new_idiff[SG_beg:SG_end], THICK=3, LINESTYLE=0, COLOR='black' 
-  
-
-     
-    cgOPLOT, [time[SG_beg],time[SG_beg]], $ ;referencia para el inicio de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'
-    
-    cgOPLOT, [time[SG_end],time[SG_end]], $ ;referencia para el final de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'  
+    cgOPLOT, time, new_idiff, THICK=3, LINESTYLE=0, COLOR='black'     
 
     ppi = TexToIDL('D_{I}')        
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
@@ -538,20 +423,11 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
      POSITION=[0.5,0.11,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
     
-    cgOPLOT, [time[SG_beg],time[SG_beg]], $ ;referencia para el inicio de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'
-    
-    cgOPLOT, [time[SG_end],time[SG_end]], $ ;referencia para el final de la Tormenta
-    [!Y.CRANGE[0], !Y.CRANGE[1]], LINESTYLE=2, $
-    THICK=2, COLOR='black'
 
-    cgOPLOT, time, new_ddyn, COLOR='black' , LINESTYLE=0, THICK=1
-    cgOPLOT, time[SG_beg:SG_end], new_ddyn[SG_beg:SG_end], THICK=3, LINESTYLE=0, COLOR='black'    
+    cgOPLOT, time, new_ddyn, COLOR='black' , LINESTYLE=0, THICK=1  
   
 ;###############################################################################     
-    cgOPLOT, time, new_dp2, COLOR='red', THICK=1
-    cgOPLOT, time[SG_beg:SG_end], new_dp2[SG_beg:SG_end], THICK=3, LINESTYLE=0, COLOR='red'       
+    cgOPLOT, time, new_dp2, COLOR='red', THICK=3    
     
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=4,COLOR='black'
     med_dp2 = MEDIAN(new_dp2)   

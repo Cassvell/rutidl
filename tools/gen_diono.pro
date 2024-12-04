@@ -81,7 +81,7 @@ COMPILE_OPT idl2, HIDDEN
     RETURN, M
 END
 
-FUNCTION gen_diono, f1, f2, l, time_res, case_event, DIG_FILTER = dig_filter, $
+FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = dig_filter, $
                                             SIMPLE_FILTER = simple_filter
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
@@ -114,19 +114,23 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, DIG_FILTER = dig_filter, $
     
     power_s = (ABS(y[0:n/2])^2)/w_ss
   ;  power_s = (ABS(y[0:n/2])^2)
-   ; pws_s   = SMOOTH(pws, 1)
+   ; pws_s   = SMOOTH(pws, 1)  
 
     fk     = (1+FINDGEN(n))/(n*time)
     PRINT, 'Nyquist freq: ', fny, 'Hz'
     
  ;   N_terms = 
 ; define pass band frequencies  
-    passband_l = freq_band(case_event, 'passband_l')
-    passband_u = freq_band(case_event, 'passband_u')
+    i = freq_cuts(case_event, station_code)
 
+    ;passband_l = freq_band(case_event, 'passband_l')
+    ;passband_u = freq_band(case_event, 'passband_u')
+    passband_l = (i.ddyn_lfc)/60
+    passband_u = (i.ddyn_hfc)/60
 ;define high band frequencies
-    highpass_l = freq_band(case_event, 'highpass_l')
-	
+    ;highpass_l = freq_band(case_event, 'highpass_l')
+	highpass_l = i.dp2_lfc
+
 	f_s = 1/time
     fr_wdif_pb = passband_l*((2*!PI)*time)
     fr_wdif_hp = (highpass_l)*((2*!PI)*time)
