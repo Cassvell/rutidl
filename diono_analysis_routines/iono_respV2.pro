@@ -309,7 +309,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     periodo = 'Period [h]'        
 ;###############################################################################               
     cgPLOT, f_k, pws, /XLOG, /YLOG, POSITION=[0.1,0.11,0.95,0.89],$
-    BACKGROUND = blanco, COLOR='black', $
+    BACKGROUND = 'white', COLOR='black', $
     CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
@@ -330,7 +330,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
     
     cgPLOT, f_k, pws, /XLOG, /YLOG, XRANGE = [freqs[1], fn], POSITION=[0.08,0.11,0.4,0.89],$
-    YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR='black', $
+    YRANGE=[yinf, ysup], BACKGROUND = 'white', COLOR='black', $
     CHARSIZE = 1.4, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=2, /NODATA,$
     /NOERASE
 

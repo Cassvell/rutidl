@@ -101,6 +101,9 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
 
+    idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    symH0 = idx2.symH0
+
     ;correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;print, correctedsymH.symH_0
     ;symH_0 = correctedsymH.symH_0
@@ -113,7 +116,7 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 ;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
 
 H = add_nan(H, 99999.0, 'equal')   
-
+symH0 = fillnan(symH0)
 H = fillnan(H)
 
 ;    DEVICE, true=24, retain=2, decomposed=0
@@ -173,16 +176,16 @@ H = fillnan(H)
     
 
     ; First 3 days of data
-    H1 = H[0:1440*3]
-    min1 = min(H1, i)
+   ; H1 = H[0:1440*3]
+    ;min1 = min(H1, i)
 
     ; Beginning of GS
-    str = max(H, i2)
+    ;str = max(H, i2)
     ;print, 'beg of GS: '
     ;print, string(dy[i2], hr[i2], min[i2], format = '(I02, X, I02, ":", I02)')    
 
     ; Minimum of GS
-    print, 'min of GS: '
+    ;print, 'min of GS: '
     ;print, min1
     ;print, string(dy[i], hr[i], min[i], format = '(I02, X, I02, ":", I02)')
 
@@ -205,12 +208,12 @@ H = fillnan(H)
 
     plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
 	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
-    oplot,date_time, symH, color=120, thick = 2
-
+    oplot,date_time, symH0, color=120, thick = 2
+    oplot,date_time, Bdiono, color=250, thick = 2
     ;oplot, [date_time[i], date_time[i]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
 	;oplot, [date_time[1440*3+j], date_time[1440*3+j]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
 
 	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
-    
+    print, max(Bdiono)
     wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
 END

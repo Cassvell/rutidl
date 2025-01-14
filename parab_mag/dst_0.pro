@@ -31,7 +31,7 @@
 ;   Dynamic Preassure P
 ;
 ;output files:
-;   dst_0 array for an specific time window
+;   dst_0 array for an specific time win806256.dow
 ;
 ;   imported to: 
 ;version
@@ -642,5 +642,50 @@ COMPILE_OPT idl2, HIDDEN
                 CHARSIZE = 2, $
                 CHARTHICK=2    
     values = {symH_0 : symH_0, Q : Q_1min}
+	
+	dir = set_var.Mega_dir+'sym_0/'
+	test = FILE_TEST(dir, /DIRECTORY) 
+	IF test EQ 0 THEN BEGIN
+		FILE_MKDIR, dir
+		PRINT, 'PATH directory '+dir
+		PRINT, 'created'
+	ENDIF ELSE BEGIN
+		PRINT, ''
+	ENDELSE
+
+    ndays = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_i,dy_i,yr_i))+1
+	outfile = STRARR(ndays) 
+	string_date = STRARR(ndays)      
+    ;values.symH_0 = add_nan(values.symH_0, !VALUES.F_NAN, 'equal') 
+    i_nan = where(~finite(values.symH_0), count)
+    ;nan_indices = where(values.symH_0 eq !VALUES.F_NAN, count)
+    if count gt 0 then values.symH_0[i_nan] = 9999
+    ;print, i_nan
+
+    FOR i=0, ndays-1 DO BEGIN
+        tmp_year    = 0
+        tmp_month   = 0
+        tmp_day     = 0
+        tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
+        CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+        string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
+    
+        outfile[i] = dir+'sym0_'+string_date[i]+'.dat'    
+        OPENW, LUN, outfile[i], /GET_LUN        
+    
+        ; Get the corresponding data for the day
+        symH_0_day = values.symH_0[i*1440:(i+1)*1440-1]
+        Q_day = values.Q[i*1440:(i+1)*1440-1]
+    
+        ; Loop through each value of the day and print as columns
+        FOR j=0, 1439 DO BEGIN               
+            PRINTF, LUN, symH_0_day[j], Q_day[j], FORMAT='(F10.4,1X,F10.4)'
+
+        ENDFOR
+    
+        CLOSE, LUN
+        FREE_LUN, LUN    
+    ENDFOR 
+
     return, values
 END    

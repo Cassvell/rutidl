@@ -46,117 +46,82 @@
 ;
 
 
-FUNCTION bsq, H, MAKE_FILE=make_file
+pro bsq, date_i, date_f, MAKE_FILE=make_file
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 ;###############################################################################
         @set_up_commons
         set_up
-        
+
+        yr_i	= date_i[0]
+        mh_i	= date_i[1]
+        dy_i 	= date_i[2]	
+      
+        yr_f	= date_f[0]
+        mh_f	= date_f[1]
+        dy_f 	= date_f[2]        
 ;###############################################################################                                  
 ;###############################################################################        
 ;###############################################################################
-ndays = N_ELEMENTS(H)/1440
+  ndays = N_ELEMENTS(H)/1440
 
-FOR  i = 0, ndays-1 DO BEGIN
-    stacked_data = H[i*1440:(i+1)*1440-1]
-    ; If the current day is not the first day, stack the data from the previous day
-    IF i NE 0 THEN BEGIN
-        stacked_data = [data[i-1], stacked_data]
-    ENDIF
-    
-    ; If the current day is not the last day, stack the data from the next day
-    IF i NE n_days - 1 THEN BEGIN
-        stacked_data = [stacked_data, data[i+1]]
-    ENDIF    
-ENDFOR
+  station_class = ''
+  PRINT, 'Enter GMS class code: 		0:regmex or 1:intermagnet'
+  READ, station_class, PROMPT = '> '
 
-;
-;###############################################################################    
-    ;DEVICE, true=24, retain=2, decomposed=0
-    ;TVLCT, R_bak, G_bak, B_bak, /GET        
-    ;LOADCT, 39, /SILENT
-    
+  CASE station_class of
+  '0' : station_class = 'regmex'
+  '1' : station_class = 'intermagnet'
+  ELSE : PRINT, 'non avaiable gms class'
+  END
+  PRINT, 'Enter GMS idx: If do not know the GMS idx, please run PRO gms code table'
+  READ, station_idx, PROMPT = '> '
+  ;###############################################################################
+  ;###############################################################################    
+  file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
+  tot_days= FINDGEN(file_number*1440)/1440.0    
+  Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-   ; WINDOW, 5, XSIZE=1000, YSIZE=400, TITLE='Bsq [m]'
- ;   PLOT, x_30min, qdl_mean, XSTYLE=1, background=255, color=0, XTICKS=ndays, $
-  ;  CHARSIZE = 1.8, CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name,THICK=2
-;	OPLOT, x_30min, avr_H2, color=254
-	;OPLOT, x_1min, H1, color=254
-;	OPLOT, x_1min, avr_H1, color=76
+  print, 'number of days in time window: ', file_number
+  IF station_class EQ 'regmex' THEN  BEGIN    
+    station = set_var.gms[FIX(station_idx)]
+    station_code = set_var.gms_code[FIX(station_idx)]  
+  ENDIF 
 
-;    WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='Bsq(mean) [30m]' 
-    ;PLOT, td_h, QDL_avr, YRANGE=[MIN(QDL_avr, /NAN),MAX(QDL_avr, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 , $
-   ; CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=ndays, XTICKNAME=X_label, THICK=2
- 
-  ;  OPLOT, td, qdl, LINESTYLE=0, color=240
- ;   OPLOT, x, H-Bsq, LINESTYLE=0, color=240, THICK=2 
+  IF station_class EQ 'intermagnet' THEN  BEGIN 
+    station = set_var.gmsi[FIX(station_idx)] 
+    station_code = set_var.gmsi_code[FIX(station_idx)] 
+  ENDIF
+  PRINT,  'GMS selected: '+station+' IAGA code: '+station_code   
 
-  ;  WINDOW, 0, XSIZE=1000, YSIZE=400, TITLE='Bsq [H]' 
- ;   PLOT, time,Bsq_H, YRANGE=[MIN(Bsq_H, /NAN),MAX(Bsq_H,/NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
-;    CHARTHICK=2.0, YTITLE = 'Bsq [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
+  ;###############################################################################	
+  ;###############################################################################     
+  ; Generate the time series variables 
+  ; define Geomagnetic data component variables                  
+  mag_array  = rawmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
+  X = mag_array.X
+  Y = mag_array.Y
+  Z = mag_array.Z
+  H = mag_array.H
 
+  X = add_nan(X, 999999.0, 'equal')        
+  X = add_nan(X, 99999.0, 'equal')
+  ;X = add_nan(X, 2.76e4, 'greater')
+  Y = add_nan(Y, 99999.0, 'equal')
+  Y = add_nan(Y, 9999.0, 'equal')
+  ;Y = add_nan(Y, 2800, 'greater')	
+  Z = add_nan(Z, 999999.0, 'equal') 	
+  Z = add_nan(Z, 99999.0, 'equal')
+  Z = add_nan(Z, 9999.0, 'equal')	
+  ;Z = add_nan(Z, 3.04e4, 'greater')	
+  ;H = add_nan(H, 2.76e4, 'greater')
+  ;  
+  ;plot, tot_days,H, ystyle=1
+  ;print, min(H, /nan)
 
-  ;  WINDOW, 3, XSIZE=1000, YSIZE=400, TITLE='H [m]'
- ;   PLOT, x, H, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
-;    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
-  ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
-;    OPLOT, x, H-Bsq_det2, LINESTYLE=0, color=240, THICK=2    
-
-  ;  WINDOW, 4, XSIZE=1000, YSIZE=400, TITLE='H [h]'
- ;   PLOT, time, H_h, YRANGE=[MIN(H, /NAN),MAX(H, /NAN)], XSTYLE=1, CHARSIZE = 1.8, background=255, color=0 ,$
-;    CHARTHICK=2.0, YTITLE = 'BH [nT]', XTITLE = time_name, XTICKS=file_number, XTICKNAME=X_label, THICK=2
-  ;  OPLOT, x, H-Bsq_det, LINESTYLE=0
- ;   OPLOT, time, H_h-Bsq_detH, LINESTYLE=0, color=240, THICK=2
-
-
-
-	Bsq_res = {H : FLTARR(N_ELEMENTS(qdl_mean)), m : FLTARR(N_ELEMENTS(qdl))}
-	
-	Bsq_res.H[*] = qdl_mean
-	Bsq_res.m[*] = qdl
-IF KEYWORD_SET(make_file) THEN BEGIN
-;Generación de archivo en muestreo de horas  
-
-    FOR i=0, ndays-1 DO BEGIN
-        tmp_year    = 0
-        tmp_month   = 0
-        tmp_day     = 0
-        tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
-        CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-        string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
-
-        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/'+STRLOWCASE(station_code)+$
-        '/Bsq_'+station_code+string_date[i]+'h.dat'
-        ;PRINT, Bsq_H[i*24:(i+1)*24-1]     
-        OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, Bsq_H[i*24:(i+1)*24-1], format='(F9.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN    
-    ENDFOR 
-
-
-   
-    ;archivo en muestreo de minutos
-    FOR i=0, ndays-1 DO BEGIN
-        tmp_year    = 0
-        tmp_month   = 0
-        tmp_day     = 0
-        tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
-        CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-        string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
-
-        outfile[i] = '/home/isaac/geomstorm/rutidl/output/Bsq_baselines/'+STRLOWCASE(station_code)+$
-        '/Bsq_'+station_code+string_date[i]+'m.dat'    
-        OPENW, LUN, outfile[i], /GET_LUN        
-        PRINTF, LUN, Bsq[i*1440:(i+1)*1440-1], format='(F9.4)'
-        CLOSE, LUN
-        FREE_LUN, LUN    
-    ENDFOR 
-   
-    PRINT, 'Se generaron archivos BSQ'
-ENDIF 
-
-RETURN, Bsq_res
-
+  daily_picks = picks(H, 60, 24)
+  
+  picks = picks(H, 60, 6)
+  hist = threshold(picks)
+  
 END

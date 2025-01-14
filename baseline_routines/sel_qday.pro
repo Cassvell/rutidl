@@ -44,7 +44,7 @@
 ;
 ;   3. bsq_V2.pro,   to generate Bsq files for the following analysis
 ;
-PRO sel_qday, date_i, station_idx
+function sel_qday, date_i, date_f
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -52,79 +52,104 @@ PRO sel_qday, date_i, station_idx
         @set_up_commons
         set_up
         	
-	yr_i	= date_i[0]
-	mh_i	= date_i[1]
-	dy_i 	= 1
+        yr_i	= date_i[0]
+        mh_i	= date_i[1]
+        dy_i 	= date_i[2]	
+      
+        yr_f	= date_f[0]
+        mh_f	= date_f[1]
+        dy_f 	= date_f[2]        
 
-	fday = ''
-	CASE mh_i of
-		1	: fday=31
-		2	: fday=28
-		3	: fday=31
-		4	: fday=30
-		5	: fday=31
-		6	: fday=30
-		7	: fday=31
-		8	: fday=31
-		9	: fday=30
-		10	: fday=31
-		11	: fday=30
-		12	: fday=31
-	ENDCASE	  
+;###############################################################################                                  
+;###############################################################################        
+;###############################################################################
+ndays = N_ELEMENTS(H)/1440
 
-	yr_f	= yr_i
-	mh_f	= mh_i
-	dy_f 	= fday
+    station_class = ''
+    PRINT, 'Enter GMS class code: 		0:regmex or 1:intermagnet'
+    READ, station_class, PROMPT = '> '
 
-    station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
-        
-        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, 1, yr_i))+1
-        data_file_name = STRARR(file_number)
-        string_date     = STRARR(file_number) 
-       
-; Generate the time series variables 
-; define H variables                  
-    H  = rawH_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station, station_idx)
-    PRINT, '#######################################################################'
-    H = nanpc(H, 99999.0, 'gequal')
-    H = add_nan(H, 999999.0, 'equal')        
-    H = add_nan(H, 99999.0, 'equal')
+    CASE station_class of
+    '0' : station_class = 'regmex'
+    '1' : station_class = 'intermagnet'
+    ELSE : PRINT, 'non avaiable gms class'
+    END
+    PRINT, 'Enter GMS idx: If do not know the GMS idx, please run PRO gms code table'
+    READ, station_idx, PROMPT = '> '
+    ;###############################################################################
+    ;###############################################################################    
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
+    tot_days= FINDGEN(file_number*1440)/1440.0    
+    Date    = STRING(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 
-;Cálculo de las desviaciones estándar en formato horario.
-	    
-    PRINT, '#######################################################################'
-    PRINT, '#######################################################################'       
-    twmin = FINDGEN(file_number*1440)/1440.    
-    tw = FINDGEN(file_number*24)/24.    
-    H_IQR = FINDGEN(N_ELEMENTS(H)/60)
-    FOR i=0, N_ELEMENTS(H_IQR)-1 DO BEGIN
-        ;PRINT, cgPercentiles(H[i*60:(i+1)*60-1], Percentiles=[0.75])
-        QR1= cgPercentiles(H[i*60:(i+1)*60-1], Percentiles=[0.25])
-        QR3= cgPercentiles(H[i*60:(i+1)*60-1], Percentiles=[0.75])
-        H_IQR[i] = QR3-QR1                    
-    ENDFOR        
-    ;PRINT, cgPercentiles(H, Percentiles=[0.25])
-    n = 1.5
-    H_IQR_n =  H_IQR*n
-    IQR_hr = FINDGEN(N_ELEMENTS(H_IQR_n)/24)
-            
-    FOR i=0, N_ELEMENTS(IQR_hr)-1 DO BEGIN
-        IQR_hr[i] = MAX(H_IQR_n[i*24:(i+1)*24-1])    
-    ENDFOR
+    print, 'number of days in time window: ', file_number
+    IF station_class EQ 'regmex' THEN  BEGIN    
+    station = set_var.gms[FIX(station_idx)]
+    station_code = set_var.gms_code[FIX(station_idx)]  
+    ENDIF 
 
+    IF station_class EQ 'intermagnet' THEN  BEGIN 
+    station = set_var.gmsi[FIX(station_idx)] 
+    station_code = set_var.gmsi_code[FIX(station_idx)] 
+    ENDIF
+    PRINT,  'GMS selected: '+station+' IAGA code: '+station_code   
+
+    ;###############################################################################	
+    ;###############################################################################     
+    ; Generate the time series variables 
+    ; define Geomagnetic data component variables                  
+    mag_array  = rawmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
+    X = mag_array.X
+    Y = mag_array.Y
+    Z = mag_array.Z
+    H = mag_array.H
+
+    X = add_nan(X, 999999.0, 'equal')        
+    X = add_nan(X, 99999.0, 'equal')
+    ;X = add_nan(X, 2.76e4, 'greater')
+    Y = add_nan(Y, 99999.0, 'equal')
+    Y = add_nan(Y, 9999.0, 'equal')
+    ;Y = add_nan(Y, 2800, 'greater')	
+    Z = add_nan(Z, 999999.0, 'equal') 	
+    Z = add_nan(Z, 99999.0, 'equal')
+    Z = add_nan(Z, 9999.0, 'equal')	
+
+    plot, tot_days,H, ystyle=1
+    ;print, min(H, /nan)
+  
+    daily_picks = picks(H, 60, 24)
+
+    time_w = TIMEGEN(N_ELEMENTS(daily_picks), final=JULDAY(mh_f, dy_f, yr_f, 23), $
+    start=JULDAY(mh_i, dy_i, yr_i, 0) , units='D')
     
-    time_w = TIMEGEN(N_ELEMENTS(H_IQR), final=JULDAY(mh_f, dy_f, yr_f, 23), $
-                start=JULDAY(mh_i, dy_i, yr_i, 0) , units='D')
-                
     CALDAT, time_w, m, d, y, hr
-    
-;selección de los días quietos con base en el día con menor desviación en IQR  
+
+    ;selección de los días quietos con base en el día con menor desviación en IQR  
+    ;	PRINT, "Five Qdays according to IQR criteria"
+    ;  PRINT, format='(2X, "Fecha", 4X, "QD", 4X, "Indice IQR(H)")'
+    ; PRINT, '---------------------------------'
+
+    picks_sorted = SORT(daily_picks)
+    iqr_sort = daily_picks[picks_sorted]
+
+    d_sort = d[picks_sorted[0:9]]
+    m_sort = m[picks_sorted[0:9]]
+    y_sort = y[picks_sorted[0:9]]
+
+    result = {day : INTARR(10), month : INTARR(10), year : INTARR(10), iqr : FLTARR(10)}	               
+    ;###############################################twmin################################   
+    result.day[*] = d_sort
+    result.month[*] = m_sort
+    result.year[*] = y_sort
+    result.iqr[*] = iqr_sort[0:9]
+
 	PRINT, "Five Qdays according to IQR criteria"
     PRINT, format='(2X, "Fecha", 4X, "QD", 4X, "Indice IQR(H)")'
-    PRINT, '---------------------------------'
-    FOR i=0, N_ELEMENTS(IQR_hr)-1 DO BEGIN
-        PRINT, y[i], m[i], d[i],  IQR_hr[i], FORMAT='(I4, "-", I02, "-", I02, 4X, F6.2)'  
-    ENDFOR    
+    PRINT, '#######################################################'
 
+
+    for i=0, n_elements(result.day)-1 do begin
+        print, string(result.year[i], result.month[i], result.day[i], result.iqr[i], format = '(I4,"-",I02,"-",I02,4X,F8.4 )')
+    endfor    
+    return, result
 END	
