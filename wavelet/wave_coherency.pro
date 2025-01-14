@@ -146,8 +146,8 @@ PRO wave_coherency, $
 
 	FOR j=0,nj-1 DO BEGIN ;*** time-smoothing
 		st1 = SYSTIME(1)
-		nt = LONG(4L*scale(j)/dt)/2L*4 + 1L
-		time_wavelet = (FINDGEN(nt) - nt/2)*dt/scale(j)
+		nt = LONG(4L*scale[j]/dt)/2L*4 + 1L
+		time_wavelet = (FINDGEN(nt) - nt/2)*dt/scale[j]
 		wave_function = EXP(-time_wavelet^2/2.)   ;*** Morlet
 		wave_function = FLOAT(wave_function/TOTAL(wave_function)) ; normalize
 		nz = nt/2
@@ -344,13 +344,16 @@ COMPILE_OPT idl2, HIDDEN
     n = N_ELEMENTS(Bdiono)
     mother = 'Morlet'
 
-    wave1 = WAVELET(Bdiono,dt,PERIOD=period1,SCALE=scale1,S0=s0, $
+    wave1 = WAVELET(Bdiono,dt,PERIOD=period1,SCALE=scale,S0=s0, $
 		COI=coi1,DJ=dj,J=j1,MOTHER=mother,/RECON,/PAD,signif=signif)
-
-    wave2 = WAVELET(SQ,dt,PERIOD=period2,SCALE=scale2,S0=s0, $
+	scale1 = scale
+	
+    wave2 = WAVELET(SQ,dt,PERIOD=period2,SCALE=scale,S0=s0, $
     COI=coi1,DJ=dj,J=j1,MOTHER=mother,/RECON,/PAD,signif=signif)            
-
-    wave_coherency, wave1,time1,scale1,wave2,time2,scale2, COI1=coi1, DT=dt,DJ=dj, WAVE_COHER=wave_coher,WAVE_PHASE=wave_phase, $
+	scale2 = scale
+	
+	;print, scale1 - scale2
+    wave_coherency, wave1,time1,scale,wave2,time2,scale, COI1=coi1, DT=dt,DJ=dj, WAVE_COHER=wave_coher,WAVE_PHASE=wave_phase, $
 	TIME_OUT=time_out,SCALE_OUT=scale_out,COI_OUT=coi_out, GLOBAL_COHER=global_coher,GLOBAL_PHASE=global_phase, $
 	CROSS_WAVELET=cross_wavelet,POWER1=power1,POWER2=power2, NOSMOOTH=nosmooth, VERBOSE=verbose
 
