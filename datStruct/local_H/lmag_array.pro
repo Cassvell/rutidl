@@ -222,13 +222,11 @@ FUNCTION lmag_array, date_i, date_f, station_code, resolution
         ENDFOR       
     ENDIF
 	
-        mag_data = {H : FLTARR(N_ELEMENTS(H)), X : FLTARR(N_ELEMENTS(X)), Y : FLTARR(N_ELEMENTS(Y)), $
-        			Z : FLTARR(N_ELEMENTS(Z))}
+        mag_data = {H : FLTARR(N_ELEMENTS(H)), bl : FLTARR(N_ELEMENTS(bl)), SQ : FLTARR(N_ELEMENTS(SQ))}
         			
         mag_data.H = H[*]
-        mag_data.X = X[*]
-        mag_data.Y = Y[*]
-        mag_data.Z = Z[*]
+        mag_data.bl = bl[*]
+        mag_data.SQ = SQ[*]
         
 	RETURN, mag_data
 END
