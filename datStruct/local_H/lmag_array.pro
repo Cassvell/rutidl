@@ -115,20 +115,7 @@ END
 
 
 
-FUNCTION lmag_array, date_i, date_f, station_code, resolution 
-	On_error, 2
-	COMPILE_OPT idl2, HIDDEN
-        @set_up_commons
-        set_up
 
-	yr_i	= date_i[0]
-	mh_i	= date_i[1]
-	dy_i 	= date_i[2]	
-
-	yr_f	= date_f[0]
-	mh_f	= date_f[1]
-	dy_f 	= date_f[2]
-	
 	;station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 ;############################################################################### 
 	gms_class = gms_class(station_code)
