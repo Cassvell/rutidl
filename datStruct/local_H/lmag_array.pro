@@ -63,58 +63,54 @@ FUNCTION struct, date, station_code, resolution
         date = string(year, month, day, FORMAT = '(I4, I02, I02)')		
         str_year = STRING(year, FORMAT = '(I4)')	
 
-           ;regmex		  0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
-           ;intermagnet bmt:0, bou:1, brd:2, bsl:3, cki:4, cyg:5, gui:6, hbk:7, ipm:8, kak:9, $
-    					;kdu:10, kmh:11, pil:12, sjg:13, tam:14, tdc:15, tuc:16
 		gms_class = gms_class(station_code)
 	
 	extension = ''
-	IF resolution EQ 'min' THEN extension = 'm.dat' ELSE extension = 'h.dat'
+	IF resolution EQ 'min' THEN extension = '.dat' ELSE extension = 'h.dat'
 		   
        ; sts  = string(stats, format = '(A5)')
-        dir = set_var.Mega_dir+'/'+gms_class+'/'+station_code+'/min/'
-		file_name = dir+station_code+'_'+date+extension
+        dir = set_var.Mega_dir+gms_class+'/'+station_code+'/minV2/'
+        
+        file_name = dir+station_code+'_'+date+'.dat'
 ;		print, file_name
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
+        file = FILE_SEARCH(file_name, COUNT=opened_files)
+        IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
-		number_of_lines = FILE_LINES(file)
+        number_of_lines = FILE_LINES(file)
 
-		data = STRARR(number_of_lines)
+        data = STRARR(number_of_lines)
 
-		OPENR, lun, file, /GET_LUN, ERROR=err
-		READF, lun, data, FORMAT = '(A)'
-		CLOSE, lun
-		FREE_LUN, lun
+        OPENR, lun, file, /GET_LUN, ERROR=err
+        READF, lun, data, FORMAT = '(A)'
+        CLOSE, lun
+        FREE_LUN, lun
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ;extracting data and denfining an structure data
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-	IF resolution EQ 'min' THEN BEGIN
-        DStruct = {X : FLTARR(1440), Y : FLTARR(1440), H : FLTARR(1440), Z : FLTARR(1440)}
-        struct = {comp : FLTARR(1440)}
-        H_mag = REPLICATE(struct, 4) 
-
+        struct = {H : 0.0, baseline : 0.0, SQ : 0.0}
+        H_mag = REPLICATE(struct, number_of_lines)
+        
 ;		 = REPLICATE(DStruct, number_of_lines)	  
-		READS, data, H_mag, FORMAT='(1440(F10))'	
-	ENDIF ELSE BEGIN
-        DStruct = {X : FLTARR(24), Y : FLTARR(24), H : FLTARR(24), Z : FLTARR(24)}
-        struct = {comp : FLTARR(24)}
-        H_mag = REPLICATE(struct, 4) 
-
-;		 = REPLICATE(DStruct, number_of_lines)	  
-		READS, data, H_mag, FORMAT='(24(F10))'	
-	ENDELSE
-	
-		DStruct.X[*]    = H_mag[0].comp 
-		DStruct.Y[*]    = H_mag[1].comp  
-		DStruct.H[*]    = H_mag[2].comp
-		DStruct.Z[*]	= H_mag[3].comp
-
-		RETURN, DStruct		
+        READS, data[0:number_of_lines-1], H_mag, FORMAT='(F7, F10, F6)'
+        
+		RETURN, H_mag		
 END
 
 
 
+FUNCTION lmag_array, date_i, date_f, station_code, resolution 
+	On_error, 2
+	COMPILE_OPT idl2, HIDDEN
+        @set_up_commons
+        set_up
+
+	yr_i	= date_i[0]
+	mh_i	= date_i[1]
+	dy_i 	= date_i[2]	
+
+	yr_f	= date_f[0]
+	mh_f	= date_f[1]
+	dy_f 	= date_f[2]
 
 	;station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
 ;############################################################################### 
@@ -125,7 +121,7 @@ END
 
         string_date        = STRARR(file_number)               
         data_file_name  = STRARR(file_number)                                
-        dir = set_var.Mega_dir+'/'+gms_class+'/'+station_code+'/min/'              
+        dir = set_var.Mega_dir+'/'+gms_class+'/'+station_code+'/minV2/'              
         
     IF resolution EQ 'min' THEN BEGIN        
         FOR i=0ll, file_number-1 DO BEGIN
@@ -136,7 +132,7 @@ END
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')       
-                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'m.dat'                          	                            
+                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'.dat'                          	                            
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)
@@ -151,9 +147,9 @@ END
 ;###############################################################################
 ; Generate the time variables to plot H time series                     
         H    = FLTARR(file_number*1440)                               
-        X    = FLTARR(file_number*1440) 
-        Y    = FLTARR(file_number*1440)
-        Z    = FLTARR(file_number*1440)                    
+        bl   = FLTARR(file_number*1440) 
+        SQ   = FLTARR(file_number*1440)
+                  
         FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
                 IF exist_data_file[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
@@ -163,17 +159,17 @@ END
                         d_h = struct([tmp_year, tmp_month, tmp_day], station_code, resolution)
                         
                         H[i*1440:(i+1)*1440-1] = d_h.H[*]
-                        X[i*1440:(i+1)*1440-1] = d_h.X[*]  
-                        Y[i*1440:(i+1)*1440-1] = d_h.Y[*]        
-                        Z[i*1440:(i+1)*1440-1] = d_h.Z[*]
+                        bl[i*1440:(i+1)*1440-1] = d_h.baseline[*]  
+                        SQ[i*1440:(i+1)*1440-1] = d_h.SQ[*]        
+
                 ENDIF ELSE BEGIN
-                        H[i*1440:(i+1)*1440-1] = 99999.0
-                        X[i*1440:(i+1)*1440-1] = 99999.0
-                        Y[i*1440:(i+1)*1440-1] = 99999.0         
-                        Z[i*1440:(i+1)*1440-1] = 99999.0                        
+                        H[i*1440:(i+1)*1440-1] = 9999.90
+                        bl[i*1440:(i+1)*1440-1] = 9999.90
+                        SQ[i*1440:(i+1)*1440-1] = 9999.90    
+                       
                 ENDELSE                
         ENDFOR
-
+        H = add_nan(H, 9999.90, 'equal')	
     ENDIF
 
 
