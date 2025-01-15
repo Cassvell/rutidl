@@ -97,7 +97,7 @@ PRO wave_coherency, $
 	NOSMOOTH=nosmooth, $
 	VERBOSE=verbose
 
-    ON_ERROR, 2
+    ;ON_ERROR, 2
     COMPILE_OPT idl2, HIDDEN
 
 	verbose = KEYWORD_SET(verbose)
@@ -109,7 +109,7 @@ PRO wave_coherency, $
 	time1_end = MAX(WHERE((time1 LE time_end)))
 	time2_start = MIN(WHERE((time2 GE time_start)))
 	time2_end = MAX(WHERE((time2 LE time_end)))
-
+	scale = scale1
 ;*** find overlapping scales
 	scale_start = MIN(scale1) > MIN(scale2)
 	scale_end = MAX(scale1) < MAX(scale2)
@@ -174,15 +174,37 @@ PRO wave_coherency, $
 	nweights = FIX(0.6/dj/2 + 0.5)*2 - 1   ; closest (smaller) odd integer
 	weights = REPLICATE(1.,nweights)
 	weights = weights/TOTAL(weights) ; normalize
-    FOR i=0,ntime-1 DO BEGIN ;*** scale-smoothing
-        cross_wavelet[i,*] = CONVOL(cross_wavelet[i,*], weights)
-        power1[i,*] = CONVOL(power1[i,*], weights)
-        power2[i,*] = CONVOL(power2[i,*], weights)
-    ENDFOR ;*** scale-smoothing
+	
+	IF (nweights GT 1) THEN BEGIN
+		pad_length = FLOOR(nweights / 2)
+		pad = REPLICATE(0.0, pad_length)  ; For real arrays
+		; If arrays are complex, use COMPLEX padding:
+		; pad = COMPLEX(REPLICATE(0.0, pad_length), REPLICATE(0.0, pad_length))
+
+		FOR i = 0, nj - 1 DO BEGIN
+		    ; Pad the columns
+		    padded_cross_wavelet = [pad, cross_wavelet[*, i], pad]
+		    padded_power1 = [pad, power1[*, i], pad]
+		    padded_power2 = [pad, power2[*, i], pad]
+
+		    ; Apply convolution
+		    convolved_cross_wavelet = CONVOL(padded_cross_wavelet, weights)
+		    convolved_power1 = CONVOL(padded_power1, weights)
+		    convolved_power2 = CONVOL(padded_power2, weights)
+
+		    ; Remove padding
+		    cross_wavelet[*, i] = convolved_cross_wavelet[pad_length:N_ELEMENTS(convolved_cross_wavelet) - pad_length - 1]
+		    power1[*, i] = convolved_power1[pad_length:N_ELEMENTS(convolved_power1) - pad_length - 1]
+		    power2[*, i] = convolved_power2[pad_length:N_ELEMENTS(convolved_power2) - pad_length - 1]
+		ENDFOR
+	ENDIF
 
 	wave_phase = 180./!PI*ATAN(IMAGINARY(cross_wavelet),FLOAT(cross_wavelet))
 	wave_coher = (ABS(cross_wavelet)^2)/(power1*power2 > 1E-9) ;Amplitude
-;	wave_phase = wave_phase + 360.*(wave_phase LT 0.)
+	wave_phase = wave_phase + 360.*(wave_phase LT 0.)
+	;print, 'local phase: ', wave_phase
+	;print, '#####################################################################'
+	;print, 'Amplitude: ', wave_coher
 END
 
 pro diono_xwt, date_i, date_f, station_code, PS=ps, Bsq=Bsq 
@@ -297,16 +319,16 @@ COMPILE_OPT idl2, HIDDEN
 
     CALDAT, date_time, mh, dy, yr, hr, min 
     
-    DEVICE, true=24, retain=2, decomposed=0
-    TVLCT, R_bak, G_bak, B_bak, /GET     
-    LOADCT, 39
-    WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
+    ;DEVICE, true=24, retain=2, decomposed=0
+    ;TVLCT, R_bak, G_bak, B_bak, /GET     
+    ;LOADCT, 39
+    ;WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
 
-    plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
-	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
-    oplot,date_time, symH0, color=120, thick = 2
-    oplot,date_time, Bdiono, color=250, thick = 2
-    oplot,date_time, SQ, color=70, thick = 2
+    ;plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
+	;XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
+    ;oplot,date_time, symH0, color=120, thick = 2
+    ;oplot,date_time, Bdiono, color=250, thick = 2
+    ;oplot,date_time, SQ, color=70, thick = 2
 
     ;###############################################################################
     ;###############################################################################
@@ -356,6 +378,20 @@ COMPILE_OPT idl2, HIDDEN
     wave_coherency, wave1,time1,scale,wave2,time2,scale, COI1=coi1, DT=dt,DJ=dj, WAVE_COHER=wave_coher,WAVE_PHASE=wave_phase, $
 	TIME_OUT=time_out,SCALE_OUT=scale_out,COI_OUT=coi_out, GLOBAL_COHER=global_coher,GLOBAL_PHASE=global_phase, $
 	CROSS_WAVELET=cross_wavelet,POWER1=power1,POWER2=power2, NOSMOOTH=nosmooth, VERBOSE=verbose
-
+	
+	;print, 'local phase: ', wave_phase
+	print, '#####################################################################'
+	print, 'Amplitude: ', 
+	
+	;compute semblance
+	;semblance = 
+	n = 3
+	
+	factor = 1/(2*n)
+	 
+	for k = 0, n/2 do begin
+		binomial = factorial(n) / (factor(2*k) * factor(n-2*k))
+		tmp_cos = cos((n - (2*k))*wave_coher)
+	endfor
 END
 
