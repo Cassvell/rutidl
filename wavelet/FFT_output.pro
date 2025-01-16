@@ -214,6 +214,6 @@ H = fillnan(H)
 	;oplot, [date_time[1440*3+j], date_time[1440*3+j]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
 
 	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
-    print, max(Bdiono)
+    
     wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
 END
