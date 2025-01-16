@@ -233,7 +233,8 @@ FUNCTION wavelet,y1,dt, $   ;*** required inputs
 	DAUGHTER=daughter,COI=coi, $
 	SIGNIF=signif,FFT_THEOR=fft_theor, $
 	OCT=oct,VOICE=voice   ;*** defunct inputs
-	
+	COMPILE_OPT idl2, HIDDEN
+
 	ON_ERROR,2
 	r = CHECK_MATH(0,1)
 	n = N_ELEMENTS(y1)

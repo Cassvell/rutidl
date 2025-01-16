@@ -366,13 +366,12 @@ COMPILE_OPT idl2, HIDDEN
     n = N_ELEMENTS(Bdiono)
     mother = 'Morlet'
 
-    wave1 = WAVELET(Bdiono,dt,PERIOD=period1,SCALE=scale,S0=s0, $
+    wave1 = WAVELET(Bdiono,dt,PERIOD=period,SCALE=scale,S0=s0, $
 		COI=coi1,DJ=dj,J=j1,MOTHER=mother,/RECON,/PAD,signif=signif)
-	scale1 = scale
+
 	
-    wave2 = WAVELET(SQ,dt,PERIOD=period2,SCALE=scale,S0=s0, $
+    wave2 = WAVELET(SQ,dt,PERIOD=period,SCALE=scale,S0=s0, $
     COI=coi1,DJ=dj,J=j1,MOTHER=mother,/RECON,/PAD,signif=signif)            
-	scale2 = scale
 	
 	;print, scale1 - scale2
     wave_coherency, wave1,time1,scale,wave2,time2,scale, COI1=coi1, DT=dt,DJ=dj, WAVE_COHER=wave_coher,WAVE_PHASE=wave_phase, $
@@ -381,17 +380,12 @@ COMPILE_OPT idl2, HIDDEN
 	
 	;print, 'local phase: ', wave_phase
 	print, '#####################################################################'
-	print, 'Amplitude: ', 
+	;print, 'Amplitude: ', 
 	
 	;compute semblance
 	;semblance = 
-	n = 3
+
 	
-	factor = 1/(2*n)
-	 
-	for k = 0, n/2 do begin
-		binomial = factorial(n) / (factor(2*k) * factor(n-2*k))
-		tmp_cos = cos((n - (2*k))*wave_coher)
-	endfor
+
 END
 
