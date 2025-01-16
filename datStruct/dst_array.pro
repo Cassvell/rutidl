@@ -71,7 +71,7 @@ FUNCTION dst_data, date
 		RETURN, r_dst
 END
 
-FUNCTION dst_array, date_i, date_f, variable, HELP=help
+FUNCTION dst_array, date_i, date_f, HELP=help
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN 
 
@@ -99,7 +99,8 @@ FUNCTION dst_array, date_i, date_f, variable, HELP=help
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date_2[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')
 
-                data_file_name_dst[i]= data_path+'/dst/daily/dst_'+string_date_2[i]+'.txt'		        	                                        
+                data_file_name_dst[i]= data_path+'/dst/daily/dst_'+string_date_2[i]+'.txt'
+                	                                        
              	file_dst = FILE_SEARCH(data_file_name_dst[i], COUNT=opened_files)
 
         	                            
@@ -132,12 +133,8 @@ FUNCTION dst_array, date_i, date_f, variable, HELP=help
                          dst[i*24:(i+1)*24-1] = 999999.0                      
                 ENDELSE                
         ENDFOR
-    
-    CASE variable of
-        'dst'    : variable = dst 
-        'hour'    : variable = hour
-        ELSE : PRINT, 'variable selected is not avaiable or valid'
-    ENDCASE    
+     
+    var = {dst : dst, hour : hour}
 
-    RETURN, variable   
+    RETURN, var   
 END                       

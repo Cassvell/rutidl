@@ -69,7 +69,7 @@ FUNCTION DH_data, date, station_code
 	;        file = FILE_SEARCH(file_name, COUNT=opened_files) 
     ;	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  	    
 	;    ENDIF
-		print, file_name
+	
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
 

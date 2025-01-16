@@ -36,7 +36,7 @@
 ;version
 ; Dec, 2022
 
-FUNCTION kp_data, date
+FUNCTION str_data, date
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -46,32 +46,46 @@ FUNCTION kp_data, date
 ;###############################################################################
 ;reading data files
         date = STRING(year, month, day, FORMAT = '(I4,"-",I02,"-",I02)')
-        path='/home/isaac/MEGAsync/datos'
-		file_name = path+'/kp/daily/kp_'+date+'.txt'
+        path='/home/isaac/datos'
+		file_name = path+'/kp/daily/kp_'+date+'.dat'
         header = 1             ; Defining number of lines of the header 
 ;###############################################################################
 ;reading data files
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-        
-		number_of_lines = FILE_LINES(file)
-		data = STRARR(number_of_lines)
+        file = FILE_SEARCH(file_name, COUNT=opened_files)
 
-		OPENR, lun, file, /GET_LUN, ERROR=err
-		READF, lun, data, FORMAT = '(A)'
-		CLOSE, lun
-		FREE_LUN, lun
+        IF opened_files NE N_ELEMENTS(file) THEN begin
+                file_name = path+'/kp/daily/kp_'+date+'.txt'
+        ENDIF
+
+        number_of_lines = FILE_LINES(file)
+        data = STRARR(number_of_lines)
+
+        OPENR, lun, file, /GET_LUN, ERROR=err
+        READF, lun, data, FORMAT = '(A)'
+        CLOSE, lun
+        FREE_LUN, lun
 ;###############################################################################
 ;extracting data and denfining an structure data
+        if file_name eq path+'/kp/daily/kp_'+date+'.txt' then begin
         DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0, doy : 0,$
                       Kp: 0, Kp_str: '', Ap: 0}
 
 		r_kp = REPLICATE(DataStruct, number_of_lines-header)	                
-		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I4,I02,A1,I04)'			
+		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,X,I02,I4,I02,A1,I04)'          
+        endif
+        if file_name eq path+'/kp/daily/kp_'+date+'.dat' then begin
+                DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0,$
+                      Kp: 0, Kp_str: '', Ap: 0}
+
+		r_kp = REPLICATE(DataStruct, number_of_lines-header)	                
+		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,X,I02,I2,A1,I04)'                
+        endif
+                		
 		RETURN, r_kp
 END   
 
 
-FUNCTION kp_array, date_i, date_f, variable, HELP=help
+FUNCTION kp_array, date_i, date_f, HELP=help
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -87,7 +101,7 @@ FUNCTION kp_array, date_i, date_f, variable, HELP=help
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/MEGAsync/datos'
+        data_path='/home/isaac/datos'
         data_file_name_kp  = strarr(file_number)                         
         string_date_2    = strarr(file_number)
              
@@ -99,10 +113,11 @@ FUNCTION kp_array, date_i, date_f, variable, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date_2[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')                
-		        data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt'
+		        data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.dat'
+                        ;print, data_file_name_kp[i]
                 file = FILE_SEARCH(data_file_name_kp[i], COUNT=opened_files)	            
 	            IF opened_files NE N_ELEMENTS(file) THEN begin
-	             ;   data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt'
+	                data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt'
 	            ENDIF 	      	                            
         ENDFOR
 
@@ -127,7 +142,7 @@ FUNCTION kp_array, date_i, date_f, variable, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date_2[i] = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')                
-                        dat = kp_data([tmp_year, tmp_month, tmp_day])
+                        dat = str_data([tmp_year, tmp_month, tmp_day])
                         kp[i*8:(i+1)*8-1]   = dat.Kp[*]                                               
                         ap[i*8:(i+1)*8-1]   = dat.Ap[*]
                         str[i*8:(i+1)*8-1]= dat.Kp_str[*]                                                                      
@@ -145,13 +160,7 @@ FUNCTION kp_array, date_i, date_f, variable, HELP=help
         kp[indexes_07] = kp[indexes_07]-0.3
         kp[indexes_03] = kp[indexes_03]+0.3
     ENDIF                  
-    
-    
-    CASE variable of
-        'kp'    : variable = kp 
-        'ap'    : variable = ap
-        ELSE : PRINT, 'variable selected is not avaiable or valid'
-    ENDCASE    
 
-    RETURN, variable
+    var = {kp : kp, ap : ap}
+    RETURN, var
 END 

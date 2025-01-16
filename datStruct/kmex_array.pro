@@ -39,7 +39,7 @@
 ; Dec, 2022
 
 
-FUNCTION kmex, date, idx
+FUNCTION kmex, date, station_code
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -54,7 +54,7 @@ FUNCTION kmex, date, idx
 	set_up
 
 ;set station data	
-	station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
+	;station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu
     dir = set_var.Mega_dir+'Kmex/'          
 	name = STRLOWCASE(station_code)+'_'+date+'.k_index.final'
 	file_name = dir+name
@@ -144,7 +144,7 @@ ENDIF  ELSE BEGIN
 RETURN, result
 END   
 
-FUNCTION kmex_array, date_i, date_f, variable, station, idx, HELP=help
+FUNCTION kmex_array, date_i, date_f, station_code, HELP=help
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
 
@@ -158,22 +158,18 @@ FUNCTION kmex_array, date_i, date_f, variable, station, idx, HELP=help
 ;##############################################################################
  ;   RESOLVE_ROUTINE, 'set_up',/COMPILE_FULL_FILE, /EITHER, /NO_RECOMPILE
 	@set_up_commons
-	set_up
-	
-    station         = set_var.gms[FIX(idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
-    station_code    = set_var.gms_code[FIX(idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	        
+	set_up    
 ;###############################################################################    
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1  
 
 ; define DH variables
-        data_path='/home/isaac/MEGAsync/datos'
+        data_path = set_var.Mega_dir+'Kmex/'  
         
         string_date        = strarr(file_number)
                
         data_file_name_km  = strarr(file_number)
-        data_file_name_kp  = strarr(file_number)  
                        
-        string_date_2    = strarr(file_number)
+        string_date    = strarr(file_number)
              
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
@@ -183,16 +179,17 @@ FUNCTION kmex_array, date_i, date_f, variable, station, idx, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')	
-                data_file_name_km[i] = data_path+'/Kmex/'+station_code+'_'+string_date[i]+'.index.final'
+                data_file_name_km[i] = data_path+station_code+'_'+string_date[i]+'.index.final'
                 		       
 		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
 	            IF opened_files NE N_ELEMENTS(file) THEN begin
-	                data_file_name_km[i] = data_path+'/Kmex/'+station_code+'_'+string_date[i]+'.index.early'    
+	                data_file_name_km[i] = data_path+station_code+'_'+string_date[i]+'.index.early'    
 	            ENDIF 	
-        	                            
+                                         
         ENDFOR
-
+       ; print, data_file_name_km
         exist_data_file_km   = FILE_TEST(data_file_name_km)
+        ;print, exist_data_file_km
         capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))
 
         IF capable_to_plot_km NE N_ELEMENTS(data_file_name_km) THEN BEGIN 
@@ -209,7 +206,7 @@ FUNCTION kmex_array, date_i, date_f, variable, station, idx, HELP=help
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'                 
-                        d_km = kmex([tmp_year, tmp_month, tmp_day], idx)
+                        d_km = kmex([tmp_year, tmp_month, tmp_day], station_code)
                         
                         k_mex[i*8:(i+1)*8-1] = d_km.k_mex[*]/10.
                         a_mex[i*8:(i+1)*8-1] = d_km.a_mex[*]
