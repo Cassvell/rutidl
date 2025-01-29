@@ -10,19 +10,35 @@ search_dir="/home/isaac/datos/intermagnet/$year"
 
 declare -a st_name=("bmt" "bou" "brd" "bsl" "cki" "cyg" "gui" "hbk" "ipm" "kak" "kdu" "kmh" "pil" "sjg" "tam" "tdc" "tuc" "hon" "kny" "jai" "lzh" "abg" "mlt" "qsb" "izn")
 
-for i in ${!st[@]};do
-        for j in "$search_dir/${st[$i]}/"*.min ; #cat $j >> ${search_dir}/${st[$i]}/*.min.out; done 
-        do
-                echo $j
-                awk '{if ($1 ~ /^[2]...-..-../){gsub(/[T]/, " "); gsub(/[Z]/, ""); print} \
-                else if ($1 ~ /^"2...-..-../){gsub(/['\"']/, ""); print}}' $j >> $j".out"
-        done
+# Process each station directory
+for i in "${!st_name[@]}"; do
+    station_dir="$search_dir/${st_name[$i]}"
+    
+    # Check if directory exists
+    if [[ ! -d "$station_dir" ]]; then
+        echo "Skipping ${st_name[$i]}: Directory not found"
+        continue
+    fi
+
+    # Process each .min file
+    for j in $station_dir/*.min; do
+        [[ -f "$j" ]] || continue  # Skip if no files found
+
+        output_file="${j}.out"
+
+        # Overwrite output file at the start
+        awk '{
+            if ($1 ~ /^[2]...-..-../) {
+                gsub(/[T]/, " "); gsub(/[Z]/, ""); print
+            } else if ($1 ~ /^"2...-..-../) {
+                gsub(/"/, ""); print
+            }
+        }' "$j" > "$output_file"
+
+        echo "Processed: $j -> $output_file"
+    done
 done
 
-#for i in '*.min' ;do cat $i >> *.min.out ;done
+echo "Processing completed!"
 
-#awk '{if ($1 ~ /^[2]...-..-../){gsub(/[T]/, " "); gsub(/[Z]/, ""); print} \
-#else if ($1 ~ /^"2...-..-../){gsub(/['\"']/, ""); print}}' *min.out >> *min.dat 
 
-#rm *min.out
-#echo "done" 

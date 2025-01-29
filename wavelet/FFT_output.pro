@@ -98,11 +98,12 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
   ;  dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
     data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
     H = data.H
+    SQ = data.SQ
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
 
     idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
-    symH0 = idx2.symH0
+    ;symH0 = idx2.symH0
 
     ;correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;print, correctedsymH.symH_0
@@ -115,8 +116,10 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
 ;identifying NAN percentage values in the Time Series                
 ;implementar una función de interpolación en caso de que el porcentaje de nan sea muy bajo       
 
-H = add_nan(H, 99999.0, 'equal')   
-symH0 = fillnan(symH0)
+H = add_nan(H, 99999.0, 'equal')  
+H = add_nan(H, 200.0, 'greater')  
+
+;symH0 = fillnan(symH0)
 H = fillnan(H)
 
 ;    DEVICE, true=24, retain=2, decomposed=0
@@ -135,33 +138,17 @@ H = fillnan(H)
        time = FINDGEN(N_ELEMENTS(H))/1440.0   
        
  
+    class = gms_class(station_code)
+    info = stationlist(class, station_code)
+    mlat = info.mlat 
 
-
-; define frequencies
-    l            = 28.06  
+    l            = mlat
     mlat         = l*!pi
     ld           = cos(mlat/180)
     p_a          = symH*ld
-    baseline     = p_a;Bsq + p_a Desde la actualización, Bsq ya está restado de H
+    baseline     = p_a
     Bdiono       = H-baseline
-   ; Bdiono2	     = H-p_a+Bsq	; Al no tener Bsq desde el inicio, aquí se suma
-    n            = N_ELEMENTS(Bdiono) 
-    
-    time_res    = 'm'
-    time        = 0.
-
-    
-    CASE time_res of 
-        'h'     : time = 3600.0
-        'm'     : time = 60.0
-    ENDCASE
-
-    fny      = FLOAT(1.0/(2.0*time)) ; frecuencia de Nyquist
-    y        = FFT(Bdiono)            ; Compute Fast Fourie Transform from diono time series
 ;###############################################################################
-
-
-
 ;###############################################################################    
     date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
                         FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
@@ -200,20 +187,18 @@ H = fillnan(H)
     ;print, min(H2, j)
     ;print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
 
-    
     DEVICE, true=24, retain=2, decomposed=0
     TVLCT, R_bak, G_bak, B_bak, /GET     
     LOADCT, 39
     WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
 
+
     plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
 	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
-    oplot,date_time, symH0, color=120, thick = 2
+    oplot,date_time, symH, color=120, thick = 2
     oplot,date_time, Bdiono, color=250, thick = 2
-    ;oplot, [date_time[i], date_time[i]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
-	;oplot, [date_time[1440*3+j], date_time[1440*3+j]], [!y.CRANGE[0], !y.CRANGE[1]], color=250
-
+    oplot,date_time, SQ, color=70, thick = 2
 	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
-    
-    wave_test, Bdiono,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    print, max(Bdiono)
+    wave_test, H, Bdiono, SQ,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
 END

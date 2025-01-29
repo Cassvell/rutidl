@@ -130,12 +130,13 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
 ;define high band frequencies
     ;highpass_l = freq_band(case_event, 'highpass_l')
 	highpass_l = i.dp2_lfc
+    highpass_u = i.dp2_hfc
 
 	f_s = 1/time
     fr_wdif_pb = passband_l*((2*!PI)*time)
     fr_wdif_hp = (highpass_l)*((2*!PI)*time)
-		print, 'pasabandas es: ', passband_l
-		print, 'pasa altas es: ', highpass_l
+		;print, 'pasabandas es: ', passband_l
+		;print, 'pasa altas es: ', highpass_l
      ;   print, 'fr_wdif_pb para pasabandas es: ', fr_wdif_pb
      ;   print, 'fr_wdif_hp para pasa altas es: ', fr_wdif_hp
     
@@ -152,7 +153,7 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
        ; coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, M_pb)
        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, (M_pb))
        ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, top, 50, M_hp)
-        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, top, 50, M_hp)
+        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, highpass_u/fny, 50, M_hp)
         print,'top: ', top
        ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, (1.0/(0.5*3600.0))/fny, 50, M_hp)
         print, 'M para pasabandas es: ', M_pb

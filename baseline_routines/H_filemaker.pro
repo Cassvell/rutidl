@@ -133,116 +133,6 @@ FUNCTION rawmag, date, station_code
 		RETURN, mag_data		
 END
 
-FUNCTION rawmag_midday, date, station_code
-
-	On_error, 2
-	COMPILE_OPT idl2, HIDDEN
-
-	year	= date[0]
-	month	= date[1]
-	day 	= date[2]
-        @set_up_commons
-        set_up		
-;###############################################################################
-;reading data files
-;###############################################################################
-        date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')		
-        str_year = STRING(year, FORMAT = '(I4)')	
-		class = gms_class(station_code)  ; set if the gms is from REGMEX (local) or INTERMAGNET
-		;according to this, there are some differences in the pre-processing
-    
-    
-    IF class EQ 'intermagnet' THEN BEGIN
-
-		data_dir = set_var.Mega_dir+'intermagnet/'+str_year+'/'+STRUPCASE(station_code)+'/'
-		file_name = data_dir+station_code+date+'qmin.min.out'
-
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
-		    file_name = data_dir+station_code+date+'pmin.min.out'
-		    file = FILE_SEARCH(file_name, COUNT=opened_files)
-		ENDIF 
-		
-		
-		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
-		    file_name = data_dir+station_code+date+'dmin.min.out'
-		    file = FILE_SEARCH(file_name, COUNT=opened_files)		
-        ENDIF
-
-		IF opened_files NE N_ELEMENTS(file) THEN BEGIN
-		    file_name = data_dir+station_code+date+'vmin.min.out'
-		    file = FILE_SEARCH(file_name, COUNT=opened_files)		
-        ENDIF
-		
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
-
-		number_of_lines = FILE_LINES(file)
-		data = STRARR(number_of_lines)
-
-		OPENR, LUN, file, /GET_LUN, ERROR=err
-		READF, LUN, data, FORMAT = '(A)'
-		CLOSE, LUN
-		FREE_LUN, LUN
-;###############################################################################
-;extracting data and denfining an structure data
-;###############################################################################
-        DStruct = {year:0, month:0, day:0, hour:0, minuntes:0, DOY:0, $ 
-                   X:0., Y:0., Z:0., F:0.}
-
-		mag_data = REPLICATE(DStruct, number_of_lines)	
-        header = 0             ; Defining number of lines of the header 
-
-		READS, data[header:number_of_lines-1], mag_data, $
-		FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,8X,I03,F13,F10,F10,F10)'
-		mag_data = mag_data[0:59]
-		zeroes1 = FLTARR(1380)
-		;zeroes2 = FLTARR(660)
-		X = [mag_data.X, zeroes1]
-		Y = [mag_data.Y, zeroes1]
-        
-        mag_data2 = {X:FLTARR(N_ELEMENTS(X)), Y:FLTARR(N_ELEMENTS(Y))}
-        mag_data2.X = X[*]
-        mag_data2.Y = Y[*] 
-    ENDIF
-    
-    IF class EQ 'regmex' THEN BEGIN 		
-		data_dir = set_var.Mega_dir+'regmex/'+station_code+'/'+station_code+'_raw/'
-		file_name = data_dir+station_code+'_'+date+'.clean.dat'
-       ; print, file_name
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
-
-		number_of_lines = FILE_LINES(file)
-		data = STRARR(number_of_lines)
-
-		OPENR, LUN, file, /GET_LUN, ERROR=err
-		READF, LUN, data, FORMAT = '(A)'
-		CLOSE, LUN
-		FREE_LUN, LUN
-;###############################################################################
-;extracting data and denfining an structure data
-;###############################################################################
-        DStruct = {year:0, month:0, day:0, hour:0, minutes:0, DOY:0, $ 
-                   D:0., H:0., Z:0., F:0.}
-
-		mag_data = REPLICATE(DStruct, number_of_lines)	
-        header = 0             ; Defining number of lines of the header 
-
-		READS, data[header:number_of_lines-1], mag_data, $
-		FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,8X,I03,F12,F10,F10,F10)'
-		mag_data = mag_data[0:59]
-		zeroes1 = FLTARR(1380)
-		;zeroes2 = FLTARR(660)
-		H = [mag_data.H, zeroes1]
-		D = [mag_data.D, zeroes1]
-        
-        mag_data2 = {D:FLTARR(N_ELEMENTS(D)), H:FLTARR(N_ELEMENTS(H))}
-        mag_data2.H = H[*]
-        mag_data2.D = D[*]        
-    ENDIF
-    
-		RETURN, mag_data2
-END
 
 FUNCTION rawmag_array, date_i, date_f, station_code
 	On_error, 2
@@ -327,8 +217,6 @@ FUNCTION rawmag_array, date_i, date_f, station_code
 		X = H*COS(D)
 		Y = H*SIN(D)
 
-        X = H*COS(D)
-        Y = H*SIN(D)
         I = ATAN(Z/H)
         mag_data = {H : FLTARR(N_ELEMENTS(H)), D : FLTARR(N_ELEMENTS(D)), Z : FLTARR(N_ELEMENTS(Z)),$
         			F : FLTARR(N_ELEMENTS(F)), X : FLTARR(N_ELEMENTS(X)), Y : FLTARR(N_ELEMENTS(Y)),$

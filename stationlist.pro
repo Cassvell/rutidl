@@ -52,24 +52,26 @@ FUNCTION stationlist, class, station_code
         @set_up_commons
         set_up		
 
-        file_name = set_var.local_dir+class+'_stations.dat'
+        file_name = set_var.local_dir+class+'_stations.csv'
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
-		READCOL, file_name, index, station, code, mlat,  hem, UTC,  DELIMITER= ' ',$
-		FORMAT='I,A,A,F,A,F'
+		READCOL, file_name, index, station, code, glat, ghem, glon, ghem2, mlat,  mhem, mlon, mhem2, UTC,  DELIMITER= ',',$
+		FORMAT='I,A,A,F,A,F,A,F,A,F,A,A'
+		
 		
 		idx = WHERE(station_code EQ code)
 		
-	;	print, mlat[idx],  hem[idx],  utc[idx]
-		;FOR i=0, N_elements(index)-1 DO BEGIN		
-		;	PRINT, i, code[i], mlat[i], FORMAT='(I02,4X, A, F8.2)'
-		;ENDFOR
+		info = {glat : 0.0, ghem : '', glon : 0.0 , ghem2 : '', mlat : 0.0, mhem : '', mlon : 0.0, mhem2 : '', utc : 0}
 		
-		info = {mlat : 0.0, hem : '', utc : 0}
-		
+		info.glat = glat[idx]
+		info.ghem = ghem[idx]
+		info.glon = glon[idx]
+		info.ghem2= ghem2[idx]
 		info.mlat = mlat[idx]
-		info.hem  = hem[idx]
+		info.mhem = mhem[idx]
+		info.mlon = mlon[idx]
+		info.mhem2= mhem2[idx] 
 		info.utc  = utc[idx]
 		
 	RETURN, info	

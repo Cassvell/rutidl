@@ -220,7 +220,8 @@ PRO cgPS_Open, filename, $
     SCALE_FACTOR=scale_factor, $
     TT_FONT=tt_font, $
    _REF_EXTRA=extra
- 
+   On_error, 2
+   COMPILE_OPT idl2, HIDDEN
    COMMON _$FSC_PS_START_, ps_struct
    
     ; Define the PS structure.
