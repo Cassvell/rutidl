@@ -61,8 +61,8 @@ cgAxis, YAxis=1, yrange=[down, up], $
 ;minPower =  min(power)
 ;maxPower =  max(power)
     period2 = FIX(ALOG(period)/ALOG(2))
-    minPower =  min(power)
-    maxPower =  max(power)
+    minPower = 1e-11 ;min(power)
+    maxPower =  8e5;max(power)
 
     nLevels = 48
     levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
@@ -240,12 +240,14 @@ CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.855
    CGTEXT, x, y,'Period [h]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90
+   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90
 ;###############################################################################   
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################                          
 ;###############################################################################   
+    print, 'min xwt: ', min(xwt)
+    print, 'max xwt: ', max(xwt)    
     minPower =  min(xwt)
     maxPower =  max(xwt)
 
@@ -345,12 +347,13 @@ CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.855
    CGTEXT, x, y,'Period [h]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90
+   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90
 ;###############################################################################   
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################                          
-;###############################################################################    
+;###############################################################################
+
 minPower = min(ddyn)
 maxPower = max(ddyn)
 
@@ -519,7 +522,7 @@ freq_series = 1/(period*60)
   x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.93   
    XYOUTS, X, y, title, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65     
+   ALIGNMENT=0.5, CHARSIZE=1.65     
 
    x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.02   
@@ -527,14 +530,14 @@ freq_series = 1/(period*60)
    xtitle = 'Time [UT h]'
 
    XYOUTS, X, y, xtitle, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2  
+   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2  
 
 ;###############################################################################
 ;###############################################################################
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.855
    CGTEXT, x, y,'Period [h]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90
+   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################    
@@ -757,7 +760,7 @@ color = 'white',  xstyle=1, ystyle=1, /overplot,  axiscolor='white', /nodata
   x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.93   
    XYOUTS, X, y, title, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65     
+   ALIGNMENT=0.5, CHARSIZE=1.65     
 
    x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
    y = 0.18   
@@ -765,7 +768,7 @@ color = 'white',  xstyle=1, ystyle=1, /overplot,  axiscolor='white', /nodata
    xtitle = 'Time [UT h]'
 
    XYOUTS, X, y, xtitle, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4  
+   ALIGNMENT=0.5, CHARSIZE=1.4  
 
 ;###############################################################################
 ;###############################################################################
@@ -773,12 +776,12 @@ color = 'white',  xstyle=1, ystyle=1, /overplot,  axiscolor='white', /nodata
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.025   
    CGTEXT, x, y,'Freq [Hz]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
+   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 
    y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
    x = 0.985   
    CGTEXT, x, y,'Period [h]', /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
+   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
    print, '/min power: ', min(power), '     max power: ',max(power)
 
 ;###############################################################################
@@ -937,7 +940,7 @@ levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
     x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
     y = 0.93   
     XYOUTS, X, y, title, /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65     
+    ALIGNMENT=0.5, CHARSIZE=1.65     
 
     x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
     y = 0.18   
@@ -945,7 +948,7 @@ levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
     xtitle = 'Time [UT h]'
 
     XYOUTS, X, y, xtitle, /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4  
+    ALIGNMENT=0.5, CHARSIZE=1.4  
 
     ;###############################################################################
     ;###############################################################################
@@ -953,12 +956,12 @@ levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
     y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
     x = 0.025   
     CGTEXT, x, y,'Freq [Hz]', /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
+    COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 
     y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
     x = 0.985   
     CGTEXT, x, y,'Period [h]', /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
+    COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################    
@@ -1125,16 +1128,16 @@ PRO make_psfig3, ddyn, period, coi, date_i, date_f, path, station_code
 
     x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
     y = 0.93   
-    XYOUTS, X, y, title, /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65     
+    cgText, X, y, title, /NORMAL, $
+    COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.65     
 
     x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
     y = 0.18   
 
     xtitle = 'Time [UT h]'
 
-    XYOUTS, X, y, xtitle, /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4  
+    cgText, X, y, xtitle, /NORMAL, $
+    COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4  
 
     ;###############################################################################
     ;###############################################################################
@@ -1142,12 +1145,12 @@ PRO make_psfig3, ddyn, period, coi, date_i, date_f, path, station_code
     y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
     x = 0.025   
     CGTEXT, x, y,'Freq [Hz]', /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
+    COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 
     y = (!Y.Window[1] - !Y.Window[0]) /  2. + !Y.Window[0]
     x = 0.985   
     CGTEXT, x, y,'Period [h]', /NORMAL, $
-    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
+    COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.4, ORIENTATION=90
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################    
