@@ -101,7 +101,7 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     SQ = data.SQ
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
-
+    asymH = idx.asyH
     idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;symH0 = idx2.symH0
 
@@ -149,19 +149,7 @@ H = fillnan(H)
     baseline     = p_a
     Bdiono       = H-baseline
 ;###############################################################################
-;###############################################################################    
-    date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
-                        FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
-    date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	
-
-    class = gms_class(station_code)
-    info = stationlist(class, station_code)
-
-    print, 'UTC: ', info.utc
-
-    CALDAT, date_time, mh, dy, yr, hr, min
-    
-
+;###############################################################################     
     ; First 3 days of data
    ; H1 = H[0:1440*3]
     ;min1 = min(H1, i)
@@ -186,19 +174,11 @@ H = fillnan(H)
     ;print, 'second min of GS: '
     ;print, min(H2, j)
     ;print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
-
-    DEVICE, true=24, retain=2, decomposed=0
-    TVLCT, R_bak, G_bak, B_bak, /GET     
-    LOADCT, 39
-    WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
-
-
-    plot, date_time, H, background=255, color=0, XMINOR=8, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
-	XTICKINTERVAL = 1,  xTITLE = 'Time [days]'
-    oplot,date_time, symH, color=120, thick = 2
-    oplot,date_time, Bdiono, color=250, thick = 2
-    oplot,date_time, SQ, color=70, thick = 2
 	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
-    print, max(Bdiono)
-    wave_test, H, Bdiono, SQ,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    
+    ;wave_test, H, Bdiono, SQ, asymH,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    path='/home/isaac/longitudinal_studio/fig/magdata/'
+    ts_plots, symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+
+
 END
