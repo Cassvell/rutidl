@@ -304,16 +304,19 @@ CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.
 minPower = min(ddyn)
 maxPower = max(ddyn)
 
-ddyn = (maxPower - ddyn) / (maxPower - minPower)
+ddyn = 2 * (maxPower - ddyn) / (maxPower - minPower) - 1
 
 
-minPower = 0
+minPower = -1
 maxPower = 1
-
+print, 'max ddyn: ', max(ddyn)
+print, 'min ddyn: ', min(ddyn)
 nLevels = 36
+; Levels from -1 to 1
+levels = 2 * (FINDGEN(nLevels) / (nLevels - 1)) - 1
 
-levels = FINDGEN(nLevels) / (nLevels)
-   ; print, levels
+;Levels from 0 to 1
+;levels = (FINDGEN(nLevels) / (nLevels - 1)) 
 
 ; Generate tick names based on levels
   
@@ -326,14 +329,11 @@ XTICKINTERVAL = 1, charsize=1.2, /noerase;,  xTITLE = 'Time [days]'
 nColors = !D.TABLE_SIZE
 
 title = Textoidl('ddyn correlation')
-tick_vals = [0, 0.2, 0.4, 0.6, 0.8, 1]
-tickNames = STRING(tick_vals, FORMAT='(F4.1)')
 
-cgCOLORBAR, NCOLORS=nColors, POSITION=[0.16, 0.87, 0.40, 0.89], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
-Charsize= 1.0,  title=title, vertical=1, right=1 ; Moves title and labels to the right
-;cgCOLORBAR, NCOLORS=nColors, POSITION=[0.15, 0.12, 0.9, 0.14], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
-;Charsize= 1.0,  title=title
+tickNames = STRING(levels, FORMAT='(F4.1)')
 
+cgCOLORBAR, NCOLORS=nColors, POSITION=[0.16, 0.87, 0.40, 0.89], $
+RANGE=[minPower, maxPower], Charsize= 1.0,  title=title, vertical=1, right=1 ;
 
 ;###############################################################################
 ;###############################################################################

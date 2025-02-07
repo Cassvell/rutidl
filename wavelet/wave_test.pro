@@ -133,9 +133,9 @@ nscale = N_ELEMENTS(period)
                 
             ENDELSE  
             make_psfig_composed, asymH, H_loc, power, cross_wavelet, ddyn, period, coi, date_i, date_f, path, station_code  
-            make_psfig1, power, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path,  station_code   
-            make_psfig2, real_part(cross_wavelet), period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code	
-            make_psfig3, ddyn, period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+            ;make_psfig1, power, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path,  station_code   
+            ;make_psfig2, real_part(cross_wavelet), period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code	
+            ;make_psfig3, ddyn, period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
 
         ENDIF
 

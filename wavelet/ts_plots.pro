@@ -34,75 +34,71 @@ pro ts_plots, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     ;WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
 
 
-    cgplot, date_time, H, background='white', color='black', position=[.1, .56, .92, .92],XMINOR=8, charsize=1.2, xstyle = 1, ystyle=5,$
-    XTICKFORMAT='(A1)', /nodata
+    cgplot, date_time, H, background='white', color='black', position=[.1, .54, .92, .90], XTICKFORMAT=['LABEL_DATE'], $
+    xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5;, /nodata
 
-    cgOPlot, date_time, H, color='black', thick=2, linestyle=0   
+    
+    jul_conv = (0.1/2.4)*info.utc
+
+    local_ini = date_time[0]+jul_conv
+    local_fin = date_time[n_elements(date_time)-1]+jul_conv
+
+    local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes') 
+    midday = fltarr(n_elements(local_time)/720)
+
+    for i = 0, n_elements(midday)-1 do begin
+        ; Define color based on even/odd index
+        if info.utc LT 0 then begin
+            if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
+        endif else begin
+            if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
+        endelse    
+
+        if i LT n_elements(midday)-1 then begin
+           
+        cgPolygon, [local_time[(i*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[(i*720)]+0.25], $
+                  [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
+            
+        endif          
+    endfor
+
+   ; cgPolygon, [date_time[720], date_time[1440], date_time[1440], date_time[720]], $
+   ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
+
+   ; cgPolygon, [date_time[720*26], date_time[720*27], date_time[720*27], date_time[720*26]], $
+   ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
+
+    cgOPlot, date_time, H, color='black', thick=3, linestyle=0   
     cgoplot,date_time, symH, color='GRN5', thick=2, linestyle=0   
 
-
-    cgAXIS, XAXIS = 0, XRANGE=[0,file_number],$
-    ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
-    XTICKS=file_number, $
-    XMINOR=8, $
-    ;XTICKV=FIX(days), $       
-    XTICKFORMAT='(A1)',$
-   ; COLOR=negro, $
-    CHARSIZE = 1.2 , $
-    TICKLEN=0.04,$
-    CHARTHICK=3.5 
+    ;first panel legend 
+    cgPolygon, [0.78,0.81,0.81,0.78], [0.62,0.62,0.623,0.623], color = 'black', /NORMAL, /FILL    
+    cgPolygon, [0.78,0.81,0.81,0.78], [0.579,0.579, 0.582,0.582], color = 'GRN5', /NORMAL , /FILL  
     
-    cgAXIS, XAXIS = 1, XRANGE=[0,file_number],$
-    ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
-    XTICKS=file_number, $
-    XMINOR=8, $
-    ;XTICKV=FIX(days), $       
-    XTICKFORMAT='(A1)',$
-; COLOR=negro, $
-    CHARSIZE =1.2, $
-    CHARTHICK=1.5,$
-    TICKLEN=0.04
+    d_H = Textoidl('\Delta H_{' + STRING(station_code) + '}')
 
-    cgAXIS, YAXIS = 0, $
-    YTITLE = 'G. Indices [nT]', $                          
-    ;COLOR=negro, $
-    YSTYLE=2, $
-    CHARSIZE = 1.2,$
-    CHARTHICK=1.6 
-
-    cgAXIS, YAXIS = 1, $
-; COLOR=negro, $                                                                      
-    YSTYLE=2, $       
-    YTICKFORMAT='(A1)',$
-    CHARSIZE = 1.2 ,$
-    CHARTHICK=1.6    
-;##################################################################################################################
-;##################################################################################################################
-;##################################################################################################################
-;##################################################################################################################
-cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .18, .92, .54], XTICKFORMAT=['LABEL_DATE'], $
-    XTICKUNITS=['hours'], XTICKLAYOUT = 0, XTICKINTERVAL = 24, charsize=1.1, xstyle=5, ystyle=5, $
-    /nodata, /noerase
-    
-    
-    cgoplot,date_time, Bdiono, color='red', thick = 2
-    cgoplot,date_time, SQ, color='blue', thick = 2
+    XYOUTS, 0.822, 0.615 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+            
+    XYOUTS, 0.822, 0.573 , /NORMAL, 'SYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 
     cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
+    xtitle='',$
     xstyle=1,$
-    XTICKUNITS=['hours'], $
+    xminor=8,$
+    XTICKUNITS=['day'], $
     XTICKLAYOUT = 0, $
-    XTICKINTERVAL = 24, $       
-    XTICKFORMAT=['LABEL_DATE'],$
+    XTICKINTERVAL = 1, $       
+    XTICKFORMAT='(A1)',$
    ; COLOR=negro, $
     CHARSIZE = 1.0 , $
     TICKLEN=0.04,$
     CHARTHICK=3.5 
     
     cgAXIS, XAXIS = 1, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$
-    XTICKUNITS=['hours'], $
+    xminor=8,$
+    XTICKUNITS=['day'], $
     XTICKLAYOUT = 0, $
-    XTICKINTERVAL = 24, $      
+    XTICKINTERVAL = 1, $      
     XTICKFORMAT='(A1)',$
 ; COLOR=negro, $
     CHARSIZE =1.0, $
@@ -110,21 +106,94 @@ cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .18,
     TICKLEN=0.04
 
     cgAXIS, YAXIS = 0, $
-    YTITLE = 'ionopheric fluctuations [nT]', $                          
+    YTITLE = 'G. Indices [nT]', $                          
     ;COLOR=negro, $
-    YSTYLE=2, $
-    CHARSIZE = 1.0,$
+    YSTYLE=1, $
+    CHARSIZE = 1.2,$
     CHARTHICK=1.6 
 
     cgAXIS, YAXIS = 1, $
 ; COLOR=negro, $                                                                      
-    YSTYLE=2, $       
+    YSTYLE=1, $       
     YTICKFORMAT='(A1)',$
-    CHARSIZE = 1.0 ,$
+    CHARSIZE = 1.2 ,$
     CHARTHICK=1.6    
+;##################################################################################################################
+;##################################################################################################################
+
+cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .16, .92, .52], XTICKFORMAT=['LABEL_DATE'], $
+XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, /noerase, /nodata
+
+for i = 0, n_elements(midday)-1 do begin
+    ; Define color based on even/odd index
+    if info.utc LT 0 then begin
+        if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
+    endif else begin
+        if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
+    endelse    
+
+    if i LT n_elements(midday)-1 then begin
+       
+    cgPolygon, [local_time[(i*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[(i*720)]+0.25], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
+        
+    endif          
+endfor
+
+cgoplot,date_time, Bdiono, color='red', thick = 2
+cgoplot,date_time, SQ, color='blue', thick = 2
 
 
+cgPolygon, [0.78,0.81,0.81,0.78], [0.279,0.279, 0.282,0.282], color = 'red', /NORMAL, /FILL    
+cgPolygon, [0.78,0.81,0.81,0.78], [0.238,0.238, 0.235,0.235], color = 'blue', /NORMAL , /FILL  
 
+P_I = Textoidl('P_{I,' + STRING(station_code) + '}')
+
+XYOUTS, 0.822, 0.275 , /NORMAL, P_I, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+        
+XYOUTS, 0.822, 0.23 , /NORMAL, 'SQ', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+
+
+cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
+xminor=8,$
+xtitle='Universal Time [h], March 2015',$
+xstyle=1,$
+XTICKUNITS=['day'], $
+XTICKLAYOUT = 0, $
+XTICKINTERVAL = 1, $       
+XTICKFORMAT=['LABEL_DATE'],$
+; COLOR=negro, $
+CHARSIZE = 1.2 , $
+TICKLEN=0.04,$
+CHARTHICK=3.5 
+
+cgAXIS, XAXIS = 1, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$
+xminor=8,$
+XTICKUNITS=['day'], $
+XTICKLAYOUT = 0, $
+XTICKINTERVAL = 1, $      
+XTICKFORMAT='(A1)',$
+; COLOR=negro, $
+CHARSIZE =1.0, $
+CHARTHICK=1.5,$
+TICKLEN=0.04
+
+cgAXIS, YAXIS = 0, $
+YTITLE = 'G. Indices [nT]', $                          
+;COLOR=negro, $
+YSTYLE=1, $
+CHARSIZE = 1.2,$
+CHARTHICK=1.6 
+
+cgAXIS, YAXIS = 1, $
+; COLOR=negro, $                                                                      
+YSTYLE=1, $       
+YTICKFORMAT='(A1)',$
+CHARSIZE = 1.2 ,$
+CHARTHICK=1.6    
+
+;##################################################################################################################
+;##################################################################################################################  
 
     title = STRING(STRUPCASE(station_code), info.mlat, info.mhem, info.mlon, info.mhem2,$
     FORMAT='("Obs: ", A, ", mlat: ", F7.2, " ", A, ",    ", "mlon: ", F7.2," ", A)')
@@ -138,22 +207,5 @@ cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .18,
     x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
     y = 0.02   
 
-    local_ini = date_time[0]-0.25
-    local_fin = date_time[n_elements(date_time)-1]-0.25
-
-    local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes')
-
-    cgplot, local_time, Bdiono, background='white', color='black', position=[.1, .12, .92, .92], $
-    charsize=1.0, xstyle=5,ystyle=5,/nodata, /noerase
-    
-    cgAXIS, XAXIS = 0,$  
-    XTICKUNITS=['hours'], $
-    XTICKLAYOUT = 0, $
-    XTICKINTERVAL = 24, $   
-    XTICKFORMAT=['LABEL_DATE'],$
-    CHARSIZE = 1.0 , $
-    TICKLEN=0.02,$
-    CHARTHICK=3.5 
-    
     cgPS_Close, density = 300, width = 1600 ;, /PNG  
 end

@@ -176,9 +176,9 @@ H = fillnan(H)
     ;print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
 	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
     
-    ;wave_test, H, Bdiono, SQ, asymH,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    wave_test, H, Bdiono, SQ, asymH,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
     path='/home/isaac/longitudinal_studio/fig/magdata/'
-    ts_plots, symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+    ;ts_plots, symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
 
 
 END
