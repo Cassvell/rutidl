@@ -36,7 +36,7 @@ PRO make_psfig_composed, asymH, H, power, xwt, ddyn, period, coi, date_i, date_f
     up = max(H)
     down = min(H)
     cgplot, date_time, H, background='white', color='black', XTICKFORMAT='(A1)', XMINOR=8, YTICKFORMAT='(A1)', $
-    POSITION=[.1, .68, .8, .92], xstyle=1, ystyle = 5
+    POSITION=[.1, .66, .8, .92], xstyle=1, ystyle = 5, thick=3
     
     CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
     COLOR='black', $
@@ -69,7 +69,7 @@ cgAxis, YAxis=1, yrange=[down, up], $
     down2 = min(asymH)
 
     cgplot, date_time, asymH, background='white', color='black', XMINOR=8, XTICKFORMAT='(A1)', YTICKFORMAT='(A1)',$
-    POSITION=[.1, .68, .8, .92], xstyle=1, ystyle = 5, yrange=[down2, up2], /noerase, /nodata
+    POSITION=[.1, .66, .8, .92], xstyle=1, ystyle = 5, yrange=[down2, up2], /noerase, /nodata
     
     cgOPlot,  date_time, asymH, color = 'blue'
 
@@ -116,9 +116,9 @@ cgAxis, YAxis=1, yrange=[down, up], $
 
 ; Generate tick names based on levels
 
-    CGCONTOUR,power,date_time,period, XSTYLE=1,YTITLE='', title='', POSITION=[.1, .42, .8, 0.66],$
+    CGCONTOUR,power,date_time,period, XSTYLE=1,YTITLE='', title='', POSITION=[.1, .38, .8, 0.64],$
 	YSTYLE=5,C_COLORS=colors, XMINOR=8,YTICKFORMAT='exponent',$ 
-	/YTYPE, LEVELS=levels, yrange=[60,4000], NLEVELS=nLevels,/FILL, $
+	/YTYPE, LEVELS=levels, yrange=[120,2880], NLEVELS=nLevels,/FILL, $
 	XTICKFORMAT='(A1)', XTICKUNITS=['day', 'month'], XTICKLAYOUT = 0,  $
 	XTICKINTERVAL = 1, /noerase ;,  xTITLE = 'Time [days]'
 
@@ -128,7 +128,7 @@ cgAxis, YAxis=1, yrange=[down, up], $
 
     title = Textoidl('Power [nT^{2} Hz^{-1}]')
     tickNames = STRING(levels, FORMAT='(E8.1)')
-    cgCOLORBAR, NCOLORS=nColors, POSITION=[0.42, 0.87, 0.66, 0.89], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
+    cgCOLORBAR, NCOLORS=nColors, POSITION=[0.38, 0.87, 0.64, 0.89], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
     Charsize= 1.0,  title=title, vertical=1, right=1 ; Moves title and labels to the right
 
 
@@ -159,7 +159,7 @@ cgAxis, YAxis=1, yrange=[down, up], $
 ;print, 'pico de potencia, rango de frecuencia, rango de periodo'
 
     freq_series = 1/(period*60)
-    j = where((freq_series LE (1.0/3600)) AND (freq_series GE (1.0/240000)), count)
+    j = where((freq_series LE (1.0/7200)) AND (freq_series GE (1.0/240000)), count)
 
     
     ;print, n_elements(freq_series), n_elements(period2)
@@ -171,8 +171,8 @@ cgAxis, YAxis=1, yrange=[down, up], $
 	CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
   	CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
 
-   CGTEXT, MAX(date_time), 2880  , ' 48',$
-   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
+   ;CGTEXT, MAX(date_time), 2880  , ' 48',$
+   ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
 
    CGTEXT, MAX(date_time), 1440  , ' 24', $
    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
@@ -182,9 +182,6 @@ cgAxis, YAxis=1, yrange=[down, up], $
    
    CGTEXT, MAX(date_time), 240  , '  4', $
    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
-   
-	CGTEXT, MAX(date_time), 60  , '  1', $
-   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2 
 ;##################################################
 
 	x = [date_time[0],date_time,MAX(date_time)]
@@ -237,7 +234,7 @@ cgAxis, YAxis=1, yrange=[down, up], $
     ;###############################################################################
     ; OVERPLOT LAYER
 
-    cgplot, date_time, findgen(n_elements(date_time)), POSITION=[.1, .42, .8, 0.66],$
+    cgplot, date_time, findgen(n_elements(date_time)), POSITION=[.1, .38, .8, 0.64],$
     color = 'white',  xstyle=1, ystyle=1, /overplot,  axiscolor='white', /nodata
     ;print, n_elements(period2), n_elements(date_time)
     ;###############################################################################
@@ -307,32 +304,31 @@ maxPower = max(ddyn)
 ddyn = 2 * (maxPower - ddyn) / (maxPower - minPower) - 1
 
 
-minPower = -1
+minPower = 0
 maxPower = 1
 print, 'max ddyn: ', max(ddyn)
 print, 'min ddyn: ', min(ddyn)
 nLevels = 36
 ; Levels from -1 to 1
-levels = 2 * (FINDGEN(nLevels) / (nLevels - 1)) - 1
+levels = (FINDGEN(nLevels) / (nLevels - 1))  ; Levels from 0 to 1
 
-;Levels from 0 to 1
-;levels = (FINDGEN(nLevels) / (nLevels - 1)) 
-
-; Generate tick names based on levels
+for i = 0, n_elements(ddyn)-1 do begin
+  if ddyn[i] LT 0 then ddyn[i] = 0
+endfor
   
 cgCONTOUR,ddyn,date_time,period, $
-XSTYLE=1,YTITLE='', title='', POSITION=[.1, .16, .8, .40],$
-YSTYLE=5,C_COLORS=colors, XMINOR=8,	/YTYPE, LEVELS=levels, yrange=[60,4000], NLEVELS=nLevels,/FILL, $
-XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
+XSTYLE=1,YTITLE='', title='', POSITION=[.1, .1, .8, .36],$
+YSTYLE=5,C_COLORS=colors, XMINOR=8,	/YTYPE, LEVELS=levels, yrange=[120,2880], NLEVELS=nLevels,/FILL, $
+XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'], XTICKLAYOUT = 1,  $
 XTICKINTERVAL = 1, charsize=1.2, /noerase;,  xTITLE = 'Time [days]'
 
 nColors = !D.TABLE_SIZE
 
-title = Textoidl('ddyn correlation')
+title = Textoidl('Ddyn correlation')
 
 tickNames = STRING(levels, FORMAT='(F4.1)')
 
-cgCOLORBAR, NCOLORS=nColors, POSITION=[0.16, 0.87, 0.40, 0.89], $
+cgCOLORBAR, NCOLORS=nColors, POSITION=[0.1, 0.87, 0.36, 0.89], $
 RANGE=[minPower, maxPower], Charsize= 1.0,  title=title, vertical=1, right=1 ;
 
 ;###############################################################################
@@ -345,8 +341,8 @@ CGPLOTS, max(date_time), 720, PSYM=8, COLOR='white', thick=4
 CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
   CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
 
-CGTEXT, MAX(date_time), 2880  , ' 48',$
-COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
+;CGTEXT, MAX(date_time), 2880  , ' 48',$
+;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
 
 CGTEXT, MAX(date_time), 1440  , ' 24', $
 COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
@@ -356,15 +352,14 @@ COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
 
 CGTEXT, MAX(date_time), 240  , '  4', $
 COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
-    CGTEXT, MAX(date_time), 60  , '  1', $
-COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+
 ;##################################################
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
 ; OVERPLOT LAYER
 
-cgplot, date_time, findgen(n_elements(date_time)), POSITION=[.1, .16, .8, .40],$
+cgplot, date_time, findgen(n_elements(date_time)), POSITION=[.1, .1, .8, .36],$
 color = 'black',  xstyle=1, ystyle=1, /overplot,  axiscolor='white', /nodata
 ;print, n_elements(period2), n_elements(date_time)
 ;###############################################################################
@@ -472,7 +467,7 @@ freq_series = 1/(period*60)
    ALIGNMENT=0.5, CHARSIZE=1.65     
 
    x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
-   y = 0.02   
+   y = 0.03   
 
    xtitle = 'Time [UT h]'
 

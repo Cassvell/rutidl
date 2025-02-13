@@ -103,8 +103,18 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     symH = idx.symH
     asymH = idx.asyH
     idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    
+    rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    Q = rc.Q
     ;symH0 = idx2.symH0
+    ip   = ip_arraym([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    Bt = ip.Bt
+    Bz = ip.Bz
+    P = ip.n_p
+    V = ip.vx
 
+    a = ae_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    AE = a.AE
     ;correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;print, correctedsymH.symH_0
     ;symH_0 = correctedsymH.symH_0
@@ -148,37 +158,13 @@ H = fillnan(H)
     p_a          = symH*ld
     baseline     = p_a
     Bdiono       = H-baseline
+
 ;###############################################################################
 ;###############################################################################     
-    ; First 3 days of data
-   ; H1 = H[0:1440*3]
-    ;min1 = min(H1, i)
-
-    ; Beginning of GS
-    ;str = max(H, i2)
-    ;print, 'beg of GS: '
-    ;print, string(dy[i2], hr[i2], min[i2], format = '(I02, X, I02, ":", I02)')    
-
-    ; Minimum of GS
-    ;print, 'min of GS: '
-    ;print, min1
-    ;print, string(dy[i], hr[i], min[i], format = '(I02, X, I02, ":", I02)')
-
-    ;H2 = H[1440*3: n_elements(H)-1]
-    ;str2 = max(H2, j2)
-    ;min2 = min(H2, j)
-    ;date_time2 = date_time[1440*3: n_elements(date_time)-1]
-    ;CALDAT, date_time2, mh2, dy2, yr2, hr2, min2
-
-
-    ;print, 'second min of GS: '
-    ;print, min(H2, j)
-    ;print, string(dy2[j], hr2[j], min2[j], format = '(I02, X, I02, ":", I02)')
-	;oplot, [date_time[i2], date_time[i2]], [!y.CRANGE[0], !y.CRANGE[1]], color=75
-    
-    wave_test, H, Bdiono, SQ, asymH,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS="ps"
+    ;print, Q
     path='/home/isaac/longitudinal_studio/fig/magdata/'
+    path2 = '/home/isaac/longitudinal_studio/fig/'
     ;ts_plots, symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
-
+    ip_plots, symH, Q, P, V, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
 END

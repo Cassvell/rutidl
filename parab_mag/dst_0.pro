@@ -222,9 +222,6 @@ FUNCTION param_Q, Ey, symH_avr
  
      a = res[1]
      print, 'coef a eq= ', a
-     WINDOW, 4, XSIZE=400, YSIZE=400, TITLE='Q vs E inducido'
-     plot, X, dtQ, PSYM=4, thick=3
-     oplot, [MIN(X), MAX(X)], [res[0] + res[1]*MIN(X), res[0] + (res[1])*MAX(X)]
 
      RETURN, res
 END 
@@ -552,15 +549,6 @@ COMPILE_OPT idl2, HIDDEN
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])
     CALDAT, timeip, mh, dy, yr, hr, min
 
-    DEVICE, true=24, retain=2, decomposed=0
-    TVLCT, R_bak, G_bak, B_bak, /GET        
-    LOADCT, 39, /SILENT  
-
-    WINDOW, 1, XSIZE=1000, YSIZE=400, TITLE='SYM-H vs Induced E'
-    plot, timeax, symH, xstyle = 1, background=255, color=0
-    plot, timeip, E, xstyle = 1,  color=70,  /noerase
-    plot, timeip, Pdyn, xstyle = 1,  color=200,  /noerase
-
    ;####################################################################################################### 
     mw = 30   
     rate = mw/5
@@ -614,33 +602,7 @@ COMPILE_OPT idl2, HIDDEN
     symH_0 = symH - (mc_pherron.b * P_sqrt_1min) + mc_pherron.c
 
 
-    WINDOW, 2, XSIZE=1000, YSIZE=400, TITLE='Energy Inyection Q and SYM-H corrected'
-    plot, timeax, Q_1min, xstyle = 1, ystyle=1, background=255, color=0, XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'], XTICKLAYOUT = 2,  $
-	XTICKINTERVAL = 1,  xTITLE = 'Time [days]', yrange=[min(symH),max(symH)], ytitle ='[nT]', /NODATA
-
-    OPLOT, timeax, Q_1min, color=75, linestyle=0, thick=2
-    OPLOT, timeax, symH,  color=0, linestyle=0, thick=2
-    OPLOT, timeax, symH_0, color=250, linestyle=0, thick=2
     
-    ;###############################################################################                      
-;second panel legend
-        POLYFILL, [0.85,0.87,0.87,0.85], [0.405,0.405,0.408,0.408], color = 75, /NORMAL
-        POLYFILL, [0.85,0.87,0.87,0.85], [0.355,0.355,0.358,0.358], color = 0, /NORMAL        
-        POLYFILL, [0.85,0.87,0.87,0.85], [0.305,0.305,0.308,0.308], color = 250, /NORMAL        
-       XYOUTS, 0.88, 0.4 , /NORMAL, $
-                'Q(t)', COLOR=0, $
-                CHARSIZE = 2, $
-                CHARTHICK=2 
-
-        XYOUTS, 0.88, 0.35 , /NORMAL, $
-                'Sym-H', COLOR=0, $
-                CHARSIZE = 2, $
-                CHARTHICK=2        
-
-        XYOUTS, 0.88, 0.3 , /NORMAL, $
-                'Sym-H0', COLOR=0, $
-                CHARSIZE = 2, $
-                CHARTHICK=2    
     values = {symH_0 : symH_0, Q : Q_1min}
 	
 	dir = set_var.Mega_dir+'sym_0/'
