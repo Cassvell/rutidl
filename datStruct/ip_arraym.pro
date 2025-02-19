@@ -30,10 +30,11 @@ FUNCTION ip_structm, date
         CLOSE, lun
         FREE_LUN, lun
 
-        DataStruct = {year : 0, doy : 0, hour : 0, minute : 0, Bt : 0.0, Bz : 0.0, Vx : 0.0, n_P : 0.0, T_P : 0.0, Pdyn : 0.0, Ey : 0.0}
+        DataStruct = {year : 0, doy : 0, hour : 0, minute : 0, Bt : 0.0, Bx : 0.0, By : 0.0, Bz : 0.0, $
+        Vx : 0.0, Vy : 0.0, Vz : 0.0, n_P : 0.0, T_P : 0.0, Pdyn : 0.0, Ey : 0.0, beta : 0.0}
         r_ip = REPLICATE(DataStruct, number_of_lines-header)	        
         ; PRINT, data[header:number_of_lines-1]
-        READS, data[header:number_of_lines-1], r_ip, FORMAT='(I4, I5, I4, I4, F8, F10, F9, F8, F10, F7, F8)'
+        READS, data[header:number_of_lines-1], r_ip, FORMAT='(I4, I5, I4, I4, F8, F9, F9, F9, F9, F9, F9, F8, F10, F7, F8, F9)'
         RETURN, r_ip 
 END
 
@@ -80,14 +81,19 @@ FUNCTION ip_arraym, date_i, date_f
             PRINT, FORMAT="('                missing GMS_YYYYMMDD.IP electric field data .',A,' impossible to plot all data.')"              
     ENDIF           
     ;###############################################################################
-    ;IP Data                      
+    ;IP Data { Bt : 0.0, Bx : 0.0, By : 0.0, Bz : 0.0, Vx : 0.0, Vy : 0.0, Vz : 0.0, n_P : 0.0, T_P : 0.0, Pdyn : 0.0, Ey : 0.0, beta : 0.0}          
     tmp_Ey    = FLTARR(file_number*1440) 
     tmp_Bt    = FLTARR(file_number*1440) 
+    tmp_Bx    = FLTARR(file_number*1440) 
+    tmp_By    = FLTARR(file_number*1440) 
     tmp_Bz    = FLTARR(file_number*1440) 
-    tmp_Vx    = FLTARR(file_number*1440) 
+    tmp_Vx    = FLTARR(file_number*1440)
+    tmp_Vy    = FLTARR(file_number*1440)
+    tmp_Vz    = FLTARR(file_number*1440)
     tmp_np    = FLTARR(file_number*1440) 
     tmp_tp    = FLTARR(file_number*1440) 
-    tmp_pdyn    = FLTARR(file_number*1440) 
+    tmp_pdyn  = FLTARR(file_number*1440) 
+    tmp_beta  = FLTARR(file_number*1440) 
 
     FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
         IF exist_data_file[i] EQ 1 THEN BEGIN
@@ -99,34 +105,51 @@ FUNCTION ip_arraym, date_i, date_f
         CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
         string_date[i] = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')                
                 dat = ip_structm([tmp_year, tmp_month, tmp_day])
-                tmp_Ey[i*1440:((i+1)*1440)-1] = dat.Ey[*]    
+                tmp_Ey[i*1440:((i+1)*1440)-1] = dat.Ey[*] 
+                tmp_Bx[i*1440:((i+1)*1440)-1] = dat.Bx[*]
+                tmp_By[i*1440:((i+1)*1440)-1] = dat.By[*]   
                 tmp_Bz[i*1440:((i+1)*1440)-1] = dat.Bz[*]
                 tmp_Bt[i*1440:((i+1)*1440)-1] = dat.Bt[*]
                 tmp_Vx[i*1440:((i+1)*1440)-1] = dat.Vx[*]     
+                tmp_Vy[i*1440:((i+1)*1440)-1] = dat.Vy[*]     
+                tmp_Vz[i*1440:((i+1)*1440)-1] = dat.Vz[*]     
                 tmp_np[i*1440:((i+1)*1440)-1] = dat.n_P[*]    
                 tmp_tp[i*1440:((i+1)*1440)-1] = dat.T_P[*]
-                tmp_pdyn[i*1440:((i+1)*1440)-1] = dat.Pdyn[*]                                 
+                tmp_pdyn[i*1440:((i+1)*1440)-1] = dat.Pdyn[*]   
+                tmp_beta[i*1440:((i+1)*1440)-1] = dat.beta[*]                                  
         ;   asym[i*1440:(i+1)*1440-1] = dat.ASY_H[*]                                                                      
         ENDIF ELSE BEGIN
                 tmp_Ey[i*1440:((i+1)*1440)-1] = 999.99
+                tmp_Bx[i*1440:((i+1)*1440)-1] = 999.99
+                tmp_By[i*1440:((i+1)*1440)-1] = 999.99
                 tmp_Bz[i*1440:((i+1)*1440)-1] = 9999.99
                 tmp_Bt[i*1440:((i+1)*1440)-1] = 9999.99
                 tmp_Vx[i*1440:((i+1)*1440)-1] = 99999.9
+                tmp_Vy[i*1440:((i+1)*1440)-1] = 99999.9
+                tmp_Vz[i*1440:((i+1)*1440)-1] = 99999.9
                 tmp_np[i*1440:((i+1)*1440)-1] = 999.99
                 tmp_tp[i*1440:((i+1)*1440)-1] = 9999999
-                tmp_pdyn[i*1440:((i+1)*1440)-1] = 99.99                
+                tmp_pdyn[i*1440:((i+1)*1440)-1] = 99.99         
+                tmp_beta[i*1440:((i+1)*1440)-1] = 1000.0       
                 ; asym[i*1440:(i+1)*1440-1] =999999.0                      
         ENDELSE                
     ENDFOR
     tmp_Ey = add_nan(tmp_Ey, 999.99, 'equal')
     tmp_Bt = add_nan(tmp_Bt, 9999.99, 'equal')	
+    tmp_Bx = add_nan(tmp_Bx, 9999.99, 'equal')	
+    tmp_By = add_nan(tmp_By, 9999.99, 'equal')	
     tmp_Bz = add_nan(tmp_Bz, 9999.99, 'equal')	
     tmp_Vx = add_nan(tmp_Vx, 99999.9, 'equal')	
+    tmp_Vy = add_nan(tmp_Vy, 99999.9, 'equal')	
+    tmp_Vz = add_nan(tmp_Vz, 99999.9, 'equal')	
     tmp_np = add_nan(tmp_np, 999.99, 'equal')
     tmp_tp = add_nan(tmp_tp, 9999999, 'equal')	
     tmp_pdyn = add_nan(tmp_pdyn, 99.99, 'equal')    
+    tmp_beta = add_nan(tmp_pdyn, 1000.0, 'equal')    
     
-    ip_struct = {Ey : tmp_Ey, Bt : tmp_Bt, Bz : tmp_Bz, Vx : tmp_Vx, n_P : tmp_np, T_P : tmp_tp, Pdyn : tmp_pdyn}
+    ip_struct = {Ey : tmp_Ey, Bt : tmp_Bt,  Bx : tmp_Bx,  By : tmp_By, Bz : tmp_Bz, $
+                Vx : tmp_Vx, Vy : tmp_Vy, Vz : tmp_Vz, n_P : tmp_np, T_P : tmp_tp, $
+                Pdyn : tmp_pdyn, beta : tmp_beta}
 
     RETURN, ip_struct
     

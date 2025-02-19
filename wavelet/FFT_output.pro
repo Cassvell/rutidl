@@ -110,8 +110,13 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     ip   = ip_arraym([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     Bt = ip.Bt
     Bz = ip.Bz
+    Bx = ip.Bx 
+    By = ip.By 
     P = ip.n_p
-    V = ip.vx
+    V = ip.Vx
+    Vy = ip.Vy
+    Vz = ip.Vz
+    T = ip.t_p
 
     a = ae_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     AE = a.AE
@@ -164,7 +169,7 @@ H = fillnan(H)
     ;print, Q
     path='/home/isaac/longitudinal_studio/fig/magdata/'
     path2 = '/home/isaac/longitudinal_studio/fig/'
-    ;ts_plots, symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
-    ip_plots, symH, Q, P, V, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
+    ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+    ;ip_plots, symH, Q, P, V, T, Bx, By, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
 END

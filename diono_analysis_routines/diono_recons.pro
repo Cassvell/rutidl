@@ -129,33 +129,34 @@ set_up
 ;###############################################################################       
      d_H = TeXtoIDL('\DeltaH_{' + STRUPCASE(station_code) + '}') 
 
-    up  = 50
-    down= -50
+    up  = 65
+    down= -65
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
      cgPLOT, date_time, ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 5, YSTYLE = 5, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
      XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /NOERASE, /NODATA
-    
-     jul_conv = (0.1/2.4)*info.utc
 
+     jul_conv = abs((0.1/2.4)*info.utc)
+     print, jul_conv
      if info.utc LT 0 then begin
-        local_ini = date_time[0] + jul_conv
-        local_fin = date_time[n_elements(date_time) - 1] + jul_conv
-    endif else begin 
-        local_ini = date_time[0] - jul_conv
-        local_fin = date_time[n_elements(date_time) - 1] - jul_conv
-    endelse    
-     
+         local_ini = date_time[0] + (jul_conv)
+         local_fin = date_time[n_elements(date_time) - 1] + jul_conv
+     endif else begin 
+         local_ini = date_time[0] - jul_conv
+         local_fin = date_time[n_elements(date_time) - 1] - jul_conv
+     endelse    
+     local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes')
+     midday = fltarr(n_elements(local_time)/720)
      local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes') 
      midday = fltarr(n_elements(local_time)/720)
 
-     for i = 0, n_elements(midday)-1 do begin
-        if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
+    for i = 0, n_elements(midday)-1 do begin
+        
         ; Define color based on even/odd index
         if info.utc LT 0 then begin
-
+                if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
 
                 if i LT n_elements(midday)-1 then begin
             
@@ -164,17 +165,18 @@ set_up
                         
                 endif               
         endif else begin
+                if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
                 if i LT n_elements(midday)-1 then begin
-                
+
                     cgPolygon, [local_time[(i*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[(i*720)]-0.25], $
                             [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
                     
                 endif 
         endelse    
-
-       
     endfor
 
+print, 'max DP2: ', max(dp2)
+print, 'min DP2: ', min(dp2)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
