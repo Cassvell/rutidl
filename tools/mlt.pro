@@ -56,8 +56,11 @@ function mlt, station_code, ut
     if mhem eq 'E' then mlon_tmp = mlon else mlon_tmp = mlon -180 
     
     
+
+    caldat, ut, mh, dy, yr, ut_h
+    mlt = ut_h + (glon_tmp / 15 ) + (mlon_tmp / 15)
     
-    mlt = ut + (glon_tmp / 15 )
-    ;print, 'magnetic local time: ', mlt
+
+
     return, mlt
 end

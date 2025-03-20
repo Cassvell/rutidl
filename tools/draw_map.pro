@@ -44,7 +44,7 @@ END
 PRO map
 On_error, 2
 COMPILE_OPT idl2, HIDDEN
-    path = '../rutidl/'
+    path = '/home/isaac/longitudinal_studio/fig/'
     psfile =  path+'map.eps'
 
 
@@ -53,7 +53,7 @@ COMPILE_OPT idl2, HIDDEN
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=3., font=0, /encapsulated, $
     /nomatch, XSize=16, YSize=10
     
-    cgMap_set, 10, 140, /CONTINENTS, /FILL_CONTINENTS, /HORIZON, $
+    cgMap_set, 10, 30, /CONTINENTS, /FILL_CONTINENTS, /HORIZON, $
     ISOTROPIC=ISOTROPIC, /MOLLWEIDE, /GRID, CON_COLOR  = cgColor("gray"), BACKGROUND = "cyan"
    
     x = [0, 0.5, 0, -0.5]
@@ -94,10 +94,6 @@ COMPILE_OPT idl2, HIDDEN
     CGPLOTS, cyg.longeo, cyg.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12 
     cgText, cyg.longeo, cyg.latgeo*1.12, 'CYG', alignment = 0.5
 
-    kny = obscoord('kny')
-    CGPLOTS, kny.longeo, kny.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12  
-    cgText, kny.longeo, kny.latgeo*0.8, 'KNY', alignment = 0.5
-
     kak = obscoord('kak')
     CGPLOTS, kak.longeo, kak.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'Gold', THICK=12  
     cgText, kak.longeo, kak.latgeo*1.05, 'KAK', alignment = 0.5
@@ -106,7 +102,7 @@ COMPILE_OPT idl2, HIDDEN
     CGPLOTS, hon.longeo, hon.latgeo, PSYM = 8, SYMSIZE=4, COLOR = 'orange', THICK=12  
     cgText, hon.longeo, hon.latgeo*1.1, 'HON', alignment = 0.5
 
-
+  
 
     cgPS_Close, density = 300, width = 1000
 

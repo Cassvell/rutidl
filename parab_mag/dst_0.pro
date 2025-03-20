@@ -192,13 +192,14 @@ FUNCTION param_Q, Ey, symH_avr
             IF FINITE(mean_Y[0]) NE 0 then begin
                 IF n_elements(mean_Y) EQ n_elements(mean_X) and n_elements(mean_Y) GE 3 THEN BEGIN
                     result = LINFIT(mean_X, mean_Y, YFIT=yfit)
-                    ;WINDOW, j
-                    ;print, bins[j]
+                   ; WINDOW, j
+                   ; print, bins[j]
                     ;plot, mean_X, mean_Y, psym=4, background=255, color=0, THICK=2.0, xtitle='diff sym-H', ytitle='sym-H'        
                     ;oplot, [MIN(mean_X), MAX(mean_X)], [result[0] + result[1]*MIN(mean_X), result[0] + (result[1])*MAX(mean_X)], color=0
         
                     params[j,0] = result[0] ; INTERSECCIÓN
                     params[j,1] = result[1] ; PENDIENTE
+
                 ENDIF 
             ENDIF
         ENDIF

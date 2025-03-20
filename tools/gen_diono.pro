@@ -142,7 +142,7 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
     
     M_pb = n_terms(fr_wdif_pb, 50, n)
     M_hp = n_terms(fr_wdif_hp, 50, n)
-        
+    M_lp = n_terms(fr_wdif_hp, 50, n)     
     IF KEYWORD_SET(dig_filter) THEN BEGIN
 ; define filtering   
 	top=0.0 
@@ -154,6 +154,9 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, (M_pb))
        ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, top, 50, M_hp)
         coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, highpass_u/fny, 50, M_hp)
+
+        coeff_prc   = DIGITAL_FILTER(0, highpass_l/fny, 50, M_hp)
+        coeff_prc2  = DIGITAL_FILTER(passband_u/fny, highpass_u/fny, 50, M_hp)
         print,'top: ', top
        ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, (1.0/(0.5*3600.0))/fny, 50, M_hp)
         print, 'M para pasabandas es: ', M_pb
@@ -166,6 +169,8 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
 ; define disturbing effects 
         Bddyn        = CONVOL(Bdiono, coeff_ddyn, /edge_wrap)
         Bdp2         = CONVOL(Bdiono, coeff_dp2, /edge_wrap)  
+        Bprc         = CONVOL(Bdiono, coeff_prc, /edge_wrap)  
+        Bpcr2        = CONVOL(Bdiono, coeff_prc2, /edge_wrap)  
     ENDIF
     
     IF KEYWORD_SET(simple_filter) THEN BEGIN
@@ -174,13 +179,15 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
       ;  PRINT,  Bddyn  
     ENDIF
     
-    structure = {diono: FLTARR(n), ddyn : FLTARR(n), dp2 : FLTARR(n), $
-                 p_a : FLTARR(n), baseline : FLTARR(n), $
+    structure = {diono: FLTARR(n), ddyn : FLTARR(n), dp2 : FLTARR(n), prc : FLTARR(n),$
+                 p_a : FLTARR(n), baseline : FLTARR(n), prc2 : FLTARR(n), $
                  f_k : FLTARR(n), pws : FLTARR(n), fn : 0.}
 
     structure.diono     = Bdiono[*] 
     structure.ddyn      = Bddyn[*]
     structure.dp2       = BDP2[*]
+    structure.prc       = Bprc[*]
+    structure.prc2       = Bpcr2[*]
     structure.f_k       = fk[*]
     structure.pws       = power_s[*]
     structure.fn        = fny

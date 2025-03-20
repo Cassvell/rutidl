@@ -1,4 +1,4 @@
-PRO make_psfig_composed, asymH, H, power, xwt, ddyn, period, coi, date_i, date_f, path, station_code	
+PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, station_code	
         @set_up_commons
         set_up
 	On_error, 2
@@ -48,7 +48,7 @@ PRO make_psfig_composed, asymH, H, power, xwt, ddyn, period, coi, date_i, date_f
     TICKLEN=0.04,$
     CHARTHICK=1.5
 
-    ytitle = TeXtoIDL('H_{loc} [nT]')
+    ytitle = TeXtoIDL('\Delta H_{loc} [nT]')
 cgAxis,YAxis=0, yrange=[down, up], $
     YTITLE = ytitle, $
     ystyle=1,$  
@@ -58,49 +58,13 @@ cgAxis,YAxis=0, yrange=[down, up], $
 
    
 cgAxis, YAxis=1, yrange=[down, up], $                        
-    COLOR='white', $
-    ytickformat='(A1)',$
+    COLOR='black', $
+   ; ytickformat='(A1)',$
     ystyle=1, $
     CHARSIZE = 1.2,$
     CHARTHICK=1.5
 ;###############################################################################               
 ;############################################################################### 
-    up2 = max(asymH)
-    down2 = min(asymH)
-
-    cgplot, date_time, asymH, background='white', color='black', XMINOR=8, XTICKFORMAT='(A1)', YTICKFORMAT='(A1)',$
-    POSITION=[.1, .66, .8, .92], xstyle=1, ystyle = 5, yrange=[down2, up2], /noerase, /nodata
-    
-    cgOPlot,  date_time, asymH, color = 'blue'
-
-    ytitle = TeXtoIDL('H_{loc} [nT]')
-
-    CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
-    COLOR='black', $
-    XTICKFORMAT='(A1)',$
-    XSTYLE=1,$ 
-    XMINOR=8,$
-    XTICKS=file_number,$
-    CHARSIZE = 1.2, $
-    TICKLEN=0.04,$
-    CHARTHICK=1.5
-
-
-    cgAxis,YAxis=0, yrange=[down2, up2], $
-        YTITLE = ytitle, $
-        ystyle=5,$  
-        ytickformat='(A1)',$
-        COLOR='black', $  
-        CHARSIZE = 1.2,$
-        CHARTHICK=1.5
-
-
-        cgAxis, YAxis=1, yrange=[down2, up2], $                        
-        COLOR='blue', $
-        YTITLE = 'ASYM - H [nT]', $
-        ystyle=1, $
-        CHARSIZE = 1.2,$
-        CHARTHICK=1.5
 ; Define the levels and colors used in CGCONTOUR
           ; Data range for the colorbar
 
@@ -324,7 +288,7 @@ XTICKINTERVAL = 1, charsize=1.2, /noerase;,  xTITLE = 'Time [days]'
 
 nColors = !D.TABLE_SIZE
 
-title = Textoidl('Ddyn correlation')
+title = Textoidl('DDEF correlation')
 
 tickNames = STRING(levels, FORMAT='(F4.1)')
 
