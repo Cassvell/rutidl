@@ -169,8 +169,8 @@ H = fillnan(H)
     ;print, Q
     path='/home/isaac/longitudinal_studio/fig/magdata/'
     path2 = '/home/isaac/longitudinal_studio/fig/'
-    ;wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
-    ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+    wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
+    ;ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
    ; ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
     END

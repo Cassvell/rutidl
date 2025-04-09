@@ -102,20 +102,20 @@ set_up
     rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     Q = rc.Q
     
-    plot, date_time[3260:4880], dp2[3260:4880], yrange=[min(dp2), max(dp2)], XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
-    XTICKLAYOUT = 2, XTICKINTERVAL = 1, xminor=24
+    ;plot, date_time[3260:4880], dp2[3260:4880], yrange=[min(dp2), max(dp2)], XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
+    ;XTICKLAYOUT = 2, XTICKINTERVAL = 1, xminor=24
     ;oplot, date_time[3260:4320], AL[3260:4320], color=60
     ;oplot, date_time[3260:4320], asymH[3260:4320], color=100
     ;oplot, date_time[3260:4320], H[3260:4320], color=200
-    threshold= 23.37
-    OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1
-    OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [threshold,threshold], LINESTYLE=3, thick=2
-    OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [threshold*(-1),threshold*(-1)], LINESTYLE=3, thick=2
-    oplot, [date_time[3685], date_time[3685]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=2
-    oplot, [date_time[3950], date_time[3950]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=2
-    oplot, [date_time[3930], date_time[3930]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=1
-    oplot, [date_time[4255], date_time[4255]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=1
-    ;dp2vsQ, diono[3260:4400], asymH[3260:4400], dp2[3260:4400], Q[3260:4400], prc[3260:4400],H[3260:4400],station_code
+    ;threshold= 23.37
+    ;OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1
+    ;OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [threshold,threshold], LINESTYLE=3, thick=2
+    ;OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [threshold*(-1),threshold*(-1)], LINESTYLE=3, thick=2
+    ;oplot, [date_time[3685], date_time[3685]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=2
+    ;oplot, [date_time[3950], date_time[3950]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=2
+    ;oplot, [date_time[3930], date_time[3930]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=1
+    ;oplot, [date_time[4255], date_time[4255]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=1
+    dp2vsQ, diono[3260:4400], asymH[3260:4400], dp2[3260:4400], Q[3260:4400], prc[3260:4400],H[3260:4400],station_code
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################

@@ -61,7 +61,7 @@ PRO set_up
     
     node_gic    = ['lav', 'qro', 'maz', 'rmy']
     l           = N_ELEMENTS(node_gic)   
-    set_var = {local_dir : '/home/isaac/geomstorm/rutidl/', $
+    set_var = {local_dir : '/home/isaac/rutidl/', $
                Mega_dir  : '/home/isaac/datos/',$               
                google_dir  : '/home/isaac/google_sync/datos/',$
                gic_dir   : '/home/isaac/MEGAsync/GICS/gic_rout/',$

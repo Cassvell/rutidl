@@ -55,6 +55,7 @@ info = stationlist(class, station_code)
 
 
 cgplot, asymH[ini4:fin4], diono[ini4:fin4], position = [0.16, .15, 0.9, 0.9], xstyle=5, ystyle=5, xrange=[min(asymH), 350],/nodata
+;cgplot, asymH[ini4:fin4], diono[ini4:fin4], position = [0.16, .15, 0.9, 0.9], xstyle=5, ystyle=5, xrange=[min(asymH), 350],/nodata
 
 x = [0, 0.5, 0, -0.5]
 y = [0.5, 0, -0.5, 0]
@@ -66,6 +67,7 @@ USERSYM, x, y, /FILL
 ;cgOPlot, asymH[ini:fin], diono[ini:fin], PSYM=8, color='blue', SYMSIZE=2
 ;cgOPlot, asymH[ini2:fin2], diono[ini2:fin2], PSYM=8, color='orange', SYMSIZE=2
 ;cgOPlot, asymH[ini3:fin3], diono[ini3:fin3], PSYM=8, color='purple', SYMSIZE=2
+cgOPlot, asymH[ini4:fin4], prc[ini4:fin4], PSYM=8, color='gray', SYMSIZE=2
 cgOPlot, asymH[ini4:fin4], diono[ini4:fin4], PSYM=8, color='red', SYMSIZE=2
 cgAXIS, XAXIS = 0,$   
 xminor=8,$
@@ -102,16 +104,22 @@ CHARSIZE = 1.2 ,$
 CHARTHICK=1.6   
 
 corr5 = correlate(asymH[ini4:fin4],diono[ini4:fin4])
-corr=correlate(asymH,diono)
-P = Textoidl('R^2')
+corr=correlate(asymH[ini4:fin4], prc[ini4:fin4])
 
 
-cgtext, 0.7, 0.7, STRING(P, corr5, FORMAT='(A, ": ", F6.2)'), /NORMAL, $
+P = Textoidl('\rho_1')
+P2 = Textoidl('\rho_2')
+
+cgtext, 0.7, 0.8, STRING(P, corr5, FORMAT='(A, ": ", F6.2)'), /NORMAL, $
 ALIGNMENT=0.5, CHARSIZE=1.65, color='black'
+
+cgtext, 0.7, 0.7, STRING(P2, corr, FORMAT='(A, ": ", F6.2)'), /NORMAL, $
+ALIGNMENT=0.5, CHARSIZE=1.65, color='black'
+
 
 ini_time = 13 + info.utc 
 fin_time = 17 + info.utc
-title = STRING(STRUPCASE(station_code), ini_time, fin_time,FORMAT='(A, ". Period (LT): ", I02,":25","-", I02,":50","h")')
+title = STRING(STRUPCASE(station_code), ini_time, fin_time,FORMAT='(A, " LT:  ", I02,"25","-", I02,"50","h")')
 
 x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
 y = 0.93   

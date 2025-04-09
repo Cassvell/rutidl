@@ -38,6 +38,7 @@ PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, stati
     cgplot, date_time, H, background='white', color='black', XTICKFORMAT='(A1)', XMINOR=8, YTICKFORMAT='(A1)', $
     POSITION=[.1, .66, .8, .92], xstyle=1, ystyle = 5, thick=3
     
+    cgtext, 0.7, 0.7, '(a)', color='black', /normal, TT_FONT='Helvetica Bold', charsize = 2
     CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
     COLOR='black', $
     XTICKFORMAT='(A1)',$
@@ -95,32 +96,7 @@ cgAxis, YAxis=1, yrange=[down, up], $
     cgCOLORBAR, NCOLORS=nColors, POSITION=[0.38, 0.87, 0.64, 0.89], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
     Charsize= 1.0,  title=title, vertical=1, right=1 ; Moves title and labels to the right
 
-
-    ;l1 = 1600.0
-    ;l2 = 1100.0
-    ;l3 = 675.0
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l1,l1], color='yellow', thick=2
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l2,l2], color='yellow', thick=2
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [l3,l3], color='yellow', thick=2
-
-    ;print, 'frequency ranges of significant Ddyn [Hz]:'
-    ;print,  string(1.0/l1, 1.0/l2, 1.0/l3,  FORMAT='(E12.5, X, E12.5, X, E12.5)')
-
-    ;print, 'period ranges of significant Ddyn [Hz]:'
-    ;print,  string(l1/60.0, l2/60.0, l3/60.0, FORMAT='(F7.1, X, F7.1, X, F7.1)')
-
-    ;p2 = 1400.0
-    ;p1 = 1100.0
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p1,p1], color='red', thick=2
-    ;cgoplot, [!X.CRANGE[0], !X.CRANGE[1]], [p2,p2], color='red', thick=2
-
-    ;print, 'frequency ranges of Ddyn peak energy:'
-    ;print,  string(1.0/p2, 1.0/p1, FORMAT='(E12.5, X, E12.5)')
-    ;print, 'period ranges of Ddyn peak energy:'
-    ;print,  string(p2/60.0, p1/60.0, FORMAT='(F7.1, X, F7.1)')
-; Check that colors and levels are properly defined before passing to cgColorbar
-
-;print, 'pico de potencia, rango de frecuencia, rango de periodo'
+    cgtext, 0.7, 0.42, '(b)', color='white', /normal, TT_FONT='Helvetica Bold', charsize = 2
 
     freq_series = 1/(period*60)
     j = where((freq_series LE (1.0/7200)) AND (freq_series GE (1.0/240000)), count)
@@ -294,6 +270,8 @@ tickNames = STRING(levels, FORMAT='(F4.1)')
 
 cgCOLORBAR, NCOLORS=nColors, POSITION=[0.1, 0.87, 0.36, 0.89], $
 RANGE=[minPower, maxPower], Charsize= 1.0,  title=title, vertical=1, right=1 ;
+
+cgtext, 0.7, 0.15, '(c)', color='white', /normal, TT_FONT='Helvetica Bold', charsize = 2
 
 ;###############################################################################
 ;###############################################################################
