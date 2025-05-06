@@ -68,17 +68,19 @@ FUNCTION str_data, date
 ;extracting data and denfining an structure data
         if file_name eq path+'/kp/daily/kp_'+date+'.txt' then begin
         DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0, doy : 0,$
-                      Kp: 0, Kp_str: '', Ap: 0}
+                      Kp: 0, Kp_str: ' ', Ap: 0}
 
 		r_kp = REPLICATE(DataStruct, number_of_lines-header)	                
 		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,X,I02,I4,I02,A1,I04)'          
         endif
+
         if file_name eq path+'/kp/daily/kp_'+date+'.dat' then begin
+
                 DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0,$
-                      Kp: 0, Kp_str: '', Ap: 0}
+                      Kp: 0, Kp_str: ' ', Ap: 0}
 
 		r_kp = REPLICATE(DataStruct, number_of_lines-header)	                
-		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,X,I02,I2,A1,I04)'                
+		READS, data[header:number_of_lines-1], r_kp, FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,X,I02,4X,I2,A1, I8)'                
         endif
                 		
 		RETURN, r_kp

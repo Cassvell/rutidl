@@ -119,7 +119,7 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
   ;  PRINT, dst
     dp2   = dionstr.dp2
     ddyn  = dionstr.ddyn
-
+    ;print, ddyn
 ;###############################################################################         
 ;###############################################################################
 ; define device and color parameters 
@@ -297,18 +297,25 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
 ;###############################################################################       
      d_H = TeXtoIDL('\DeltaH_{' + STRUPCASE(station_code) + '}') 
 ;###############################################################################   [0.5,0.7,0.95,0.9]   
-     ; up = MAX(new_dH)
-     ;down=MIN(new_dH)
+
     if max(new_dH) eq max(new_dst) then up = max(new_dH) else up = max(new_dst)
     if min(new_dH) eq min(new_dst) then down = min(new_dH) else down = min(new_dst)
 
+    ; up = MAX(180) 
+    ;down=MIN(new_dH)
+    ;
      CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
      COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.11,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
      
      cgOPlot, time, new_dH, color = 'black', thick=3, linestyle=0
      cgOPlot, time, new_dst, color = 'GRN5', thick=3, linestyle=0     
+    l = (28.1 * !PI)/180
+    dst_l = (new_dst * cos(l)) + new_dp2 +new_ddyn
+
+    cgOPlot, time, dst_l, color = 'red', thick=3, linestyle=0     
+
    
         AXIS, XAXIS = 0, XRANGE=[0,file_number],$
                          ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
@@ -345,14 +352,14 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          YTICKFORMAT='(A1)',$
                          CHARSIZE = 1.4 ,$
                          CHARTHICK=1.6                                                                                            
-;###############################################################################                                 
+;###############################################################################                            
 ;############################################################################### 
      up_diono=max(new_idiff)
      down_diono=min(new_idiff)
     ; print,  new_idiff
      cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
      COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.51,0.95,0.68], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
+     POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
      THICK=2, /NODATA   
 
@@ -398,17 +405,17 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
     ;IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn) ELSE up = max(new_dp2)
     ;IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn) ELSE down = min(new_dp2)
 ;###############################################################################
-    up  = 50
-    down= -50
+    up  = 45
+    down= -45
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
      cgPLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.11,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.51,0.95,0.68], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
     
 
-    cgOPLOT, time, new_ddyn, COLOR='black' , LINESTYLE=0, THICK=1  
+    cgOPLOT, time, new_ddyn, COLOR='black' , LINESTYLE=0, THICK=2
   
 ;###############################################################################     
     cgOPLOT, time, new_dp2, COLOR='red', THICK=3    
@@ -455,20 +462,25 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          CHARTHICK=1.6          
 ;###############################################################################
 ;first panel legend 
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.804,0.804,0.807,0.807], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.767,0.767,0.770,0.770], color = 'GRN5', /NORMAL , /FILL  
-        
-        XYOUTS, 0.85, 0.8 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+
+    H_recons = Textoidl('\DeltaH_{R}')
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.304,0.304,0.307,0.307], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.267,0.267,0.270,0.270], color = 'GRN5', /NORMAL , /FILL  
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.230,0.230,0.233,0.233], color = 'red', /NORMAL , /FILL  
+
+        XYOUTS, 0.85, 0.3 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.85, 0.762 , /NORMAL, 'Sym-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+        XYOUTS, 0.85, 0.262 , /NORMAL, 'Sym-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+
+        XYOUTS, 0.85, 0.23 , /NORMAL, H_recons, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 ;###############################################################################                     
 ;second panel legend                   
-        cgPolygon, [0.91,0.94,0.94,0.91], [0.461,0.461,0.464,0.464], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.91,0.94,0.94,0.91], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
+        cgPolygon, [0.91,0.94,0.94,0.91], [0.661,0.661,0.664,0.664], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.91,0.94,0.94,0.91], [0.624,0.624,0.627,0.627], color = 'red', /NORMAL , /FILL  
         
-        XYOUTS, 0.87, 0.456 , /NORMAL, 'Ddyn', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.87, 0.656 , /NORMAL, 'Ddyn', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.87, 0.42 , /NORMAL, 'DP2', CHARSIZE = 1.2, CHARTHICK=chr_thick1     
+        XYOUTS, 0.87, 0.62 , /NORMAL, 'DP2', CHARSIZE = 1.2, CHARTHICK=chr_thick1     
                 
 ;###############################################################################                                                            
   !P.Font = 1
@@ -478,7 +490,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
    XYOuts, 0.91, 0.54, '(b)', /Normal, $
    Alignment=0.5, Charsize=3.2, CHARTHICK= 10, font=1  
    
-   XYOuts, 0.53, 0.41, '(d)', /Normal, $
+   XYOuts, 0.53, 0.21, '(d)', /Normal, $
    Alignment=0.5, Charsize=3.2, CHARTHICK= 10;, font=1  
    
    XYOuts, 0.12, 0.2, '(c)', /Normal, $

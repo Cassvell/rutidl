@@ -147,7 +147,8 @@ PRO list_kmex, date_i, date_f
     station         = set_var.gms[FIX(station_idx)]        ;0:coeneo, 1:teoloyuca, 2:tucson, 3:bsl, 4:iturbide
     station_code    = set_var.gms_code[FIX(station_idx)]   ;0;coe, 1:teo, 2:tuc, 3:bsl, 4:itu	
 ;###############################################################################
-    k_mex   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'k', station, FIX(station_idx))    
+    data   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)    
+    k_mex = data.k
     k_mex   = add_nan(k_mex, 9.0, 'greater')                                                        ;built my self function to add nan to time series
 
     km_max = FINDGEN(N_ELEMENTS(k_mex)/8)
@@ -196,11 +197,11 @@ PRO list_kmex, date_i, date_f
 
                 print, y_idx[i], m_idx[i], d_idx[i], hr_idx[i], $
                 k_mex_idx[i], $
-                FORMAT = '(I4, "-", I02, "-", I02, 2X, I02, 4X, I03)' 
+                FORMAT = '(I4, "-", I02, "-", I02, 2X, I02, 4X, F10.1)' 
   
                ; PRINTF, lun, y_idx_tmp[i], m_idx_tmp[i], d_idx_tmp[i], $
                ; hr_idx_tmp[i], k_mex_idx_tmp[i], $ 
-               ; FORMAT = '(I4, "-", I02, "-", I02, 2X, I02, 4X, I03)'                         
+               ; FORMAT = '(I4, "-", I02, "-", I02, 2X, I02, 4X, F03)'                         
         ENDIF        
     ENDFOR
     ;CLOSE,lun
