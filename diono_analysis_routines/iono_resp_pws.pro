@@ -60,7 +60,7 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
     TGM_n = event_case([yr_i,mh_i,dy_i])  
 ;###############################################################################   
     time= findgen(file_number*1440)/1440.0
-    ;time_h = findgen(file_number*24)/24.0    
+    time_h = findgen(file_number*24)/24.0    
     Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
 	station_class = ''
@@ -99,6 +99,11 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
 
     H = fillnan(H)
     print, max(H)
+
+    t = tec2018()
+
+    pcTEC = t.pcTEC
+    ;print, pcTEC
  ;   PRINT, H;N_ELEMENTS(H), N_ELEMENTS(Bsq)
 ;###############################################################################    
 ;###############################################################################             
@@ -137,19 +142,19 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
             
         ENDELSE   
 
-    make_psfig, f_k, fn, pws, symH, H, diono, ddyn, dp2, time,$
+    make_psfig, f_k, fn, pws, symH, H, diono, ddyn, dp2, pcTEC, time, time_h,$
         path, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code   
     ENDIF
 
     IF keyword_set(png) THEN BEGIN        
-    make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, $
+    make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, time_h, $
         SG_beg, SG_end, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]               
     ENDIF 
 
 END
 
 
-PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, time,$
+PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcTEC, time, time_h,$
         path, date_i, date_f, station_code
 
 	On_error, 2
@@ -294,66 +299,10 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
    
    ;XYOUTS, 0.34, .82, 'DP2', /NORMAL, $
    ;COLOR=negro, ALIGNMENT=0.5, CHARSIZE=2, CHARTHICK=1.5    
-;###############################################################################       
-     d_H = TeXtoIDL('\DeltaH_{' + STRUPCASE(station_code) + '}') 
-;###############################################################################   [0.5,0.7,0.95,0.9]   
-
-    if max(new_dH) eq max(new_dst) then up = max(new_dH) else up = max(new_dst)
-    if min(new_dH) eq min(new_dst) then down = min(new_dH) else down = min(new_dst)
-
-    ; up = MAX(180) 
-    ;down=MIN(new_dH)
-    ;
-     CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
-     COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.11,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
-     
-     cgOPlot, time, new_dH, color = 'black', thick=3, linestyle=0
-     cgOPlot, time, new_dst, color = 'GRN5', thick=3, linestyle=0     
-    l = (28.1 * !PI)/180
-    dst_l = (new_dst * cos(l)) + new_dp2 +new_ddyn
-
-    cgOPlot, time, dst_l, color = 'red', thick=3, linestyle=0     
-
-   
-        AXIS, XAXIS = 0, XRANGE=[0,file_number],$
-                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
-                         XTICKS=file_number, $
-                         XMINOR=8, $
-                         ;XTICKV=FIX(days), $       
-                         XTICKFORMAT='(A1)',$
-                        ; COLOR=negro, $
-                         CHARSIZE = 3.0 , $
-                         TICKLEN=0.04,$
-                         CHARTHICK=3.5 
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
-                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
-                         XTICKS=file_number, $
-                         XMINOR=8, $
-                         ;XTICKV=FIX(days), $       
-                         XTICKFORMAT='(A1)',$
-                        ; COLOR=negro, $
-                         CHARSIZE = 0.9, $
-                         CHARTHICK=1.5,$
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = 'G. Indices [nT]', $                          
-                         ;COLOR=negro, $
-                         YSTYLE=2, $
-                         CHARSIZE = 1.2,$
-                         CHARTHICK=1.6 
-                        
-        AXIS, YAXIS = 1, YRANGE=[down,up], $
-                        ; COLOR=negro, $                                                                      
-                         YSTYLE=2, $       
-                         YTICKFORMAT='(A1)',$
-                         CHARSIZE = 1.4 ,$
-                         CHARTHICK=1.6                                                                                            
+                                                                           
 ;###############################################################################                            
 ;############################################################################### 
+
      up_diono=max(new_idiff)
      down_diono=min(new_idiff)
     ; print,  new_idiff
@@ -429,7 +378,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          XTITLE='', $                         
                          XMINOR=8, $
                          XTICKNAME=X_label, $
-                         ;XTICKFORMAT='(A1)',$
+                         XTICKFORMAT='(A1)',$
                          COLOR=negro, $
                          CHARSIZE = 1.2, $
                          TICKLEN=0.04,$
@@ -461,18 +410,132 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, tim
                          CHARSIZE = 1.2,$
                          CHARTHICK=1.6          
 ;###############################################################################
-;first panel legend 
+;###############################################################################       
+     d_H = TeXtoIDL('\DeltaH_{' + STRUPCASE(station_code) + '}') 
+;###############################################################################   [0.5,0.7,0.95,0.9]   
+
+    if max(new_dH) eq max(new_dst) then up = max(new_dH) else up = max(new_dst)
+    if min(new_dH) eq min(new_dst) then down = min(new_dH) else down = min(new_dst)
+
+    ; up = MAX(180) 
+    ;down=MIN(new_dH)
+    ;
+     CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
+     COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
+     POSITION=[0.5,0.31,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
+     
+     cgOPlot, time, new_dH, color = 'black', thick=3, linestyle=0
+     cgOPlot, time, new_dst, color = 'GRN5', thick=3, linestyle=0     
+    l = (28.1 * !PI)/180
+    dst_l = (new_dst * cos(l)) + new_dp2 +new_ddyn
+
+    cgOPlot, time, dst_l, color = 'red', thick=3, linestyle=0     
+
+   
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                        ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                        XTICKS=file_number, $
+                        XMINOR=8, $
+                        ;XTICKV=FIX(days), $       
+                        XTICKFORMAT='(A1)',$
+                    ; COLOR=negro, $
+                        CHARSIZE = 0.9, $
+                        CHARTHICK=1.5,$
+                        TICKLEN=0.04
+
+                         
+        AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                         ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=file_number, $
+                         XMINOR=8, $
+                         ;XTICKV=FIX(days), $       
+                         XTICKFORMAT='(A1)',$
+                        ; COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down,up], $
+                         YTITLE = 'G. Indices [nT]', $                          
+                         ;COLOR=negro, $
+                         YSTYLE=2, $
+                         CHARSIZE = 1.2,$
+                         CHARTHICK=1.6 
+                        
+        AXIS, YAXIS = 1, YRANGE=[down,up], $
+                        ; COLOR=negro, $                                                                      
+                         YSTYLE=2, $       
+                         YTICKFORMAT='(A1)',$
+                         CHARSIZE = 1.4 ,$
+                         CHARTHICK=1.6                                                                                            
+;###############################################################################                            
+;############################################################################### 
+t = tec2018()
+tec = t.TEC 
+med = t.MEDT
+
+pctec = (TEC-med)/med
+down = min(pctec)
+up = max(pctec)
+dTec = Textoidl('\DeltaTEC')
+
+CGPLOT, time_h, pctec, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
+COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
+POSITION=[0.5,0.11,0.95,0.28], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
+
+cgOPlot, time_h, pctec, color = 'red', thick=4, linestyle=0  
+;cgOPlot, time_h, med, color = 'black', thick=3, linestyle=0  
+
+
+days = [24, 25, 26, 27, 28, 29, 30]
+    AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                    XTICKS=file_number, $
+                    XTITLE='', $                         
+                    XMINOR=8, $
+                    XTICKNAME=X_label, $
+                  ;  XTICKFORMAT='(A1)',$
+                    COLOR=negro, $
+                    CHARSIZE = 1.2, $
+                    TICKLEN=0.04,$
+                    CHARTHICK=1.6
+                                    
+   AXIS, XAXIS = 1, XRANGE=[0,file_number],$
+                    ;XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                    XTICKS=file_number, $
+                    XMINOR=8, $
+                    ;XTICKV=FIX(days), $       
+                    XTICKFORMAT='(A1)',$
+                   ; COLOR=negro, $
+                    CHARSIZE = 0.9, $
+                    CHARTHICK=1.5,$
+                    TICKLEN=0.04
+
+   AXIS, YAXIS = 0, YRANGE=[down,up], $
+                    YTITLE = dTec+' [TECu]', $                          
+                    ;COLOR=negro, $
+                    YSTYLE=2, $
+                    CHARSIZE = 1.2,$
+                    CHARTHICK=1.6 
+                   
+   AXIS, YAXIS = 1, YRANGE=[down,up], $
+                   ; COLOR=negro, $                                                                      
+                    YSTYLE=2, $       
+                    YTICKFORMAT='(A1)',$
+                    CHARSIZE = 1.4 ,$
+                    CHARTHICK=1.6                 
 
     H_recons = Textoidl('\DeltaH_{R}')
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.304,0.304,0.307,0.307], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.267,0.267,0.270,0.270], color = 'GRN5', /NORMAL , /FILL  
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.230,0.230,0.233,0.233], color = 'red', /NORMAL , /FILL  
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.404,0.404,0.407,0.407], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.367,0.367,0.370,0.370], color = 'GRN5', /NORMAL , /FILL  
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.330,0.330,0.333,0.333], color = 'red', /NORMAL , /FILL  
 
-        XYOUTS, 0.85, 0.3 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.85, 0.4 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.85, 0.262 , /NORMAL, 'Sym-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+        XYOUTS, 0.85, 0.36 , /NORMAL, 'Sym-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 
-        XYOUTS, 0.85, 0.23 , /NORMAL, H_recons, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+        XYOUTS, 0.85, 0.325 , /NORMAL, H_recons, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 ;###############################################################################                     
 ;second panel legend                   
         cgPolygon, [0.91,0.94,0.94,0.91], [0.661,0.661,0.664,0.664], color = 'black', /NORMAL, /FILL    
