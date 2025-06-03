@@ -81,10 +81,11 @@ PRO index_plot, date_i, date_f
         PRINT,  'GMS selected: '+station+' IAGA code: '+station_code  
 ;###############################################################################
 ; define K variables   
-    p      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
-    kp = p.kp
+    ;p      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+    ;kp = p.kp
     lidx   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code) 
-    kmex =  lidx.k  
+    kmex =  lidx.K
+
     kmex   = add_nan(kmex, 9.0, 'greater')   
 ;###############################################################################
 ; Generate the time series DH and Dst                                
@@ -94,18 +95,25 @@ PRO index_plot, date_i, date_f
     dst = pidx.dst
 ;###############################################################################                
 ;identifying NAN percentage values in the Time Series
-    
+    ndata_k = n_elements(kmex)
+	
+	date_time =    TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0), $
+	FINAL=JULDAY(mh_f, dy_f, yr_f, 21), UNITS='Hours', step_size = 1)
+	
+	caldat, date_time, month, day, year, hour
+
+
     dH = add_nan(dH, 100.0, 'greater')
     dH = add_nan(dH, 999999.0, 'equal')
 
-    print, FORMAT='(6X,"kp",10X,"kmex")'
-    print, MAX(kp), MAX(kmex)
-	
-	print, '##########################################################'
 
-    print, FORMAT='(6X,"Dst",10X,"dH")'
-    print, MIN(dst), MIN(dH)
-     
+	print, FORMAT='("dia",2X,"Hora",5X,"dH")'
+	for i = 0, file_number-1 do begin
+		min_H = min(dH[i*24:(i+1)*24-1], j, /nan)
+
+		print, string(day[i*24], hour[j], min_H, format = '(X,I02, 3X, I02, 3X, F7.2)')
+	endfor    
+	plot, date_time, dH, XTICKS=file_number, xminor=8, xstyle=1, ystyle=1
 
 
 	path = set_var.local_dir+'output/indexplot/'+station_code	
@@ -119,7 +127,7 @@ PRO index_plot, date_i, date_f
 		
 	ENDELSE    
     psfile =  path+'idx_'+Date+'.eps'
-    makepsfigure, kp, kmex, dst, dH, psfile, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]
+   ;makepsfigure, kp, kmex, dst, dH, psfile, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]
 END
 
 
@@ -155,7 +163,6 @@ compile_opt idl2, HIDDEN
 
 	CHARSIZE = 1.8
     CHARTHICK=2.0
-	print, 'kmex pick', max(kmex, /nan)
 
 	chr_size1 = 0.9
 	chr_thick1= 1.0
@@ -229,7 +236,7 @@ compile_opt idl2, HIDDEN
 		; Draw the top part (the larger value)
 		cgPolygon, [0.+space, 0.125-space, 0.125-space, 0.+space]+tot_days[i], $
 				  [bottom_value, bottom_value, top_value+step, top_value+step], COLOR=top_color, /fill
-		print, Kp[i], kmex[i]
+		;print, Kp[i], kmex[i]
 	ENDFOR
 	
 

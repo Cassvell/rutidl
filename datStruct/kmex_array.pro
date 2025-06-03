@@ -64,7 +64,7 @@ FUNCTION kmex, date, station_code
 		file_name = dir+name	
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 	    IF opened_files NE N_ELEMENTS(file) THEN BEGIN
-	        name = STRLOWCASE(station_code)+'_'+date+'.index.early'
+	        name = STRLOWCASE(station_code)+'_'+date+'.k_index.early'
 			
 			file_name = dir+name
 	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
@@ -179,15 +179,15 @@ FUNCTION kmex_array, date_i, date_f, station_code, HELP=help
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')	
-                data_file_name_km[i] = data_path+station_code+'_'+string_date[i]+'.index.final'
+                data_file_name_km[i] = data_path+station_code+'_'+string_date[i]+'.k_index.final'
                 		       
 		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
 	            IF opened_files NE N_ELEMENTS(file) THEN begin
-	                data_file_name_km[i] = data_path+station_code+'_'+string_date[i]+'.index.early'    
+	                data_file_name_km[i] = data_path+station_code+'_'+string_date[i]+'.k_index.early'    
 	            ENDIF 	
                                          
         ENDFOR
-       ; print, data_file_name_km
+        ;print, data_file_name_km
         exist_data_file_km   = FILE_TEST(data_file_name_km)
         ;print, exist_data_file_km
         capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))

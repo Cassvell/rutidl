@@ -54,8 +54,8 @@ set_up
     idate0 = string(yr_i, mh_i, format='(I4,I02)')
     TGM_n = event_case([yr_i,mh_i,dy_i])  
 ;###############################################################################   
-    date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,0), $
-    FINAL=JULDAY(mh_f, dy_f, yr_f, 23,59), UNITS='Minutes')
+    date_time = TIMEGEN(START=JULDAY(mh_i, 16, yr_i, 0,0), $
+    FINAL=JULDAY(mh_f, 26, yr_f, 23,59), UNITS='Minutes')
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	  
     Date    = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 ;###############################################################################
@@ -94,6 +94,9 @@ set_up
     ddyn  = dionstr.ddyn
     prc   = dionstr.prc
     prc2   = dionstr.prc2
+    
+    ndata = n_elements(symH[1440:n_elements(symH)-2880])-2
+
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
@@ -101,27 +104,32 @@ set_up
 ;###############################################################################
     rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     Q = rc.Q
-    
-    ;plot, date_time[3260:4880], dp2[3260:4880], yrange=[min(dp2), max(dp2)], XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
-    ;XTICKLAYOUT = 2, XTICKINTERVAL = 1, xminor=24
-    ;oplot, date_time[3260:4320], AL[3260:4320], color=60
-    ;oplot, date_time[3260:4320], asymH[3260:4320], color=100
-    ;oplot, date_time[3260:4320], H[3260:4320], color=200
-    ;threshold= 23.37
-    ;OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1
-    ;OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [threshold,threshold], LINESTYLE=3, thick=2
-    ;OPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [threshold*(-1),threshold*(-1)], LINESTYLE=3, thick=2
-    ;oplot, [date_time[3685], date_time[3685]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=2
-    ;oplot, [date_time[3950], date_time[3950]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=2
-    ;oplot, [date_time[3930], date_time[3930]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=1
-    ;oplot, [date_time[4255], date_time[4255]], [!Y.CRANGE[0],  !Y.CRANGE[1]], linestyle=1
-    dp2vsQ, diono[3260:4400], asymH[3260:4400], dp2[3260:4400], Q[3260:4400], prc[3260:4400],H[3260:4400],station_code
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
     path='/home/isaac/longitudinal_studio/fig/diono_recons/'
     psfile = path+station_code+'_'+Date+'.eps'
+    
+    up  = 65
+    down= -65
+    PLOT, date_time, ddyn[1440:ndata], XTICKS=file_number, XMINOR=8, BACKGROUND =0, $
+     COLOR=255, CHARSIZE = 1, CHARTHICK=1, $
+     POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 1, YSTYLE = 1, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
+     XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /nodata
 
+    OPLOT, date_time, ddyn, COLOR= 150, LINESTYLE=0, THICK=3       
+    OPLOT, date_time, dp2, COLOR=250, THICK=2    
+
+
+    time = 3900
+    ;    dp2_max = min(dp2, time)
+    OPLOT, [date_time[time], date_time[time]], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=2
+
+    caldat, date_time[time], month ,day, year, hour, minute
+
+    print, string(day, hour, minute, format = '(I3,2X, I02,":",I02)')
+
+    stop, 'fin'
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=10, YSize=4
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
@@ -148,23 +156,14 @@ set_up
    ALIGNMENT=0.5, CHARSIZE=2.1, CHARTHICK=1.5               
 
 ;###############################################################################       
-     d_H = TeXtoIDL('\DeltaH_{' + STRUPCASE(station_code) + '}') 
-
     up  = 65
     down= -65
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
-     cgPLOT, date_time, ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
+     cgPLOT, date_time, ddyn[1440:ndata], XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 5, YSTYLE = 5, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
      XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /NOERASE, /NODATA
-
-    ;cgPolygon, [date_time[(0)], date_time[(600)], date_time[(600)], date_time[(0)]], $
-    ;                        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-
-    ;cgPolygon, [date_time[(19380)], date_time[(20100)], date_time[(20100)], date_time[(19380)]], $
-    
-    ;                        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
                             
     jul_conv = abs((0.1/2.4)*info.utc)
     print, jul_conv
@@ -176,9 +175,12 @@ set_up
         local_ini = date_time[0] - jul_conv
         local_fin = date_time[n_elements(date_time) - 1] - jul_conv
     endelse    
+
     local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes')
+
     midday = fltarr(n_elements(local_time)/720)
-    
+    midddays = n_elements(symH[1440:n_elements(symH)-2880])/720
+
     if info.utc LT 0 then begin
         if local_time[(0*720)]-0.25 GE date_time[0] then begin
         cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
@@ -188,8 +190,9 @@ set_up
             [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
         endelse
 
-    if date_time[20159]-(local_time[(28*719)]-0.25) LE 0.5 and date_time[20159] - (local_time[(28*719)]-0.25)GE 0 then begin
-        cgPolygon, [local_time[(28*719)]-0.25, date_time[20159], date_time[20159], local_time[(28*719)]-0.25], $
+        print, midddays
+    if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[(midddays*719)]-0.25)GE 0 then begin
+        cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata], date_time[ndata], local_time[(midddays*719)]-0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
 
     endif 
@@ -205,20 +208,15 @@ endif else begin
         endelse    
 
 
-
-    if date_time[20159]-(local_time[(28*719)]-0.25) LE 0 then begin
-        cgPolygon, [local_time[(27*720)]+0.25, date_time[20159], date_time[20159], local_time[(27*720)]+0.25], $
+    if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0 then begin
+        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endif else begin
-        cgPolygon, [local_time[(27*720)]+0.25, local_time[(28*719)]+0.25, local_time[(28*719)]+0.25, local_time[(27*720)]+0.25], $
+        cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[(midddays*719)]+0.25, local_time[(midddays*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endelse  
 endelse
 
-    
-
-
-    print, date_time[20159]-(local_time[(27*720)]-0.25) 
     
     for i = 0, n_elements(midday)-1 do begin
         

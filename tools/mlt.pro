@@ -38,29 +38,31 @@
 
 
 function mlt, station_code, ut
-    On_error, 2
     COMPILE_OPT idl2, HIDDEN
     
+    ; Get station information
     class = gms_class(station_code)
     info = stationlist(class, station_code)
 
-
-
+    ; Extract longitudes and hemispheres
     glon = info.glon
     ghem = info.ghem2
-
     mlon = info.mlon
     mhem = info.mhem2
 
-    if ghem eq 'E' then glon_tmp = glon else glon_tmp = glon - 180
-    if mhem eq 'E' then mlon_tmp = mlon else mlon_tmp = mlon -180 
-    
-    
+    ; Adjust longitudes based on hemisphere
+    glon_tmp = (ghem eq 'E') ? fix(glon) : fix(glon - 180)
+    mlon_tmp = (mhem eq 'E') ? fix(mlon) : fix(mlon - 180)
 
+    ; Convert UT to hours and calculate MLT
     caldat, ut, mh, dy, yr, ut_h
-    mlt = ut_h + (glon_tmp / 15 ) + (mlon_tmp / 15)
+    mlt = ut_h + (glon_tmp / 15) + (mlon_tmp / 15)
+
+    ; Ensure MLT is within 0-24 range
+    mlt = mlt mod 24
+    for i = 0, n_elements(mlt)-1 do begin
+        if mlt[i] lt 0 then mlt[i] = mlt[i] + 24
+    end
     
-
-
     return, mlt
 end
