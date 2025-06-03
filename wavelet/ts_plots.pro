@@ -22,7 +22,7 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     psfile =  path+station_code+'_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
-    /nomatch, XSize=10, YSize=8
+    /nomatch, XSize=10, YSize=6
 
     class = gms_class(station_code)
     info = stationlist(class, station_code)
@@ -36,7 +36,7 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     down = min(symH)
     ;if max(H) GT max(symH) then up = max(H) else up = max(symH)
     up = max(symH)
-    cgplot, date_time, symH, background='white', color='black', position=[.1, .725, .92, .90], XTICKFORMAT=['LABEL_DATE'], $
+    cgplot, date_time, symH, background='white', color='black', position=[.1, .725, .9, .90], XTICKFORMAT=['LABEL_DATE'], $
     xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, $
     yrange=[down,up], /nodata
 
@@ -124,27 +124,8 @@ endelse
        
     endfor
 
-   ; cgPolygon, [date_time[720], date_time[1440], date_time[1440], date_time[720]], $
-   ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
 
-   ; cgPolygon, [date_time[720*(midddays-2)], date_time[720*(midddays-1)], date_time[720*(midddays-1)], date_time[720*(midddays-2)]], $
-   ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
-
-
-    cgoplot,date_time, symH, color='GRN5', thick=2, linestyle=0   
-
-    cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=2,COLOR='black' 
-    ;first panel legend 
-    cgPolygon, [0.78,0.81,0.81,0.78], [0.661,0.661,0.664,0.664], color = 'orange', /NORMAL, /FILL    
-    cgPolygon, [0.78,0.81,0.81,0.78], [0.62,0.62,0.623,0.623], color = 'GRN5', /NORMAL, /FILL    
-    ;cgPolygon, [0.78,0.81,0.81,0.78], [0.579,0.579, 0.582,0.582], color = 'black', /NORMAL , /FILL  
-    
-
-    XYOUTS, 0.822, 0.657 , /NORMAL, 'ASYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1    
-
-    XYOUTS, 0.822, 0.615 , /NORMAL, 'SYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
-            
-    ;XYOUTS, 0.822, 0.573 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+    cgoplot,date_time, symH, color='charcoal', thick=1, linestyle=0 
 
     cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
     xtitle='',$
@@ -171,7 +152,7 @@ endelse
     TICKLEN=0.04
 
     cgAXIS, YAXIS = 0, yrange=[down,up],$
-    YTITLE = 'G. Indices [nT]', $                          
+    YTITLE = 'SYMH [nT]', $                          
     ;COLOR=negro, $
     YSTYLE=1, $
     CHARSIZE = 1.2,$
@@ -179,7 +160,7 @@ endelse
 
     cgAXIS, YAXIS = 1,  yrange=[down,up],$
 ; COLOR=negro, $                                                                      
-    YSTYLE=1, $       
+    YSTYLE=5, $       
     YTICKFORMAT='(A1)',$
     CHARSIZE = 1.2 ,$
     CHARTHICK=1.6    
@@ -189,10 +170,64 @@ endelse
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
-    down = -150
+
+    down = -20
+    up = 50
+    cgplot, date_time, SQ, background='white', color='black', position=[.1, .725, .9, .90], XTICKFORMAT=['LABEL_DATE'], $
+    xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, $
+    yrange=[down,up], /nodata, /noerase
+
+    cgoplot,date_time, SQ, color='blue', thick=2, linestyle=0   
+
+    cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=2,COLOR='black' 
+
+    cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
+    xtitle='',$
+    xstyle=1,$
+    xminor=8,$
+    XTICKUNITS=['day'], $
+    XTICKLAYOUT = 0, $
+    XTICKINTERVAL = 1, $       
+    XTICKFORMAT='(A1)',$
+   ; COLOR=negro, $
+    CHARSIZE = 1.0 , $
+    TICKLEN=0.04,$
+    CHARTHICK=3.5 
+    
+    cgAXIS, XAXIS = 1, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$
+    xminor=8,$
+    XTICKUNITS=['day'], $
+    XTICKLAYOUT = 0, $
+    XTICKINTERVAL = 1, $      
+    XTICKFORMAT='(A1)',$
+; COLOR=negro, $
+    CHARSIZE =1.0, $
+    CHARTHICK=1.5,$
+    TICKLEN=0.04
+
+    cgAXIS, YAXIS = 0, yrange=[down,up],$                     
+    YTICKFORMAT='(A1)',$
+    YSTYLE=5, $
+    CHARSIZE = 1.2,$
+    CHARTHICK=1.6 
+
+    cgAXIS, YAXIS = 1,  yrange=[down,up],$
+    YTITLE = 'Diurnal Variation [nT]', $     
+    COLOR='blue', $                                                                      
+    YSTYLE=1, $         
+    CHARSIZE = 1.2 ,$
+    CHARTHICK=1.6    
+
+;##################################################################################################################
+;##################################################################################################################
+;##################################################################################################################
+;##################################################################################################################
+;##################################################################################################################
+
+    down = min(asymH)
     up = max(asymH)
 
-    cgplot, date_time, asymH, background='white', color='black', position=[.1, .16, .92, .715], XTICKFORMAT=['LABEL_DATE'], $
+    cgplot, date_time, asymH, background='white', color='black', position=[.1, .16, .9, .705], XTICKFORMAT=['LABEL_DATE'], $
     xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, $
     yrange=[down,up], /nodata,/noerase
 
@@ -286,20 +321,18 @@ endelse
    ; cgPolygon, [date_time[720*(midddays-2)], date_time[720*(midddays-1)], date_time[720*(midddays-1)], date_time[720*(midddays-2)]], $
    ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
 
-    cgOPlot, date_time, asymH, color='orange', thick=2
-    cgOPlot, date_time, SQ, color='blue', thick=2 
-    cgOPlot, date_time, Bdiono, color = 'red', thick=2
+    cgOPlot, date_time, asymH, color='black', thick=1
 
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=2,COLOR='black' 
     ;first panel legend 
-    cgPolygon, [0.78,0.81,0.81,0.78], [0.661,0.661,0.664,0.664], color = 'orange', /NORMAL, /FILL    
-    cgPolygon, [0.78,0.81,0.81,0.78], [0.62,0.62,0.623,0.623], color = 'GRN5', /NORMAL, /FILL    
+    ;cgPolygon, [0.78,0.81,0.81,0.78], [0.661,0.661,0.664,0.664], color = 'orange', /NORMAL, /FILL    
+    ;cgPolygon, [0.78,0.81,0.81,0.78], [0.62,0.62,0.623,0.623], color = 'GRN5', /NORMAL, /FILL    
     ;cgPolygon, [0.78,0.81,0.81,0.78], [0.579,0.579, 0.582,0.582], color = 'black', /NORMAL , /FILL  
     
 
-    XYOUTS, 0.822, 0.657 , /NORMAL, 'ASYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1    
+    ;XYOUTS, 0.822, 0.657 , /NORMAL, 'ASYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1    
 
-    XYOUTS, 0.822, 0.615 , /NORMAL, 'SYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+    ;XYOUTS, 0.822, 0.615 , /NORMAL, 'SYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
             
     ;XYOUTS, 0.822, 0.573 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 
@@ -310,7 +343,7 @@ endelse
     XTICKUNITS=['day'], $
     XTICKLAYOUT = 0, $
     XTICKINTERVAL = 1, $       
-    XTICKFORMAT=['LABEL_DATE'],$
+    XTICKFORMAT='(A1)',$
    ; COLOR=negro, $
     CHARSIZE = 1.0 , $
     TICKLEN=0.04,$
@@ -328,7 +361,7 @@ endelse
     TICKLEN=0.04
 
     cgAXIS, YAXIS = 0, yrange=[down,up],$
-    YTITLE = 'G. Indices [nT]', $                          
+    YTITLE = 'ASYMH [nT]', $                          
     ;COLOR=negro, $
     YSTYLE=1, $
     CHARSIZE = 1.2,$
@@ -336,7 +369,7 @@ endelse
 
     cgAXIS, YAXIS = 1,  yrange=[down,up],$
 ; COLOR=negro, $                                                                      
-    YSTYLE=1, $       
+    YSTYLE=5, $       
     YTICKFORMAT='(A1)',$
     CHARSIZE = 1.2 ,$
     CHARTHICK=1.6    
@@ -345,11 +378,69 @@ endelse
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
-;##################################################################################################################
-;##################################################################################################################
-;##################################################################################################################
-;##################################################################################################################
-;##################################################################################################################
+
+    down = -150
+    up = 100
+
+    cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .16, .9, .705], XTICKFORMAT=['LABEL_DATE'], $
+    xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, $
+    yrange=[down,up], /nodata,/noerase
+
+
+    cgOPlot, date_time, Bdiono, color='red', thick=4
+
+    cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=2,COLOR='black' 
+    ;first panel legend 
+    ;cgPolygon, [0.78,0.81,0.81,0.78], [0.661,0.661,0.664,0.664], color = 'orange', /NORMAL, /FILL    
+    ;cgPolygon, [0.78,0.81,0.81,0.78], [0.62,0.62,0.623,0.623], color = 'GRN5', /NORMAL, /FILL    
+    ;cgPolygon, [0.78,0.81,0.81,0.78], [0.579,0.579, 0.582,0.582], color = 'black', /NORMAL , /FILL  
+    
+
+    ;XYOUTS, 0.822, 0.657 , /NORMAL, 'ASYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1    
+
+;    XYOUTS, 0.822, 0.615 , /NORMAL, 'SYM-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+            
+    ;XYOUTS, 0.822, 0.573 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+
+    cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
+    xtitle='Universal Time',$
+    xstyle=1,$
+    xminor=8,$
+    XTICKUNITS=['day'], $
+    XTICKLAYOUT = 0, $
+    XTICKINTERVAL = 1, $       
+    XTICKFORMAT=['LABEL_DATE'],$
+   ; COLOR=negro, $
+    CHARSIZE = 1.2 , $
+    TICKLEN=0.04,$
+    CHARTHICK=3.5 
+    
+    cgAXIS, XAXIS = 1, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$
+    xminor=8,$
+    XTICKUNITS=['day'], $
+    XTICKLAYOUT = 0, $
+    XTICKINTERVAL = 1, $      
+    XTICKFORMAT='(A1)',$
+; COLOR=negro, $
+    CHARSIZE =1.0, $
+    CHARTHICK=1.5,$
+    TICKLEN=0.04
+
+    cgAXIS, YAXIS = 0, yrange=[down,up],$
+    YTITLE = 'G. Indices [nT]', $                          
+    ;COLOR=negro, $
+    YSTYLE=5, $
+    CHARSIZE = 1.2,$
+    CHARTHICK=1.6 
+
+    cgAXIS, YAXIS = 1,  yrange=[down,up],$
+    COLOR='red', $         
+    YTITLE = 'Ionospheric Disturbance [nT]', $                                                             
+    YSTYLE=1, $       
+    ;YTICKFORMAT='(A1)',$
+    CHARSIZE = 1.2 ,$
+    CHARTHICK=1.6    
+
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
