@@ -189,10 +189,10 @@ endelse
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
-    down = min(asymH)
+    down = -150
     up = max(asymH)
 
-    cgplot, date_time, symH, background='white', color='black', position=[.1, .54, .92, .715], XTICKFORMAT=['LABEL_DATE'], $
+    cgplot, date_time, asymH, background='white', color='black', position=[.1, .16, .92, .715], XTICKFORMAT=['LABEL_DATE'], $
     xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, $
     yrange=[down,up], /nodata,/noerase
 
@@ -287,6 +287,8 @@ endelse
    ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
 
     cgOPlot, date_time, asymH, color='orange', thick=2
+    cgOPlot, date_time, SQ, color='blue', thick=2 
+    cgOPlot, date_time, Bdiono, color = 'red', thick=2
 
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=2,COLOR='black' 
     ;first panel legend 
@@ -308,7 +310,7 @@ endelse
     XTICKUNITS=['day'], $
     XTICKLAYOUT = 0, $
     XTICKINTERVAL = 1, $       
-    XTICKFORMAT='(A1)',$
+    XTICKFORMAT=['LABEL_DATE'],$
    ; COLOR=negro, $
     CHARSIZE = 1.0 , $
     TICKLEN=0.04,$
@@ -344,248 +346,11 @@ endelse
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
-
-updiono = 100
-downdiono = -160
-
-cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .355, .92, .53], XTICKFORMAT=['LABEL_DATE'], $
-XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, yrange=[downdiono, updiono],/noerase, /nodata
-
-
-if info.utc LT 0 then begin
-    if local_time[(0*720)]-0.25 GE date_time[0] then begin
-    cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
-[!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endif else begin
-        cgPolygon, [date_time[0], local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, date_time[0]], $
-        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endelse
-
-if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[((midddays)*719)]-0.25)GE 0 then begin
-    cgPolygon, [local_time[((midddays)*719)]-0.25, date_time[ndata], date_time[ndata], local_time[((midddays)*719)]-0.25], $
-[!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-
-endif 
-
-
-endif else begin
-    if local_time[(0*720)]-0.25 GE date_time[0] then begin
-        cgPolygon, [local_time[(0*720)]+0.25, local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, local_time[(0*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endif else begin
-            cgPolygon, [date_time[0], local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, date_time[0]], $
-            [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endelse    
-
-
-
-    if date_time[ndata]-(local_time[((midddays)*719)]-0.25) LE 0 then begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endif else begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[((midddays)*719)]+0.25, local_time[((midddays)*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endelse  
-endelse
-
-for i = 0, n_elements(midday)-1 do begin
-    ; Define color based on even/odd index
-   
-    if info.utc LT 0 then begin
-         if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
-
-         if i LT n_elements(midday)-1 and i GT 0 then begin
-        
-                cgPolygon, [local_time[(i*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[(i*720)]+0.25], $
-                        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
-                    
-            endif               
-    endif else begin
-            if i LT n_elements(midday)-1 and i GT 0 then begin
-             if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
-                cgPolygon, [local_time[(i*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[(i*720)]-0.25], $
-                        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
-                
-            endif 
-    endelse          
-endfor
-
-cgoplot,date_time, Bdiono, color='red', thick = 3
-cgoplot,date_time, SQ, color='blue', thick =3
-
-
-cgPolygon, [0.78,0.81,0.81,0.78], [0.279,0.279, 0.282,0.282], color = 'red', /NORMAL, /FILL    
-cgPolygon, [0.78,0.81,0.81,0.78], [0.238,0.238, 0.235,0.235], color = 'blue', /NORMAL , /FILL  
-
-P_I = Textoidl('P_{I,' + STRING(station_code) + '}')
-
-XYOUTS, 0.822, 0.275 , /NORMAL, P_I, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
-        
-XYOUTS, 0.822, 0.23 , /NORMAL, 'SQ', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
-
-
-cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
-xminor=8,$
-xtitle='Universal Time [h], March 2015',$
-xstyle=1,$
-XTICKUNITS=['day'], $
-XTICKLAYOUT = 0, $
-XTICKINTERVAL = 1, $       
-XTICKFORMAT='(A1)',$
-; COLOR=negro, $
-CHARSIZE = 1.2 , $
-TICKLEN=0.04,$
-CHARTHICK=3.5 
-
-cgAXIS, XAXIS = 1, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$
-xminor=8,$
-XTICKUNITS=['day'], $
-XTICKLAYOUT = 0, $
-XTICKINTERVAL = 1, $      
-XTICKFORMAT='(A1)',$
-; COLOR=negro, $
-CHARSIZE =1.0, $
-CHARTHICK=1.5,$
-TICKLEN=0.04
-
-cgAXIS, YAXIS = 0, yrange=[downdiono, updiono],$
-YTITLE = '[nT]', $                          
-;COLOR=negro, $
-YSTYLE=1, $
-CHARSIZE = 1.2,$
-CHARTHICK=1.6 
-
-cgAXIS, YAXIS = 1, yrange=[downdiono, updiono],$
-YTITLE = '', $      
-YTICKFORMAT='(A1)',$                   
-;COLOR=negro, $
-YSTYLE=1, $
-CHARSIZE = 1.2,$
-CHARTHICK=1.6 
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
-
-
-
-up = max(SQ)
-down = min(SQ)
-
-cgplot, date_time, SQ, background='white', color='black', position=[.1, .17, .92, .345], XTICKFORMAT=['LABEL_DATE'], $
-XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, yrange=[down, up],/noerase, /nodata
-
-
-if info.utc LT 0 then begin
-    if local_time[(0*720)]-0.25 GE date_time[0] then begin
-    cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
-[!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endif else begin
-        cgPolygon, [date_time[0], local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, date_time[0]], $
-        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endelse
-
-if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[((midddays)*719)]-0.25)GE 0 then begin
-    cgPolygon, [local_time[((midddays)*719)]-0.25, date_time[ndata], date_time[ndata], local_time[((midddays)*719)]-0.25], $
-[!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-
-endif 
-
-
-endif else begin
-    if local_time[(0*720)]-0.25 GE date_time[0] then begin
-        cgPolygon, [local_time[(0*720)]+0.25, local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, local_time[(0*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endif else begin
-            cgPolygon, [date_time[0], local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, date_time[0]], $
-            [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endelse    
-
-
-
-    if date_time[ndata]-(local_time[((midddays)*719)]-0.25) LE 0 then begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endif else begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[((midddays)*719)]+0.25, local_time[((midddays)*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endelse  
-endelse
-
-for i = 0, n_elements(midday)-1 do begin
-    ; Define color based on even/odd index
-   
-    if info.utc LT 0 then begin
-         if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
-
-         if i LT n_elements(midday)-1 and i GT 0 then begin
-        
-                cgPolygon, [local_time[(i*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[(i*720)]+0.25], $
-                        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
-                    
-            endif               
-    endif else begin
-            if i LT n_elements(midday)-1 and i GT 0 then begin
-             if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
-                cgPolygon, [local_time[(i*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[(i*720)]-0.25], $
-                        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
-                
-            endif 
-    endelse          
-endfor
-
-cgoplot,date_time, SQ, color='blue', thick =3
-
-
-cgPolygon, [0.78,0.81,0.81,0.78], [0.279,0.279, 0.282,0.282], color = 'red', /NORMAL, /FILL    
-cgPolygon, [0.78,0.81,0.81,0.78], [0.238,0.238, 0.235,0.235], color = 'blue', /NORMAL , /FILL  
-
-P_I = Textoidl('P_{I,' + STRING(station_code) + '}')
-
-XYOUTS, 0.822, 0.275 , /NORMAL, P_I, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
-        
-XYOUTS, 0.822, 0.23 , /NORMAL, 'SQ', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
-
-
-cgAXIS, XAXIS = 0, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$   
-xminor=8,$
-xtitle='Universal Time [h], March 2015',$
-xstyle=1,$
-XTICKUNITS=['day'], $
-XTICKLAYOUT = 0, $
-XTICKINTERVAL = 1, $       
-XTICKFORMAT=['LABEL_DATE'],$
-; COLOR=negro, $
-CHARSIZE = 1.2 , $
-TICKLEN=0.04,$
-CHARTHICK=3.5 
-
-cgAXIS, XAXIS = 1, xrange = [date_time[0], date_time[n_elements(date_time)-1]],$
-xminor=8,$
-XTICKUNITS=['day'], $
-XTICKLAYOUT = 0, $
-XTICKINTERVAL = 1, $      
-XTICKFORMAT='(A1)',$
-; COLOR=negro, $
-CHARSIZE =1.0, $
-CHARTHICK=1.5,$
-TICKLEN=0.04
-
-cgAXIS, YAXIS = 0, yrange=[down, up],$
-YTITLE = '[nT]', $                          
-;COLOR=negro, $
-YSTYLE=1, $
-CHARSIZE = 1.2,$
-CHARTHICK=1.6 
-
-cgAXIS, YAXIS = 1, yrange=[down, up],$
-YTITLE = '', $      
-YTICKFORMAT='(A1)',$                   
-;COLOR=negro, $
-YSTYLE=1, $
-CHARSIZE = 1.2,$
-CHARTHICK=1.6 
 ;##################################################################################################################
 ;##################################################################################################################
 ;##################################################################################################################
