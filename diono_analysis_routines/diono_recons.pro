@@ -112,24 +112,14 @@ set_up
     
     up  = 65
     down= -65
-    PLOT, date_time, ddyn[1440:ndata], XTICKS=file_number, XMINOR=8, BACKGROUND =0, $
-     COLOR=255, CHARSIZE = 1, CHARTHICK=1, $
-     POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 1, YSTYLE = 1, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
-     XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /nodata
+    ;PLOT, date_time, ddyn[1440:ndata], XTICKS=file_number, XMINOR=8, BACKGROUND =0, $
+    ; COLOR=255, CHARSIZE = 1, CHARTHICK=1, $
+    ; POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 1, YSTYLE = 1, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
+    ; XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /nodata
 
-    OPLOT, date_time, ddyn, COLOR= 150, LINESTYLE=0, THICK=3       
-    OPLOT, date_time, dp2, COLOR=250, THICK=2    
+    ;OPLOT, date_time, ddyn, COLOR= 150, LINESTYLE=0, THICK=3       
+    ;OPLOT, date_time, dp2, COLOR=250, THICK=2    
 
-
-    time = 3900
-    ;    dp2_max = min(dp2, time)
-    OPLOT, [date_time[time], date_time[time]], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=2
-
-    caldat, date_time[time], month ,day, year, hour, minute
-
-    print, string(day, hour, minute, format = '(I3,2X, I02,":",I02)')
-
-    stop, 'fin'
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=10, YSize=4
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
@@ -212,7 +202,7 @@ endif else begin
         cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endif else begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[(midddays*719)]+0.25, local_time[(midddays*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
+        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endelse  
 endelse
