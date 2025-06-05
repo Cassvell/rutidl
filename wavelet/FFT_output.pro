@@ -172,9 +172,9 @@ caldat, date_time, month, day, year, ut, min
 ;ZOOM data
 ; 
 ndata = n_elements(symH)
-;symH = symH[1440:ndata-2881]
+symH = symH[1440:ndata-2881]
 SQ = SQ[1440:ndata-2881]
-;asymH = asymH[1440:ndata-2881]
+asymH = asymH[1440:ndata-2881]
 Bdiono = Bdiono[1440:ndata-2881]
 
 
@@ -186,7 +186,7 @@ print, string(min(Bdiono, k), ut[k], min[k], format = '("min Bdiono: ", I4,X, I3
     path='/home/isaac/longitudinal_studio/fig/magdata/'
     path2 = '/home/isaac/longitudinal_studio/fig/'
     ;wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
-    ;ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
-     ip_plots, symH, Q, P, V, T, E, Bz, Bt, asymH,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
+    ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+    ;ip_plots, symH, Q, P, V, T, E, Bz, Bt, asymH,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
     END

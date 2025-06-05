@@ -56,8 +56,12 @@ set_up
 ;###############################################################################   
     date_time = TIMEGEN(START=JULDAY(mh_i, 16, yr_i, 0,0), $
     FINAL=JULDAY(mh_f, 26, yr_f, 23,59), UNITS='Minutes')
+
+
+
+
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	  
-    Date    = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
+    Date    = STRING(yr_i, mh_i, 16, yr_f, mh_f, 26, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 ;###############################################################################
 
     data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
@@ -95,8 +99,9 @@ set_up
     prc   = dionstr.prc
     prc2   = dionstr.prc2
     
-    ndata = n_elements(symH[1440:n_elements(symH)-2880])-2
-
+    ndata_original = n_elements(dp2)
+    ndata = n_elements(dp2[1440:ndata_original-2881])
+    PRINT, ndata, n_elements(date_time)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
@@ -108,11 +113,11 @@ set_up
 ;###############################################################################
 ;###############################################################################
     path='/home/isaac/longitudinal_studio/fig/diono_recons/'
-    psfile = path+station_code+'_'+Date+'.eps'
+    psfile = path+station_code+'_'+Date+'_V2.eps'
     
     up  = 65
     down= -65
-    ;PLOT, date_time, ddyn[1440:ndata], XTICKS=file_number, XMINOR=8, BACKGROUND =0, $
+    ;PLOT, date_time, ddyn[1440:ndata_original-2881], XTICKS=file_number, XMINOR=8, BACKGROUND =0, $
     ; COLOR=255, CHARSIZE = 1, CHARTHICK=1, $
     ; POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 1, YSTYLE = 1, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
     ; XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /nodata
@@ -150,7 +155,7 @@ set_up
     down= -65
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
-     cgPLOT, date_time, ddyn[1440:ndata], XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
+     cgPLOT, date_time, ddyn[1440:ndata_original-2881], XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 5, YSTYLE = 5, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
      XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /NOERASE, /NODATA
@@ -169,7 +174,7 @@ set_up
     local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes')
 
     midday = fltarr(n_elements(local_time)/720)
-    midddays = n_elements(symH[1440:n_elements(symH)-2880])/720
+    midddays = n_elements(symH[2880:(1440*4)-1])/720
 
     if info.utc LT 0 then begin
         if local_time[(0*720)]-0.25 GE date_time[0] then begin
@@ -180,9 +185,10 @@ set_up
             [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
         endelse
 
-        print, midddays
-    if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[(midddays*719)]-0.25)GE 0 then begin
-        cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata], date_time[ndata], local_time[(midddays*719)]-0.25], $
+
+
+    if date_time[ndata-1]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata-1] - (local_time[(midddays*719)]-0.25)GE 0 then begin
+        cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata-1], date_time[ndata-1], local_time[(midddays*719)]-0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
 
     endif 
@@ -197,12 +203,11 @@ endif else begin
             [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
         endelse    
 
-
-    if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0 then begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
+    if date_time[ndata-1]-(local_time[(midddays*719)]-0.25) LE 0 then begin
+        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata-1], date_time[ndata-1], local_time[((midddays-1)*720)]+0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endif else begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
+        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata-1], date_time[ndata-1], local_time[((midddays-1)*720)]+0.25], $
     [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endelse  
 endelse
@@ -240,10 +245,8 @@ print, 'min DP2: ', min(dp2)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
-    cgOPLOT, date_time, ddyn, COLOR='black' , LINESTYLE=0, THICK=3       
-    cgOPLOT, date_time, dp2, COLOR='red', THICK=2    
-    ;cgOPLOT, date_time, SQ, color='blue', THICK=3  
-
+    cgOPLOT, date_time, dp2[1440:ndata_original-2881], COLOR='red', THICK=3    
+    cgOPLOT, date_time, ddyn[1440:ndata_original-2881], color='black', THICK=3  
 
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=4,COLOR='black' 
  

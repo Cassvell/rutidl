@@ -18,7 +18,7 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     FINAL=JULDAY(mh_f, 26, yr_f, 23,59), UNITS='Minutes')
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	
     Date    = STRING(2015, 03, 16, 2015, 03, 26, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
-    file_number    = (JULDAY(03, 26, 2015) - JULDAY(03, 16, 2015))+1
+    file_number    = (JULDAY(03,26, 2015) - JULDAY(03, 16, 2015))+1
     psfile =  path+station_code+'_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
@@ -32,6 +32,9 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     ;TVLCT, R_bak, G_bak, B_bak, /GET     
     ;LOADCT, 39
     ;WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
+
+
+    print, n_elements(date_time), n_elements(Bdiono)
 
     down = -170
     up = 100
