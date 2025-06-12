@@ -44,9 +44,9 @@ PRO set_up
     @set_up_commons
     
     
-    stations    = ['coeneo', 'teoloyucan', 'iturbide']
+    stations    = ['coeneo', 'teoloyucan', 'iturbide', 'juriquilla']
     n           = N_ELEMENTS(stations)
-    stat_code   = ['coe', 'teo', 'itu']
+    stat_code   = ['coe', 'teo', 'itu', 'jur']
     
     intermagnet_station = ['beijing', 'boulder', 'brandon', 'bstenis', 'cocos', 'cheongyang', 'guimar', $
     					   'hartebeesthoek', 'islandpascua', 'kakioka', 'kakadu', 'keetmanshoop', $

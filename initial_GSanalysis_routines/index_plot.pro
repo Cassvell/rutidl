@@ -81,52 +81,38 @@ PRO index_plot, date_i, date_f
         PRINT,  'GMS selected: '+station+' IAGA code: '+station_code  
 ;###############################################################################
 ; define K variables   
-    ;p      = kp_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
-    ;kp = p.kp
-    lidx   = kmex_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code) 
-    kmex =  lidx.K
-
-    kmex   = add_nan(kmex, 9.0, 'greater')   
 ;###############################################################################
 ; Generate the time series DH and Dst                                
 
-    dH   = dh_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
-    pidx = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])   
-    dst = pidx.dst
+
+    data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
+    H = data.H
+    SQ = data.SQ
+    idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    symH = idx.symH
+    asymH = idx.asyH
+    H = add_nan(H, 99999.0, 'equal')  
+    H = add_nan(H, 200.0, 'greater')  
+
+
 ;###############################################################################                
 ;identifying NAN percentage values in the Time Series
-    ndata_k = n_elements(kmex)
-	
-	date_time =    TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0), $
-	FINAL=JULDAY(mh_f, dy_f, yr_f, 21), UNITS='Hours', step_size = 1)
-	
-	caldat, date_time, month, day, year, hour
+  	WINDOW, 0, XSIZE=700, YSIZE=400, TITLE='H data'
+
+	plot, date_time, H, XTICKS=file_number, xminor=8, xstyle=1, ystyle=1
 
 
-    dH = add_nan(dH, 100.0, 'greater')
-    dH = add_nan(dH, 999999.0, 'equal')
-
-
-	print, FORMAT='("dia",2X,"Hora",5X,"dH")'
-	for i = 0, file_number-1 do begin
-		min_H = min(dH[i*24:(i+1)*24-1], j, /nan)
-
-		print, string(day[i*24], hour[j], min_H, format = '(X,I02, 3X, I02, 3X, F7.2)')
-	endfor    
-	plot, date_time, dH, XTICKS=file_number, xminor=8, xstyle=1, ystyle=1
-
-
-	path = set_var.local_dir+'output/indexplot/'+station_code	
-	test = FILE_TEST(path, /DIRECTORY) 
-	IF test EQ 0 THEN BEGIN
+	;path = set_var.local_dir+'output/indexplot/'+station_code	
+	;test = FILE_TEST(path, /DIRECTORY) 
+	;IF test EQ 0 THEN BEGIN
 		FILE_MKDIR, path
 		PRINT, 'PATH directory '+path
 		PRINT, 'created'
-	ENDIF ELSE BEGIN
-		PRINT, ''
+	;ENDIF ELSE BEGIN
+;		PRINT, ''
 		
-	ENDELSE    
-    psfile =  path+'idx_'+Date+'.eps'
+;	ENDELSE    
+    ;psfile =  path+'idx_'+Date+'.eps'
    ;makepsfigure, kp, kmex, dst, dH, psfile, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]
 END
 

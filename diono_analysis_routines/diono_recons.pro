@@ -48,20 +48,30 @@ set_up
 
     
 ;###############################################################################	
+umbral = 0
+
+case station_code of
+  'teo' : umbral = 22.96
+  'gui' : umbral = 19.49
+  'jai' : umbral = 31.07
+  'kak' : umbral = 14.25 
+    ;else umbral = 0
+endcase
+
 ;###############################################################################  
     	
     file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
     idate0 = string(yr_i, mh_i, format='(I4,I02)')
     TGM_n = event_case([yr_i,mh_i,dy_i])  
 ;###############################################################################   
-    date_time = TIMEGEN(START=JULDAY(mh_i, 16, yr_i, 0,0), $
-    FINAL=JULDAY(mh_f, 26, yr_f, 23,59), UNITS='Minutes')
+    date_time = TIMEGEN(START=JULDAY(mh_i, 17, yr_i, 0,0), $
+    FINAL=JULDAY(mh_f, 18, yr_f, 23,59), UNITS='Minutes')
 
 
 
 
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	  
-    Date    = STRING(yr_i, mh_i, 16, yr_f, mh_f, 26, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
+    Date    = STRING(yr_i, mh_i, 17, yr_f, mh_f, 18, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 ;###############################################################################
 
     data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
@@ -99,8 +109,7 @@ set_up
     prc   = dionstr.prc
     prc2   = dionstr.prc2
     
-    ndata_original = n_elements(dp2)
-    ndata = n_elements(dp2[1440:ndata_original-2881])
+    ndata = n_elements(dp2[2880:(1440*4)-1])
     PRINT, ndata, n_elements(date_time)
 ;###############################################################################
 ;###############################################################################
@@ -109,24 +118,21 @@ set_up
 ;###############################################################################
     rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     Q = rc.Q
+
+
+    dp2vsQ, diono[2880:(1440*4)-1], asymH[2880:(1440*4)-1], dp2[2880:(1440*4)-1], $
+    Q[2880:(1440*4)-1], prc[2880:(1440*4)-1],H[2880:(1440*4)-1],station_code
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
     path='/home/isaac/longitudinal_studio/fig/diono_recons/'
-    psfile = path+station_code+'_'+Date+'_V2.eps'
+    psfile = path+station_code+'_'+Date+'.eps'
     
     up  = 65
     down= -65
-    ;PLOT, date_time, ddyn[1440:ndata_original-2881], XTICKS=file_number, XMINOR=8, BACKGROUND =0, $
-    ; COLOR=255, CHARSIZE = 1, CHARTHICK=1, $
-    ; POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 1, YSTYLE = 1, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
-    ; XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /nodata
-
-    ;OPLOT, date_time, ddyn, COLOR= 150, LINESTYLE=0, THICK=3       
-    ;OPLOT, date_time, dp2, COLOR=250, THICK=2    
 
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
-    /nomatch, XSize=10, YSize=4
+    /nomatch, XSize=6, YSize=6
     X_label = xlabel([yr_i, mh_i, dy_i], file_number)
     old_month = month_name(mh_i, 'english') 
     
@@ -134,10 +140,8 @@ set_up
     info = stationlist(class, station_code)
 
     time_title = ' UT [days]'
-    title = STRING(STRUPCASE(station_code), info.mlat, info.mhem, info.mlon, info.mhem2,$
-    FORMAT='(A, ", magnetic lat: ", F7.2, " ", A, ", ", "magnetic lon: ", F7.2," ", A)')
-
-    periodo = 'Period [h]'        
+    title = STRING(STRUPCASE(station_code), Format='(A)')
+     
 ;###############################################################################     
     chr_size1 = 0.9
     chr_thick1= 1.5          
@@ -146,7 +150,7 @@ set_up
     CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.85   
+   y = 0.93  
    XYOUTS, X, y, title, /NORMAL, $
    ALIGNMENT=0.5, CHARSIZE=2.1, CHARTHICK=1.5               
 
@@ -155,9 +159,9 @@ set_up
     down= -65
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
-     cgPLOT, date_time, ddyn[1440:ndata_original-2881], XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
+     cgPLOT, date_time, ddyn[2880:(1440*4)-1], XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.1,0.2,0.9,0.8], XSTYLE = 5, YSTYLE = 5, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
+     POSITION=[0.1,0.1,0.9,0.9], XSTYLE = 5, YSTYLE = 5, XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'],$
      XTICKLAYOUT = 1, XTICKINTERVAL = 1, YRANGE=[down,up], /NOERASE, /NODATA
                             
     jul_conv = abs((0.1/2.4)*info.utc)
@@ -185,7 +189,7 @@ set_up
             [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
         endelse
 
-
+    print, n_elements(dp2), n_elements(date_time), ndata
 
     if date_time[ndata-1]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata-1] - (local_time[(midddays*719)]-0.25)GE 0 then begin
         cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata-1], date_time[ndata-1], local_time[(midddays*719)]-0.25], $
@@ -245,8 +249,13 @@ print, 'min DP2: ', min(dp2)
 ;###############################################################################
 ;###############################################################################
 ;###############################################################################
-    cgOPLOT, date_time, dp2[1440:ndata_original-2881], COLOR='red', THICK=3    
-    cgOPLOT, date_time, ddyn[1440:ndata_original-2881], color='black', THICK=3  
+    cgOPLOT, date_time, dp2[2880:(1440*4)-1], COLOR='red', THICK=2, linestyle=1 
+    
+    j = where(abs(dp2[2880:(1440*4)-1]) GE umbral)
+
+    print, n_elements(date_time)
+    cgOPlot, date_time[min(j):max(j)], dp2[2880+min(j):2880+max(j)], COLOR='red', THICK=3, linestyle=0 
+
 
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=4,COLOR='black' 
  
@@ -289,17 +298,7 @@ print, 'min DP2: ', min(dp2)
     CHARSIZE = 1.2 ,$
     CHARTHICK=1.6    
 ;###############################################################################
-;###############################################################################                     
-;second panel legend                   
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.391,0.391,0.394,0.394], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.79,0.82,0.82,0.79], [0.324,0.324,0.327,0.327], color = 'red', /NORMAL , /FILL  
-        
-        ddyn = Textoidl('H_{DDEF}')
-        dp2 = Textoidl('H_{PPEF}')
-        XYOUTS, 0.83, 0.39 , /NORMAL, Ddyn, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
-                
-        XYOUTS, 0.83, 0.32 , /NORMAL, DP2, CHARSIZE = 1.2, CHARTHICK=chr_thick1     
-                
+;###############################################################################                                     
 ;###############################################################################                                                            
   !P.Font = 1
   ;XYOuts, 0.53, 0.735, '(a)', /Normal, $

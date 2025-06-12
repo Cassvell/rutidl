@@ -7,10 +7,10 @@ set_up
 ndata = (n_elements(asymH))
 
 ;ndays = (JULDAY(mh_f,dy_f,yr_f)-JULDAY(mh_i,dy_i,yr_i))+1
-;asymH = asymH;[250:1089]
-;dp2 = dp2[250:1089]  
-;Q = Q[250:1089]
-;diono = diono[250:1089]  
+asymH = asymH;[250:1089]
+dp2 = dp2;[250:1089]  
+Q = Q;[250:1089]
+diono = diono;[250:1089]  
 ndata = (n_elements(asymH))
     dir=set_var.Mega_dir
     outfile = dir+'pca/'+station_code+'_2015-03-17_2015-03-18.dat'    
@@ -34,8 +34,8 @@ fin2 = 800
 ini3 = 1000
 fin3 = 1140
 
-ini4 = 400
-fin4 = 690
+ini4 = 3650-2880
+fin4 = 3950-2880
 
 
 time = findgen(n_elements(asymH))
@@ -45,7 +45,8 @@ path='/home/isaac/longitudinal_studio/fig/corr/'
 psfile = path+station_code+'_corr.eps'
 
 
-plot, time[0:1140], H[0:1140], color=255
+plot, time[ini4:fin4], asymH[ini4:fin4], color=255
+
 cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
 /nomatch, XSize=6, YSize=6
 
@@ -117,8 +118,12 @@ cgtext, 0.7, 0.7, STRING(P2, corr, FORMAT='(A, ": ", F6.2)'), /NORMAL, $
 ALIGNMENT=0.5, CHARSIZE=1.65, color='black'
 
 
-ini_time = 13 + info.utc 
-fin_time = 17 + info.utc
+ini_time = 12 + info.utc 
+if 17 + info.utc LE 24 then begin
+  fin_time = (17 + info.utc)
+endif else begin
+    fin_time = (17 + info.utc)-24
+endelse
 title = STRING(STRUPCASE(station_code), ini_time, fin_time,FORMAT='(A, " LT:  ", I02,"25","-", I02,"50","h")')
 
 x = (!X.Window[1] - !X.Window[0]) /  2. + !X.Window[0]
