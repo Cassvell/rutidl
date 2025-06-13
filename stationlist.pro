@@ -53,13 +53,14 @@ FUNCTION stationlist, class, station_code
         set_up		
 
         file_name = set_var.local_dir+class+'_stations.csv'
+
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		READCOL, file_name, index, station, code, glat, ghem, glon, ghem2, mlat,  mhem, mlon, mhem2, UTC,  DELIMITER= ',',$
 		FORMAT='I,A,A,F,A,F,A,F,A,F,A,A'
 		
-		
+
 		idx = WHERE(station_code EQ code)
 		
 		info = {glat : 0.0, ghem : '', glon : 0.0 , ghem2 : '', mlat : 0.0, mhem : '', mlon : 0.0, mhem2 : '', utc : 0}

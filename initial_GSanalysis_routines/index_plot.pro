@@ -80,7 +80,16 @@ PRO index_plot, date_i, date_f
         ENDIF
         PRINT,  'GMS selected: '+station+' IAGA code: '+station_code  
 ;###############################################################################
-; define K variables   
+; define time variable  
+
+    date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,0), $
+    FINAL=JULDAY(mh_f, dy_f, yr_f, 23,59), UNITS='Minutes')
+
+
+
+
+    date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])	  
+    ;Date    = STRING(yr_i, mh_i, 17, yr_f, mh_f, 18, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 ;###############################################################################
 ; Generate the time series DH and Dst                                
 
@@ -90,24 +99,46 @@ PRO index_plot, date_i, date_f
     SQ = data.SQ
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
-    asymH = idx.asyH
+    ;asymH = idx.asyH
     H = add_nan(H, 99999.0, 'equal')  
     H = add_nan(H, 200.0, 'greater')  
 
+    class = gms_class(station_code)
+
+	;print, symH
+
+
+    info = stationlist(class, station_code)
+
+    mlat = info.mlat 
+	l = mlat * (!PI/180)
+	H_I = H - (symH * cos(l)) ;+ SQ 
 
 ;###############################################################################                
 ;identifying NAN percentage values in the Time Series
-  	WINDOW, 0, XSIZE=700, YSIZE=400, TITLE='H data'
 
-	plot, date_time, H, XTICKS=file_number, xminor=8, xstyle=1, ystyle=1
+	DEVICE, true=24, retain=2, decomposed=0
+    TVLCT, R_bak, G_bak, B_bak, /GET        
+    LOADCT, 39, /SILENT    
 
+	WINDOW, 0, XSIZE=900, YSIZE=500, TITLE='H data: '+ station_code
+
+	up 		= max(H_I)
+	down 	= min(H)
+
+	plot, date_time, H, XTICKS=file_number, xminor=8, xstyle=1, ystyle=1, background=255, $
+	color=0, CHARTHICK=2.0,     POSITION=[0.1,0.1,0.9,0.9], XTICKFORMAT=['LABEL_DATE', 'LABEL_DATE'], XTICKUNITS=['day', 'month'],$
+    XTICKLAYOUT = 2, XTICKINTERVAL = 1, YRANGE=[down,up]
+	
+	oplot, date_time, SQ, color = 250, thick = 2
+	oplot, date_time, H_I, color = 70, thick = 3
 
 	;path = set_var.local_dir+'output/indexplot/'+station_code	
 	;test = FILE_TEST(path, /DIRECTORY) 
 	;IF test EQ 0 THEN BEGIN
-		FILE_MKDIR, path
-		PRINT, 'PATH directory '+path
-		PRINT, 'created'
+	;	FILE_MKDIR, path
+	;	PRINT, 'PATH directory '+path
+	;	PRINT, 'created'
 	;ENDIF ELSE BEGIN
 ;		PRINT, ''
 		

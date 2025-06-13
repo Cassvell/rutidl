@@ -9,6 +9,7 @@ CASE gms_code of
         'coe'   : class = 'regmex'
         'teo'   : class = 'regmex'
 		'itu'   : class = 'regmex'
+		'jur'	: class = 'regmex'
 		'bmt'   : class = 'intermagnet'
 		'bou'   : class = 'intermagnet'
 		'brd'   : class = 'intermagnet'

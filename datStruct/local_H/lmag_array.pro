@@ -73,8 +73,8 @@ FUNCTION struct, date, station_code, resolution
        ; sts  = string(stats, format = '(A5)')
         dir = set_var.Mega_dir+gms_class+'/'+station_code+'/minV2/'
         
-        file_name = dir+station_code+'_'+date+'.dat'
-;		print, file_name
+        file_name = dir+station_code+'_'+date+'M.dat'
+		print, file_name
         file = FILE_SEARCH(file_name, COUNT=opened_files)       
                 
         IF opened_files NE N_ELEMENTS(file) THEN begin
@@ -140,7 +140,7 @@ FUNCTION lmag_array, date_i, date_f, station_code, resolution
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')    
                 string_date2[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')      
-                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'.dat'               
+                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'M.dat'               
                 file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)         
                 
                 IF opened_files NE N_ELEMENTS(file) THEN begin
