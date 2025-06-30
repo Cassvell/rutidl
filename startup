@@ -14,7 +14,7 @@ COMPILE_OPT IDL2
 DEVICE, RETAIN = 2
 ;Path to example programs and data
 ;DEFSYSV, '!Bowman', $\
-;(FILE_SEARCH('/home/isaac/geomstorm/idl', /FULLY_QUALIFY_PATH, /MARK_DIRECTORY))[0]
+;(FILE_SEARCH('/home/isaac/rutidl', /FULLY_QUALIFY_PATH, /MARK_DIRECTORY))[0]
 
 ;Double precision degrees to radians
 DEFSYSV, '!DDTOR', !DPI/180.0D0, 1
