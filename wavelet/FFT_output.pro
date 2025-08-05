@@ -104,22 +104,22 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     asymH = idx.asyH
     idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     
-    rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
-    Q = rc.Q
+    ;rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    ;Q = rc.Q
     ;symH0 = idx2.symH0
-    ip   = ip_arraym([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
-    Bt = ip.Bt
-    Bz = ip.Bz
-    Bx = ip.Bx 
-    By = ip.By 
-    P = ip.n_p
-    V = ip.Vx
-    Vy = ip.Vy
-    Vz = ip.Vz
-    T = ip.t_p
-    E = ip.Ey
-    a = ae_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
-    AE = a.AE
+    ;ip   = ip_arraym([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    ;Bt = ip.Bt
+    ;Bz = ip.Bz
+    ;Bx = ip.Bx 
+    ;By = ip.By 
+    ;P = ip.n_p
+    ;V = ip.Vx
+    ;Vy = ip.Vy
+    ;Vz = ip.Vz
+    ;T = ip.t_p
+    ;E = ip.Ey
+    ;a = ae_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    ;AE = a.AE
     ;correctedsymH = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;print, correctedsymH.symH_0
     ;symH_0 = correctedsymH.symH_0
@@ -185,8 +185,8 @@ print, string(min(Bdiono, k), ut[k], min[k], format = '("min Bdiono: ", I4,X, I3
     ;print, Q
     path='/home/isaac/longitudinal_studio/fig/magdata/'
     path2 = '/home/isaac/longitudinal_studio/fig/'
-    ;wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
-    ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+    wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
+    ;ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
    ;ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
     END

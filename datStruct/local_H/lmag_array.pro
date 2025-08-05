@@ -68,17 +68,17 @@ FUNCTION struct, date, station_code, resolution
 		gms_class = gms_class(station_code)
 	
 	extension = ''
-	IF resolution EQ 'min' THEN extension = '.dat' ELSE extension = 'h.dat'
+	IF resolution EQ 'min' THEN extension = 'M.dat' ELSE extension = 'h.dat'
 		   
        ; sts  = string(stats, format = '(A5)')
         dir = set_var.Mega_dir+gms_class+'/'+station_code+'/minV2/'
         
-        file_name = dir+station_code+'_'+date+'.dat'
+        file_name = dir+station_code+'_'+date+'M.dat'
 ;		print, file_name
         file = FILE_SEARCH(file_name, COUNT=opened_files)       
                 
         IF opened_files NE N_ELEMENTS(file) THEN begin
-                file_name  = dir+station_code+'_'+date2+'.dat'   
+                file_name  = dir+station_code+'_'+date+'.dat'   
                 file = FILE_SEARCH(file_name, COUNT=opened_files)          
                 IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'    
         ENDIF
@@ -140,11 +140,11 @@ FUNCTION lmag_array, date_i, date_f, station_code, resolution
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')    
                 string_date2[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')      
-                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'.dat'               
+                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'M.dat'               
                 file = FILE_SEARCH(data_file_name[i], COUNT=opened_files)         
                 
                 IF opened_files NE N_ELEMENTS(file) THEN begin
-	                data_file_name[i]  = dir+station_code+'_'+string_date2[i]+'.dat'          
+	                data_file_name[i]  = dir+station_code+'_'+string_date[i]+'.dat'          
 	        ENDIF
         ENDFOR
 
@@ -154,7 +154,7 @@ FUNCTION lmag_array, date_i, date_f, station_code, resolution
         
         IF capable_to_plot NE N_ELEMENTS(data_file_name) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
-                PRINT, FORMAT="('                missing GMS_YYYYMMDD.magnetic XYZH ',A,' impossible to plot all data.')"              
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.magnetic H ',A,' impossible to plot all data.')"              
         ENDIF
 
 ;###############################################################################

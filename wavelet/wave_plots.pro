@@ -18,7 +18,7 @@ PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, stati
     Date    = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 	X_label = xlabel([yr_i, mh_i, dy_i], file_number)
 	
-    psfile =  '/home/isaac/longitudinal_studio/fig/wavelets/'+station_code+'_'+Date+'.eps'    
+    psfile =  '/home/isaac/rutidl/output/wavelet/teo/'+station_code+'_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=10, YSize=7
