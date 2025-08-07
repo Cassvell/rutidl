@@ -102,7 +102,7 @@ PRO FFT_output, date_i, date_f, station_code, PS=ps, Bsq=Bsq
     idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     symH = idx.symH
     asymH = idx.asyH
-    idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    ;idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     
     ;rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
     ;Q = rc.Q
@@ -166,27 +166,20 @@ H = fillnan(H)
 
 ;###############################################################################
 ;###############################################################################     
- date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,0), $
-    FINAL=JULDAY(mh_f, dy_f, yr_f, 23,59), UNITS='Minutes')
-caldat, date_time, month, day, year, ut, min
-;ZOOM data
-; 
-ndata = n_elements(symH)
-symH = symH[1440:ndata-2881]
-SQ = SQ[1440:ndata-2881]
-asymH = asymH[1440:ndata-2881]
-Bdiono = Bdiono[1440:ndata-2881]
-
-
-print, string(max(asymH, i), ut[i], min[i], format = '("max ASYMH: ", I4,X, I3,":", I02 )')
-print, string(min(symH, j), ut[j], min[j], format = '("min SYMH: ", I4,X, I3,":", I02 )')
-print, string(min(Bdiono, k), ut[k], min[k], format = '("min Bdiono: ", I4,X, I3,":", I02 )')
-
     ;print, Q
     path='/home/isaac/longitudinal_studio/fig/magdata/'
     path2 = '/home/isaac/longitudinal_studio/fig/'
+
+    ;antes de aplicar XWT, se modifica la resolución temporal de H de 1 minuto a una hora
+
+    H_hr = fltarr(N_ELEMENTS(H)/60)
+
+    for i = 0, n_elements(H_hr)-1 do begin
+        H_hr[i] = median(H[i*60:(i+1)*60-1])
+    endfor
+    plot, findgen(n_elements(H_hr)), H_hr
     wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
     ;ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
-   ;ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
+   ; ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
     END

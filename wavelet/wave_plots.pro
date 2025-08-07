@@ -1,3 +1,4 @@
+
 PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, station_code	
         @set_up_commons
         set_up
@@ -18,7 +19,7 @@ PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, stati
     Date    = STRING(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, FORMAT='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')
 	X_label = xlabel([yr_i, mh_i, dy_i], file_number)
 	
-    psfile =  '/home/isaac/rutidl/output/wavelet/teo/'+station_code+'_'+Date+'.eps'    
+    psfile =  '/home/isaac/rutidl/output/wavelet/'+station_code+'/'+station_code+'_'+Date+'.eps'    
     
     cgPS_open, psfile, XOffset=0., YOffset=0., default_thickness=1., font=0, /encapsulated, $
     /nomatch, XSize=10, YSize=7
@@ -32,7 +33,6 @@ PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, stati
     date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
                         FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])					
-
 
     up = max(H)
     down = min(H)
@@ -71,18 +71,18 @@ cgAxis, YAxis=1, yrange=[down, up], $
           ; Data range for the colorbar
 
 ; Define the range of the power series and compute levels
-minPower =  min(power)
-maxPower =  max(power)
+;minPower =  min(power)
+;maxPower =  max(power)
     period2 = FIX(ALOG(period)/ALOG(2))
-    ;minPower = 1e-11 ;min(power)
-    ;maxPower =  8e5;max(power)
+    minPower = 1e-11 ;min(power)
+    maxPower =  8e5;max(power)
 
     nLevels = 48
     levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
 
 ; Generate tick names based on levels
 
-CGCONTOUR,power,date_time,period, XSTYLE=1,YTITLE='', title='', POSITION=[.1, .38, .8, 0.64],$
+    CGCONTOUR,power,date_time,period, XSTYLE=1,YTITLE='', title='', POSITION=[.1, .38, .8, 0.64],$
 	YSTYLE=5,C_COLORS=colors, XMINOR=8,YTICKFORMAT='exponent',$ 
 	/YTYPE, LEVELS=levels, yrange=[120,2880], NLEVELS=nLevels,/FILL, $
 	XTICKFORMAT='(A1)', XTICKUNITS=['day', 'month'], XTICKLAYOUT = 0,  $
@@ -255,9 +255,8 @@ levels = (FINDGEN(nLevels) / (nLevels - 1))  ; Levels from 0 to 1
 
 for i = 0, n_elements(ddyn)-1 do begin
   if ddyn[i] LT 0 then ddyn[i] = 0
-endfor    
-
-
+endfor
+  
 cgCONTOUR,ddyn,date_time,period, $
 XSTYLE=1,YTITLE='', title='', POSITION=[.1, .1, .8, .36],$
 YSTYLE=5,C_COLORS=colors, XMINOR=8,	/YTYPE, LEVELS=levels, yrange=[120,2880], NLEVELS=nLevels,/FILL, $
@@ -415,8 +414,8 @@ freq_series = 1/(period*60)
 
    xtitle = 'Time [UT h]'
 
-   XYOUTS, X, y, xtitle, /NORMAL, $
-   COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2  
+  ; XYOUTS, X, y, xtitle, /NORMAL, $
+  ; COLOR='black', ALIGNMENT=0.5, CHARSIZE=1.2  
 
 ;###############################################################################
 ;###############################################################################
