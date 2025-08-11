@@ -51,18 +51,34 @@ function mlt, station_code, ut
     mhem = info.mhem2
 
     ; Adjust longitudes based on hemisphere
-    glon_tmp = (ghem eq 'E') ? fix(glon) : fix(glon - 180)
-    mlon_tmp = (mhem eq 'E') ? fix(mlon) : fix(mlon - 180)
+    mlon_tmp = 0
+    if mhem EQ 'W' then mlon_tmp = 360-mlon else mlon_tmp = mlon
+
 
     ; Convert UT to hours and calculate MLT
-    caldat, ut, mh, dy, yr, ut_h
-    mlt = ut_h + (glon_tmp / 15) + (mlon_tmp / 15)
+    caldat, ut, mh, dy, yr, ut_h, mn, sc
+    mlt = ut_h + (fix(mlon_tmp) / 15)    
+    mlt = mlt mod 24 ; mlt forced to be in 0-24 range
 
-    ; Ensure MLT is within 0-24 range
-    mlt = mlt mod 24
-    for i = 0, n_elements(mlt)-1 do begin
-        if mlt[i] lt 0 then mlt[i] = mlt[i] + 24
-    end
+    for i = 0, n_elements(mlt) - 1 do begin
+        if mlt[i] LT 0 then mlt[i] = mlt[i] + 24
+        if mlt[i] GE 24 then mlt[i] = mlt[i] - 24
+
+    endfor    
+
+    ;get mlt julday array
+
+    if mlt[0] LE 12 then begin
+        mlt_julday = JULDAY(mh, dy, yr, mlt, mn)
+    endif else begin
+        mlt_julday = JULDAY(mh, dy-1, yr, mlt, mn)
+    endelse
+
+
+    utc_mlt  = 0
+    if mlt[0] LE 12 then utc_mlt = mlt[0] else utc_mlt = mlt[0] - 24
     
-    return, mlt
+    info = {mlt : mlt, utc_mlt : utc_mlt}
+
+    return, info
 end

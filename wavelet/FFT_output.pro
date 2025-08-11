@@ -168,9 +168,9 @@ oplot, time, symH, color=150
 ;###############################################################################
 ;###############################################################################     
     ;print, Q
-    path='/home/isaac/longitudinal_studio/fig/magdata/'
-    path2 = '/home/isaac/longitudinal_studio/fig/'
-
+    ;path='/home/isaac/longitudinal_studio/fig/magdata/'
+    ;path2 = '/home/isaac/longitudinal_studio/fig/'
+    path = set_var.local_dir+'output/TS_plots/'
     ;antes de aplicar XWT, se modifica la resolución temporal de H de 1 minuto a una hora
 
     Bdiono_hr = fltarr(N_ELEMENTS(H)/60)
@@ -191,8 +191,8 @@ oplot, time, symH, color=150
         H_hr[i] = median(H[i*60:(i+1)*60-1])
     endfor
 
-    wave_test, H_hr, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
-    ;ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
+    ;wave_test, H_hr, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
+    ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
    ; ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
     END
