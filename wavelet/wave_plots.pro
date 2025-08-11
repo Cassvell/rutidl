@@ -1,5 +1,5 @@
 
-PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, station_code	
+PRO make_psfig_composed, H, SQ, power, xwt, ddyn, period, coi, date_i, date_f, station_code	
         @set_up_commons
         set_up
 	On_error, 2
@@ -31,15 +31,18 @@ PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, stati
     cgLOADCT,40
 
     date_time = TIMEGEN(START=JULDAY(mh_i, dy_i, yr_i, 0,1), $
-                        FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Minutes')
+                        FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Hours')
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])					
+
 
     up = max(H)
     down = min(H)
     cgplot, date_time, H, background='white', color='black', XTICKFORMAT='(A1)', XMINOR=8, YTICKFORMAT='(A1)', $
-    POSITION=[.1, .66, .8, .92], xstyle=1, ystyle = 5, thick=3
+    POSITION=[.1, .66, .8, .92], xstyle=5, ystyle = 5, thick=3
     
+    cgoplot, date_time,SQ, color='blue', thick=2
     cgtext, 0.7, 0.7, '(a)', color='black', /normal, TT_FONT='Helvetica Bold', charsize = 2
+
     CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
     COLOR='black', $
     XTICKFORMAT='(A1)',$
@@ -49,6 +52,17 @@ PRO make_psfig_composed, H, power, xwt, ddyn, period, coi, date_i, date_f, stati
     CHARSIZE = 1.2, $
     TICKLEN=0.04,$
     CHARTHICK=1.5
+
+    CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
+    COLOR='black', $
+    XTICKFORMAT='(A1)',$
+    XSTYLE=1,$ 
+    XMINOR=8,$
+    XTICKS=file_number,$
+    CHARSIZE = 1.2, $
+    TICKLEN=0.04,$
+    CHARTHICK=1.5
+
 
     ytitle = TeXtoIDL('\Delta H_{loc} [nT]')
 cgAxis,YAxis=0, yrange=[down, up], $
@@ -71,20 +85,20 @@ cgAxis, YAxis=1, yrange=[down, up], $
           ; Data range for the colorbar
 
 ; Define the range of the power series and compute levels
-;minPower =  min(power)
-;maxPower =  max(power)
+minPower =  min(power)
+maxPower =  max(power)
     period2 = FIX(ALOG(period)/ALOG(2))
-    minPower = 1e-11 ;min(power)
-    maxPower =  8e5;max(power)
+;    minPower = 1e-11 ;min(power)
+;    maxPower =  8e5;max(power)
 
-    nLevels = 48
+    nLevels = 36
     levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
 
 ; Generate tick names based on levels
 
     CGCONTOUR,power,date_time,period, XSTYLE=1,YTITLE='', title='', POSITION=[.1, .38, .8, 0.64],$
-	YSTYLE=5,C_COLORS=colors, XMINOR=8,YTICKFORMAT='exponent',$ 
-	/YTYPE, LEVELS=levels, yrange=[120,2880], NLEVELS=nLevels,/FILL, $
+	YSTYLE=5,C_COLORS=colors, yrange=[480,2880],XMINOR=8,YTICKFORMAT='exponent',$ 
+	/YTYPE, LEVELS=levels, NLEVELS=nLevels,/FILL, $
 	XTICKFORMAT='(A1)', XTICKUNITS=['day', 'month'], XTICKLAYOUT = 0,  $
 	XTICKINTERVAL = 1, /noerase ;,  xTITLE = 'Time [days]'
 
@@ -101,28 +115,26 @@ cgAxis, YAxis=1, yrange=[down, up], $
 
     freq_series = 1/(period*60)
     j = where((freq_series LE (1.0/7200)) AND (freq_series GE (1.0/240000)), count)
-
     
-    ;print, n_elements(freq_series), n_elements(period2)
     usersym, [ 0, 1, 0, -1, 0 ], [ 1, 0, -1, 0, 1 ], /fill
 
-	CGPLOTS, max(date_time), 2880, PSYM=8, COLOR='white', thick=4
-	CGPLOTS, max(date_time), 1440, PSYM=8, COLOR='white', thick=4
-	CGPLOTS, max(date_time), 720, PSYM=8, COLOR='white', thick=4
-	CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
-  	CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 2880, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 1440, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 720, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
 
-   ;CGTEXT, MAX(date_time), 2880  , ' 48',$
-   ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
+    ;CGTEXT, MAX(date_time), 2880  , ' 48',$
+    ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
 
-   CGTEXT, MAX(date_time), 1440  , ' 24', $
-   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
-   
-   CGTEXT, MAX(date_time), 720  , ' 12', $
-   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
-   
-   CGTEXT, MAX(date_time), 240  , '  4', $
-   COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+    CGTEXT, MAX(date_time), 1440  , ' 24', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+
+    CGTEXT, MAX(date_time), 720  , ' 12', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+
+    ;CGTEXT, MAX(date_time), 240  , '  4', $
+    ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
 ;##################################################
 
 	x = [date_time[0],date_time,MAX(date_time)]
@@ -151,22 +163,22 @@ cgAxis, YAxis=1, yrange=[down, up], $
                          XTICKFORMAT='(A1)',$
                          XTICKUNITS=['day']            
 
-                         cgAxis, YAxis=0, yrange=[max(freq_series[j]), min(freq_series[j])], $
-                         YTITLE = 'Freq [Hz]', $
-                         ystyle=1, $  
-                         COLOR='black', $                
-                         /ylog, $
-                         CHARSIZE = 1.2, $
-                         CHARTHICK=1.5
-                        
-        cgAxis, YAxis=1, yrange=[max(freq_series),min(freq_series)], $
-                         /ylog,$ 
-                         YTITLE = 'Period [h]', $                         
-                         COLOR='black', $
-                         YTICKFORMAT='(A1)',$ 
-                         ystyle=5, $
-                         CHARSIZE = 1.4,$
-                         CHARTHICK=1.5
+        cgAxis,YAxis=0,  yrange=[max(freq_series[j]),min(freq_series[j])], $
+            YTITLE = 'Freq [Hz]', $
+            ystyle=1,$  
+            COLOR='black', $                
+            /ylog,$
+            CHARSIZE = 1.2,$
+            CHARTHICK=1.5
+
+
+            cgAxis, YAxis=1, yrange=[max(freq_series),min(freq_series)], $
+            /ylog,$                          
+            COLOR='black', $
+            YTICKFORMAT='(A1)',$ 
+            ystyle=5, $
+            CHARSIZE = 1.4,$
+            CHARTHICK=1.5
                                             
     ;###############################################################################
     ;###############################################################################
@@ -243,25 +255,29 @@ minPower = min(ddyn)
 maxPower = max(ddyn)
 
 ddyn = 2 * (maxPower - ddyn) / (maxPower - minPower) - 1
-
-
-minPower = 0
-maxPower = 1
 print, 'max ddyn: ', max(ddyn)
 print, 'min ddyn: ', min(ddyn)
-nLevels = 36
-; Levels from -1 to 1
-levels = (FINDGEN(nLevels) / (nLevels - 1))  ; Levels from 0 to 1
 
+nLevels = 24
+; Levels from -1 to 1
+
+
+levels = (FINDGEN(nLevels) / (nLevels - 1))  ; Levels from 0 to 1
+print, max(levels), min(levels)
 for i = 0, n_elements(ddyn)-1 do begin
   if ddyn[i] LT 0 then ddyn[i] = 0
 endfor
-  
-cgCONTOUR,ddyn,date_time,period, $
-XSTYLE=1,YTITLE='', title='', POSITION=[.1, .1, .8, .36],$
-YSTYLE=5,C_COLORS=colors, XMINOR=8,	/YTYPE, LEVELS=levels, yrange=[120,2880], NLEVELS=nLevels,/FILL, $
-XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'], XTICKLAYOUT = 1,  $
-XTICKINTERVAL = 1, charsize=1.2, /noerase;,  xTITLE = 'Time [days]'
+
+minPower = min(ddyn)
+maxPower = max(ddyn)
+
+cgCONTOUR, ddyn, date_time, period, $
+    XSTYLE=1, YSTYLE=5, $
+    YTITLE='Period [min]', $
+    POSITION=[0.1, 0.1, 0.8, 0.36], C_COLORS=colors, LEVELS=levels, YRANGE=[480, 2880], /FILL, /YTYPE, $
+    XTICKFORMAT=['LABEL_DATE'], XTICKUNITS=['day'], XTICKLAYOUT=1, XTICKINTERVAL=1, $
+    C_LABELS=levels, c_charsize = 1.0,$  ; Show labels for all levels  
+    CHARSIZE=1.2, /NOERASE
 
 nColors = !D.TABLE_SIZE
 
@@ -281,8 +297,8 @@ usersym, [ 0, 1, 0, -1, 0 ], [ 1, 0, -1, 0, 1 ], /fill
 CGPLOTS, max(date_time), 2880, PSYM=8, COLOR='white', thick=4
 CGPLOTS, max(date_time), 1440, PSYM=8, COLOR='white', thick=4
 CGPLOTS, max(date_time), 720, PSYM=8, COLOR='white', thick=4
-CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
-  CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
+;CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
+;  CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
 
 ;CGTEXT, MAX(date_time), 2880  , ' 48',$
 ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
@@ -293,8 +309,8 @@ COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
 CGTEXT, MAX(date_time), 720  , ' 12', $
 COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
 
-CGTEXT, MAX(date_time), 240  , '  4', $
-COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+;CGTEXT, MAX(date_time), 240  , '  4', $
+;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
 
 ;##################################################
 ;###############################################################################
@@ -339,7 +355,7 @@ freq_series = 1/(period*60)
     XTICKFORMAT='(A1)',$
     XTICKUNITS=['day']                         
 
-    cgAxis,YAxis=0, yrange=[max(freq_series[j]),min(freq_series[j])], $
+    cgAxis,YAxis=0,  yrange=[max(freq_series[j]),min(freq_series[j])], $
     YTITLE = 'Freq [Hz]', $
     ystyle=1,$  
     COLOR='black', $                

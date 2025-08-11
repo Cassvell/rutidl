@@ -18,15 +18,7 @@ pro wave_test, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
   arr = n_elements(bfield)
   times = findgen(arr) ; arreglo de tiempo arbitrario
 
-  dt = 1. ; resolucion de 1 minuto
-
-  ; wave = WAVELET(Y,DT)
-  ; INPUTS:
-  ; Y = the time series of length N.
-  ; para el archivo: 2013-01-01-chan-0-3C298.dat
-  ; N= 44420
-  ; DT = amount of time between each Y value, i.e. the sampling time.
-  ; dt=0.0171661 (segundos) ; 4.76837e-06 (horas)
+  dt = 60. ; resolusión temporal en minutos
 
   pad = 1
   s0 = dt
@@ -58,7 +50,7 @@ pro wave_test, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
   global_ws = total(power, 1) / n ; global wavelet spectrum (GWS)
   J = n_elements(scale) - 1
 
-  SIGLVL = 0.1 ; (siginficance level=.1 (90% confidence level))  ;1sigma=.683; 2sigma=.954 ; 3sigma=0.9973
+  SIGLVL = 0.05 ; (siginficance level=.05 (95% confidence level))  ;1sigma=.683; 2sigma=.954 ; 3sigma=0.9973
 
   ; Significance levels, assuming the GWS as background spectrum:
   signif = wave_signif(sst, dt, scale, 0, $
@@ -77,18 +69,19 @@ pro wave_test, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
   variance = (moment(sst))[1]
   recon_variance = dj * dt / (Cdelta * n) * total(power_norm) ; [Eqn(14)]
 
-  if (n_elements(recon_sst) gt 1) then begin
-    recon_variance = (moment(recon_sst))[1]
-    ; RMS of Reconstruction [Eqn(11)]
-    rms_error = sqrt(total((sst - recon_sst) ^ 2) / n)
+;  if (n_elements(recon_sst) gt 1) then begin
+;    recon_variance = (moment(recon_sst))[1]
+;    ; RMS of Reconstruction [Eqn(11)]
+;    rms_error = sqrt(total((sst - recon_sst) ^ 2) / n)
 
     ; Scale-average
-    avg = where((scale ge 0.5) and (scale lt 3.3))
-    scale_avg = dj * dt / Cdelta * total(power_norm[*, avg], 2) ; [Eqn(24)]
-    scaleavg_signif = wave_signif(sst, dt, scale, 2, $
+;    avg = where((scale ge 0.5) and (scale lt 3.3))
+;    print, 'avg: ',avg
+;    scale_avg = dj * dt / Cdelta * total(power_norm[*, avg], 2) ; [Eqn(24)]
+;    scaleavg_signif = wave_signif(sst, dt, scale, 2, $
       ; GWS=global_ws,SIGLVL=SIGLVL,DOF=[0.3,50.0],MOTHER=mother)
-      gws = global_ws, siglvl = SIGLVL, dof = [.5, 3.3], mother = mother)
-  endif
+;      gws = global_ws, siglvl = SIGLVL, dof = [.5, 3.3], mother = mother)
+;  endif
 
   ; ==============================================================================
   ; ==============================================================================
@@ -104,11 +97,11 @@ pro wave_test, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
     time_out = time_out, scale_out = scale_out, coi_out = coi_out, global_coher = global_coher, global_phase = global_phase, $
     cross_wavelet = cross_wavelet, power1 = power1, power2 = power2, nosmooth = nosmooth, verbose = verbose
 
-  n = 7
+  n = 5
   semblance = cos(wave_phase) ^ n
 
   ddyn = wave_coher * semblance
-  print, size(ddyn)
+
   ; ==============================================================================
   ; ==============================================================================
   if keyword_set(ps) then begin
@@ -121,7 +114,7 @@ pro wave_test, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
     endif else begin
       print, ''
     endelse
-     make_psfig_composed, H_loc, power, cross_wavelet, ddyn, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code
+     make_psfig_composed, H, SQ, power, cross_wavelet, ddyn, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code
     ; make_psfig1, power, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path,  station_code
     ; make_psfig2, real_part(cross_wavelet), period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
     ; make_psfig3, ddyn, period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code

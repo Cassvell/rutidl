@@ -136,7 +136,8 @@ H = add_nan(H, 200.0, 'greater')
 
 ;symH0 = fillnan(symH0)
 H = fillnan(H)
-
+plot, time, H
+oplot, time, symH, color=150
 ;    DEVICE, true=24, retain=2, decomposed=0
   ;  TVLCT, R_bak, G_bak, B_bak, /GET        
    ; LOADCT, 39, /SILENT    
@@ -172,13 +173,25 @@ H = fillnan(H)
 
     ;antes de aplicar XWT, se modifica la resolución temporal de H de 1 minuto a una hora
 
+    Bdiono_hr = fltarr(N_ELEMENTS(H)/60)
+
+    for i = 0, n_elements(Bdiono_hr)-1 do begin
+        Bdiono_hr[i] = median(Bdiono[i*60:(i+1)*60-1])
+    endfor
+
+    SQ_hr = fltarr(N_ELEMENTS(SQ)/60)
+
+    for i = 0, n_elements(SQ_hr)-1 do begin
+        SQ_hr[i] = median(SQ[i*60:(i+1)*60-1])
+    endfor
+
     H_hr = fltarr(N_ELEMENTS(H)/60)
 
-    for i = 0, n_elements(H_hr)-1 do begin
+    for i=0, n_elements(H_hr)-1 do begin
         H_hr[i] = median(H[i*60:(i+1)*60-1])
     endfor
-    plot, findgen(n_elements(H_hr)), H_hr
-    wave_test, H, Bdiono, SQ, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
+
+    wave_test, H_hr, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
     ;ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
    ; ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 
