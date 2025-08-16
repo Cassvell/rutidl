@@ -33,9 +33,12 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     ;LOADCT, 39
     ;WINDOW, 1, XSIZE=800, YSIZE=500, TITLE='GS'
 
-    down = min(symH)
-    ;if max(H) GT max(symH) then up = max(H) else up = max(symH)
+    
+    if max(H) GT max(symH) then up = max(H) else up = max(symH)
+    if min(H) LT min(symH) then down = min(H) else down = min(symH)
+
     up = max(symH)
+
     cgplot, date_time, symH, background='white', color='black', position=[.1, .725, .92, .90], XTICKFORMAT=['LABEL_DATE'], $
     xminor=8,XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, $
     yrange=[down,up], /nodata
@@ -43,50 +46,61 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, date_i, date_f, path, station_code
     ndata = n_elements(symH)-1
     
     info_lt = mlt(station_code, date_time)
-    local_time = info_lt.mlt
+    ;local_time = info_lt.mlt
     utc = info_lt.utc_mlt
-    print, utc
     
+    jul_conv = abs((0.1/2.4)*utc)
+
+    if utc LT 0 then begin    
+        local_ini = date_time[0] + (jul_conv)
+        local_fin = date_time[n_elements(date_time) - 1] + jul_conv
+    endif else begin 
+        local_ini = date_time[0] - jul_conv
+        local_fin = date_time[n_elements(date_time) - 1] - jul_conv
+    endelse    
+
+    local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes')
+
     midday = fltarr(n_elements(local_time)/720)
 
     midddays = n_elements(symH)/720
 
-    if utc LT 0 then begin
-        if local_time[(0*720)]-0.25 GE date_time[0] then begin
-        cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endif else begin
-            cgPolygon, [date_time[0], local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, date_time[0]], $
-            [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endelse
+        if utc LT 0 then begin
+            if local_time[(0*720)]-0.25 GE date_time[0] then begin
+            cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endif else begin
+                cgPolygon, [date_time[0], local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, date_time[0]], $
+                [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endelse
 
-    if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[(midddays*719)]-0.25)GE 0 then begin
-        cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata], date_time[ndata], local_time[(midddays*719)]-0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+        if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[(midddays*719)]-0.25)GE 0 then begin
+            cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata], date_time[ndata], local_time[(midddays*719)]-0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
 
-    endif 
-
-
-endif else begin
-    if local_time[(0*720)]-0.25 GE date_time[0] then begin
-        cgPolygon, [local_time[(0*720)]+0.25, local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, local_time[(0*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endif else begin
-            cgPolygon, [date_time[0], local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, date_time[0]], $
-            [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-        endelse    
+        endif 
 
 
-    if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0 then begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
     endif else begin
-        cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[(midddays*719)]+0.25, local_time[(midddays*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
-    [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
-    endelse  
-endelse
+        if local_time[(0*720)]-0.25 GE date_time[0] then begin
+            cgPolygon, [local_time[(0*720)]+0.25, local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, local_time[(0*720)]+0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endif else begin
+                cgPolygon, [date_time[0], local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, date_time[0]], $
+                [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endelse    
 
-    
+
+        if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0 then begin
+            cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+        endif else begin
+            cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[(midddays*719)]+0.25, local_time[(midddays*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+        endelse  
+    endelse
+
+
     for i = 0, n_elements(midday)-1 do begin
         
         ; Define color based on even/odd index
@@ -114,6 +128,7 @@ endelse
 
 
     cgoplot,date_time, symH, color='GRN5', thick=2, linestyle=0   
+    cgoplot,date_time, H, color='black', thick=2, linestyle=0   
 
     cgOPLOT, [!X.CRANGE[0], !X.CRANGE[1]], [0.,0.], LINESTYLE=1, THICK=2,COLOR='black' 
     ;first panel legend 
@@ -180,28 +195,66 @@ endelse
 
     ndata = n_elements(symH)-1
     
-    ;mlt = mlt(station_code, date_time)
-    jul_conv = abs((0.1/2.4)*info.utc)
+        if utc LT 0 then begin
+            if local_time[(0*720)]-0.25 GE date_time[0] then begin
+            cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endif else begin
+                cgPolygon, [date_time[0], local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, date_time[0]], $
+                [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endelse
 
-    ;print, 'magnetic local time zone: ', -mlt[0]
-    print, jul_conv
-    if info.utc LT 0 then begin
+        if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0.5 and date_time[ndata] - (local_time[(midddays*719)]-0.25)GE 0 then begin
+            cgPolygon, [local_time[(midddays*719)]-0.25, date_time[ndata], date_time[ndata], local_time[(midddays*719)]-0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+
+        endif 
+
+
+    endif else begin
+        if local_time[(0*720)]-0.25 GE date_time[0] then begin
+            cgPolygon, [local_time[(0*720)]+0.25, local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, local_time[(0*720)]+0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endif else begin
+                cgPolygon, [date_time[0], local_time[((1)*720)]+0.25, local_time[((1)*720)]+0.25, date_time[0]], $
+                [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+            endelse    
+
+
+        if date_time[ndata]-(local_time[(midddays*719)]-0.25) LE 0 then begin
+            cgPolygon, [local_time[((midddays-1)*720)]+0.25, date_time[ndata], date_time[ndata], local_time[((midddays-1)*720)]+0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+        endif else begin
+            cgPolygon, [local_time[((midddays-1)*720)]+0.25, local_time[(midddays*719)]+0.25, local_time[(midddays*719)]+0.25, local_time[((midddays-1)*720)]+0.25], $
+        [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
+        endelse  
+    endelse
+
+
+    for i = 0, n_elements(midday)-1 do begin
         
-        local_ini = date_time[0] + (jul_conv)
-        local_fin = date_time[n_elements(date_time) - 1] + jul_conv
-    endif else begin 
-        local_ini = date_time[0] - jul_conv
-        local_fin = date_time[n_elements(date_time) - 1] - jul_conv
-    endelse    
+        ; Define color based on even/odd index
+        if utc LT 0 then begin
+                if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
 
-    local_time = TIMEGEN(START=local_ini, FINAL=local_fin, UNITS='Minutes')
- 
+                if i LT n_elements(midday)-1 and i GT 0 then begin
+            
+                    cgPolygon, [local_time[(i*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[((i+1)*720)]+0.25, local_time[(i*720)]+0.25], $
+                            [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
+                        
+                endif               
+        endif else begin
+                if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
+                if i LT n_elements(midday)-1 and i GT 0 then begin
 
-   ; cgPolygon, [date_time[720], date_time[1440], date_time[1440], date_time[720]], $
-   ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
+                    cgPolygon, [local_time[(i*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[((i+1)*720)]-0.25, local_time[(i*720)]-0.25], $
+                            [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = color_shade, /fill
+                    
+                endif 
+        endelse    
 
-   ; cgPolygon, [date_time[720*(midddays-2)], date_time[720*(midddays-1)], date_time[720*(midddays-1)], date_time[720*(midddays-2)]], $
-   ;           [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'gray', /fill
+       
+    endfor
 
     cgOPlot, date_time, asymH, color='orange', thick=2
 
@@ -269,7 +322,7 @@ cgplot, date_time, Bdiono, background='white', color='black', position=[.1, .355
 XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, yrange=[downdiono, updiono],/noerase, /nodata
 
 
-if info.utc LT 0 then begin
+if utc LT 0 then begin
     if local_time[(0*720)]-0.25 GE date_time[0] then begin
     cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
 [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill
@@ -394,7 +447,7 @@ cgplot, date_time, SQ, background='white', color='black', position=[.1, .17, .92
 XTICKUNITS=['day'], XTICKLAYOUT = 1, XTICKINTERVAL = 1, charsize=1.1, xstyle=5, ystyle=5, yrange=[down, up],/noerase, /nodata
 
 
-if info.utc LT 0 then begin
+if utc LT 0 then begin
     if local_time[(0*720)]-0.25 GE date_time[0] then begin
     cgPolygon, [local_time[(0*720)]-0.25, local_time[((1)*720)]-0.25, local_time[((1)*720)]-0.25, local_time[(0*720)]-0.25], $
 [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color = 'light gray', /fill

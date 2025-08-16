@@ -136,8 +136,8 @@ H = add_nan(H, 200.0, 'greater')
 
 ;symH0 = fillnan(symH0)
 H = fillnan(H)
-plot, time, H
-oplot, time, symH, color=150
+;plot, time, H
+;oplot, time, symH, color=150
 ;    DEVICE, true=24, retain=2, decomposed=0
   ;  TVLCT, R_bak, G_bak, B_bak, /GET        
    ; LOADCT, 39, /SILENT    
@@ -191,7 +191,7 @@ oplot, time, symH, color=150
         H_hr[i] = median(H[i*60:(i+1)*60-1])
     endfor
 
-    ;wave_test, H_hr, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
+    wave_test, H_hr, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
     ts_plots, asymH,symH, H, SQ, Bdiono, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
    ; ip_plots, symH, Q, P, V, T, E, Bz, Bt, AE,[yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 

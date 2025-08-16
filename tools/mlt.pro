@@ -54,6 +54,9 @@ function mlt, station_code, ut
     mlon_tmp = 0
     if mhem EQ 'W' then mlon_tmp = 360-mlon else mlon_tmp = mlon
 
+    glon_tmp = 0
+    if ghem EQ 'W' then glon_tmp = 360-glon else glon_tmp = glon
+
 
     ; Convert UT to hours and calculate MLT
     caldat, ut, mh, dy, yr, ut_h, mn, sc
