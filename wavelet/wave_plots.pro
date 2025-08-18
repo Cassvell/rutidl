@@ -1,5 +1,5 @@
 
-PRO make_psfig_composed, H, SQ, power, xwt, ddyn, period, coi, date_i, date_f, station_code	
+PRO make_psfig_composed, diono, H, H_sq, SQ, power, xwt, ddyn, period, coi, date_i, date_f, station_code	
         @set_up_commons
         set_up
 	On_error, 2
@@ -34,65 +34,110 @@ PRO make_psfig_composed, H, SQ, power, xwt, ddyn, period, coi, date_i, date_f, s
                         FINAL=JULDAY(mh_f, dy_f, yr_f, 24,0), UNITS='Hours')
     date_label = LABEL_DATE(DATE_FORMAT = ['%D', '%M %Y'])					
 
+    nLevels = 36
+    minPower =  min(real_part(SQ))
+    maxPower =  max(real_part(SQ))
+    levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
 
-    up = max(H)
-    down = min(H)
-    cgplot, date_time, H, background='white', color='black', XTICKFORMAT='(A1)', XMINOR=8, YTICKFORMAT='(A1)', $
-    POSITION=[.1, .66, .8, .92], xstyle=5, ystyle = 5, thick=3
+    CGCONTOUR,SQ,date_time,period, XSTYLE=5,YTITLE='', title='', POSITION=[.1, .66, .8, .92],$
+	YSTYLE=5,C_COLORS=colors, yrange=[480,2880],XMINOR=8,YTICKFORMAT='exponent',$ 
+	/YTYPE, LEVELS=levels, NLEVELS=nLevels,/FILL, $
+	XTICKFORMAT='(A1)', XTICKUNITS=['day', 'month'], XTICKLAYOUT = 0,  $
+	XTICKINTERVAL = 1, /noerase ;,  xTITLE = 'Time [days]'
+
+
+    nColors = !D.TABLE_SIZE
+
+    title = Textoidl('Power [nT Hz^{-1}]')
+    tickNames = STRING(levels, FORMAT='(E8.1)')
     
-    cgoplot, date_time,SQ, color='blue', thick=2
-    cgtext, 0.7, 0.7, '(a)', color='black', /normal, TT_FONT='Helvetica Bold', charsize = 2
+    cgCOLORBAR, NCOLORS=nColors, POSITION=[0.66, 0.87, 0.92, 0.89], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
+    Charsize= 1.0,  title=title, vertical=1, right=1 ; Moves title and labels to the right
 
-    CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
-    COLOR='black', $
-    XTICKFORMAT='(A1)',$
-    XSTYLE=1,$ 
-    XMINOR=8,$
-    XTICKS=file_number,$
-    CHARSIZE = 1.2, $
-    TICKLEN=0.04,$
-    CHARTHICK=1.5
+    cgtext, 0.7, 0.70, '(a)', color='black', /normal, TT_FONT='Helvetica Bold', charsize = 2
 
-    CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
-    COLOR='black', $
-    XTICKFORMAT='(A1)',$
-    XSTYLE=1,$ 
-    XMINOR=8,$
-    XTICKS=file_number,$
-    CHARSIZE = 1.2, $
-    TICKLEN=0.04,$
-    CHARTHICK=1.5
+    freq_series = 1/(period*60)
+    j = where((freq_series LE (1.0/7200)) AND (freq_series GE (1.0/240000)), count)
+    
+    usersym, [ 0, 1, 0, -1, 0 ], [ 1, 0, -1, 0, 1 ], /fill
+
+    CGPLOTS, max(date_time), 2880, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 1440, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 720, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 240, PSYM=8, COLOR='white', thick=4
+    CGPLOTS, max(date_time), 60, PSYM=8, COLOR='white', thick=4
+
+    ;CGTEXT, MAX(date_time), 2880  , ' 48',$
+    ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2;, ORIENTATION=90   
+
+    CGTEXT, MAX(date_time), 1440  , ' 24', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+
+    CGTEXT, MAX(date_time), 720  , ' 12', $
+    COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+
+    ;CGTEXT, MAX(date_time), 240  , '  4', $
+    ;COLOR='black', ALIGNMENT=0.0, CHARSIZE=1.2
+;##################################################
+
+	x = [date_time[0],date_time,MAX(date_time)]
+	y = [MAX(period),coi,MAX(period)]
+
+	cgPolygon,x,y,ORIEN=+45,SPACING=0.5,NOCLIP=0, LINESTYLE=0, FCOLOR='white', /FILL
+	cgPolygon,x,y,ORIEN=-45,SPACING=0.5,NOCLIP=0, LINESTYLE=0,FCOLOR='white', /FILL
+
+    
+        CGAXIS, XAXIS = 0, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $                       
+                         COLOR='black', $
+                         XSTYLE=1,$ 
+                         XMINOR=8,$
+                         XTICKS=file_number,$
+                         ;xTITLE = 'Time [days]',$ 
+                         CHARSIZE = 1.2, $
+                         TICKLEN=0.04,$
+                         CHARTHICK=1.5,$
+                         XTICKFORMAT='(A1)'
+                                           
+        CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.0/(!X.CRANGE), $                    (!X.CRANGE+date_time[1440]-0.25)    
+                         COLOR='black', $
+                         XSTYLE=1,$
+                         XTICKS=file_number,$
+                         XMINOR=8,$
+                         XTICKFORMAT='(A1)',$
+                         XTICKUNITS=['day']            
+
+        cgAxis,YAxis=0,  yrange=[max(freq_series[j]),min(freq_series[j])], $
+            YTITLE = 'Freq [Hz]', $
+            ystyle=1,$  
+            COLOR='black', $                
+            /ylog,$
+            CHARSIZE = 1.2,$
+            CHARTHICK=1.5
 
 
-    ytitle = TeXtoIDL('\Delta H_{loc} [nT]')
-cgAxis,YAxis=0, yrange=[down, up], $
-    YTITLE = ytitle, $
-    ystyle=1,$  
-    COLOR='black', $  
-    CHARSIZE = 1.2,$
-    CHARTHICK=1.5
-
-   
-cgAxis, YAxis=1, yrange=[down, up], $                        
-    COLOR='black', $
-   ; ytickformat='(A1)',$
-    ystyle=1, $
-    CHARSIZE = 1.2,$
-    CHARTHICK=1.5
+            cgAxis, YAxis=1, yrange=[max(freq_series),min(freq_series)], $
+            /ylog,$                          
+            COLOR='black', $
+            YTICKFORMAT='(A1)',$ 
+            ystyle=5, $
+            CHARSIZE = 1.4,$
+            CHARTHICK=1.5
 ;###############################################################################               
 ;############################################################################### 
 ; Define the levels and colors used in CGCONTOUR
           ; Data range for the colorbar
 
 ; Define the range of the power series and compute levels
-minPower =  min(power)
-maxPower =  max(power)
+minPower =  min((power))
+maxPower =  max((power))
     period2 = FIX(ALOG(period)/ALOG(2))
-;    minPower = 1e-11 ;min(power)
-;    maxPower =  8e5;max(power)
-
+;minPower = 1e-11 ;min(power)
+;maxPower =  8e5;max(power)
+    
     nLevels = 36
+
     levels = FINDGEN(nLevels) * ((maxPower - minPower) / (nLevels - 1)) + minPower
+
 
 ; Generate tick names based on levels
 
@@ -106,8 +151,9 @@ maxPower =  max(power)
     ;A string array of names or values for the color bar tick marks. 
     nColors = !D.TABLE_SIZE
 
-    title = Textoidl('Power [nT^{2} Hz^{-1}]')
+    title = Textoidl('Power [nT^2 Hz^{-1}]')
     tickNames = STRING(levels, FORMAT='(E8.1)')
+    
     cgCOLORBAR, NCOLORS=nColors, POSITION=[0.38, 0.87, 0.64, 0.89], TICKNAMES=tickNames, RANGE=[minPower, maxPower], $
     Charsize= 1.0,  title=title, vertical=1, right=1 ; Moves title and labels to the right
 
@@ -243,7 +289,11 @@ CGAXIS, XAXIS = 1, XRANGE=[date_time[0],date_time[N_ELEMENTS(date_time)-1]], $;.
 ;###############################################################################   
 ;###############################################################################
 ;###############################################################################
-;###############################################################################                          
+;###############################################################################   
+cgplot, date_time, H, POSITION=[.1, .38, .8, 0.64],$
+color = 'black',  xstyle=5, ystyle=6, /nodata, /noerase
+ 
+cgoplot, date_time, H, color='gray', thick=4, linestyle=3                  
 ;###############################################################################   
 ;###############################################################################   
 ;###############################################################################
@@ -413,10 +463,11 @@ freq_series = 1/(period*60)
 ;###############################################################################
 ;###############################################################################
 
-cgplot, date_time, H, POSITION=[.1, .1, .8, .36],$
+cgplot, date_time, H, POSITION=[0.1, 0.1, 0.8, 0.36], yrange=[min(H), max(H)],$
 color = 'black',  xstyle=5, ystyle=6, /nodata, /noerase
  
-cgoplot, date_time, H, color='gray', thick=4 
+cgoplot, date_time, H, color='gray', thick=4, linestyle=3
+;cgoplot, date_time, H_sq, color='cyan', thick=4
 ;###############################################################################                          
 ;###############################################################################   
 

@@ -114,7 +114,7 @@ pro wave_test, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
     endif else begin
       print, ''
     endelse
-     make_psfig_composed, H, SQ, power, cross_wavelet, ddyn, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code
+     make_psfig_composed, H, H_loc,SQ, wave2, power, cross_wavelet, ddyn, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code
     ; make_psfig1, power, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path,  station_code
     ; make_psfig2, real_part(cross_wavelet), period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
     ; make_psfig3, ddyn, period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
