@@ -93,17 +93,16 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
     baseline     = p_a             
     Bdiono       = f2-baseline
     n           = N_ELEMENTS(Bdiono) 
-    
+
     time        = 0.
 
-    
     CASE time_res of 
         'h'     : time = 3600.0
         'm'     : time = 60.0
     ENDCASE
 
     fny      = FLOAT(1.0/(2.0*time)) ; frecuencia de Nyquist
-    
+
     hann_w = HANNING(n)
     w_ss = (TOTAL((hann_w)^2))/n
         
@@ -123,22 +122,14 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
 ; define pass band frequencies  
     i = freq_cuts(case_event, station_code)
 
-    ;passband_l = freq_band(case_event, 'passband_l')
-    ;passband_u = freq_band(case_event, 'passband_u')
     passband_l = (i.ddyn_lfc)/60
     passband_u = (i.ddyn_hfc)/60
 ;define high band frequencies
-    ;highpass_l = freq_band(case_event, 'highpass_l')
 	highpass_l = i.dp2_lfc
     highpass_u = i.dp2_hfc
 
-	f_s = 1/time
-    fr_wdif_pb = passband_l*((2*!PI)*time)
-    fr_wdif_hp = (highpass_l)*((2*!PI)*time)
-		;print, 'pasabandas es: ', passband_l
-		;print, 'pasa altas es: ', highpass_l
-     ;   print, 'fr_wdif_pb para pasabandas es: ', fr_wdif_pb
-     ;   print, 'fr_wdif_hp para pasa altas es: ', fr_wdif_hp
+    fr_wdif_pb = passband_l*((2*!PI))
+    fr_wdif_hp = (highpass_l)*((2*!PI))
     
     M_pb = n_terms(fr_wdif_pb, 50, n)
     M_hp = n_terms(fr_wdif_hp, 50, n)
@@ -148,24 +139,15 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
 	top=0.0 
         CASE time of
         3600.0     : top = 1.0
-        60.0       : top = 1.0;(1/(0.5*3600.0))/fny
+        60.0       : top = (1/(0.5*3600.0))/fny
    		ENDCASE
-       ; coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, M_pb)
-       coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, (M_pb))
-       ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, top, 50, M_hp)
-        coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, highpass_u/fny, 50, M_hp)
+        coeff_ddyn  = DIGITAL_FILTER(passband_l/fny, passband_u/fny, 50, (M_pb))
+        coeff_dp2   = DIGITAL_FILTER((highpass_l)/fny, top, 50, M_hp)
 
         coeff_prc   = DIGITAL_FILTER(0, highpass_l/fny, 50, M_hp)
         coeff_prc2  = DIGITAL_FILTER(passband_u/fny, highpass_u/fny, 50, M_hp)
-        print,'top: ', top
-       ; coeff_dp2   = DIGITAL_FILTER(highpass_l/fny, (1.0/(0.5*3600.0))/fny, 50, M_hp)
-        print, 'M para pasabandas es: ', M_pb
-        print, 'M para pasa altas es: ', M_hp
+
         
-        print, 'coeff_ddyn para pasabandas es: ', N_ELEMENTS(coeff_ddyn)
-        print, 'coeff_dp2 para pasa altas es: ', N_ELEMENTS(coeff_dp2)
-        
-        print, 'N elements Diono', N_ELEMENTS(Bdiono)
 ; define disturbing effects 
         Bddyn        = CONVOL(Bdiono, coeff_ddyn, /edge_wrap)
         Bdp2         = CONVOL(Bdiono, coeff_dp2, /edge_wrap)  
@@ -176,9 +158,10 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
     IF KEYWORD_SET(simple_filter) THEN BEGIN
         Bddyn        = passband_filter(n, Bdiono, fk, passband_l, passband_u)
         Bdp2         = highpass_filter(n, Bdiono, fk, highpass_l) 
-      ;  PRINT,  Bddyn  
     ENDIF
     
+       ; plot, findgen(n_elements(Bdiono)), Bdiono, yrange=[min(Bdp2), max(Bdp2)]
+       ; oplot, findgen(n_elements(Bdiono)), Bdp2
     structure = {diono: FLTARR(n), ddyn : FLTARR(n), dp2 : FLTARR(n), prc : FLTARR(n),$
                  p_a : FLTARR(n), baseline : FLTARR(n), prc2 : FLTARR(n), $
                  f_k : FLTARR(n), pws : FLTARR(n), fn : 0.}
@@ -194,7 +177,8 @@ FUNCTION gen_diono, f1, f2, l, time_res, case_event, station_code, DIG_FILTER = 
     structure.p_a       = p_a[*]
     structure.baseline = baseline[*]
     RETURN, structure
-    
+   
+
 END
 
 

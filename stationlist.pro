@@ -51,7 +51,7 @@ FUNCTION stationlist, class, station_code
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         @set_up_commons
         set_up		
-
+		print, class
         file_name = set_var.local_dir+class+'_stations.csv'
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'

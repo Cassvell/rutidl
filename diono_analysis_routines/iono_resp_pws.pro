@@ -38,7 +38,7 @@
 ;       2. having the H clean data files (H_filmaker.pro)
 ;
 
-PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps 
+PRO iono_resp_pws, date_i, date_f
 
 	On_error, 2
 	COMPILE_OPT idl2, HIDDEN
@@ -90,7 +90,7 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
 ; Generate the time series variables 
 ; define H variables                  
 
-    idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+    idx = sym_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f], 'm')
     symH = idx.symH
     ;dst = dst_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'dst')
     data   = lmag_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, 'min')
@@ -130,7 +130,7 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
 ; define device and color parameters 
 ;###############################################################################
 
-    IF keyword_set(ps) THEN BEGIN
+    ;IF keyword_set(ps) THEN BEGIN
         path = set_var.local_dir+'output/diono_recons/'+station_code+'/'	
         test = FILE_TEST(path, /DIRECTORY) 
         IF test EQ 0 THEN BEGIN
@@ -144,12 +144,7 @@ PRO iono_resp_pws, date_i, date_f, PNG = png, PS=ps
 
     make_psfig, f_k, fn, pws, symH, H, diono, ddyn, dp2, pcTEC, time, time_h,$
         path, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code   
-    ENDIF
-
-    IF keyword_set(png) THEN BEGIN        
-    make_pngfig, f_k, fn, pws, new_Bz, new_Ey, new_vp, new_pdyn, new_idiff, new_ddyn, new_dp2, time, time_h, $
-        SG_beg, SG_end, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f]               
-    ENDIF 
+   ; ENDIF
 
 END
 
@@ -208,7 +203,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcT
     
     fny=WHERE(f_k EQ fn)
 
-    ysup = 50;max(pws[i])
+    ysup = max(pws[i])
     yinf = 1e-5;min(pws[i])
     
     print, 'min pws: ', yinf
@@ -302,13 +297,13 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcT
                                                                            
 ;###############################################################################                            
 ;############################################################################### 
-
+;panel b
      up_diono=max(new_idiff)
      down_diono=min(new_idiff)
     ; print,  new_idiff
      cgPLOT, time, new_idiff, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
      COLOR='black', CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
+     POSITION=[0.5,0.51,0.95,0.68]  , XSTYLE = 5, XRANGE=[0, file_number], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down_diono,up_diono], /NOERASE,$
      THICK=2, /NODATA   
 
@@ -350,17 +345,18 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcT
                          YTICKFORMAT='(A1)',$
                          CHARSIZE = 1.2,$
                          CHARTHICK=1.6                
-;###############################################################################                
+;###############################################################################              
     ;IF max(new_ddyn) GT max(new_dp2) THEN up = max(new_ddyn) ELSE up = max(new_dp2)
     ;IF min(new_ddyn) LT min(new_dp2) THEN down = min(new_ddyn) ELSE down = min(new_dp2)
 ;###############################################################################
-    up  = 45
-    down= -45
+; panel c
+    up  = 110
+    down= -110
     ;IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
      cgPLOT, time, new_ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND ='white', $
      COLOR='black', CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.51,0.95,0.68], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.31,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, /NODATA
     
 
@@ -412,8 +408,8 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcT
 ;###############################################################################
 ;###############################################################################       
      d_H = TeXtoIDL('\DeltaH_{' + STRUPCASE(station_code) + '}') 
-;###############################################################################   [0.5,0.7,0.95,0.9]   
-
+;###############################################################################   
+;panel a
     if max(new_dH) eq max(new_dst) then up = max(new_dH) else up = max(new_dst)
     if min(new_dH) eq min(new_dst) then down = min(new_dH) else down = min(new_dst)
 
@@ -422,7 +418,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcT
     ;
      CGPLOT, time, new_dH, XTICKS=file_number, XMINOR=8, BACKGROUND = 'white', $
      COLOR='black', CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.5,0.31,0.95,0.48], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
+     POSITION=[0.5,0.71,0.95,0.89], XSTYLE = 5, XRANGE=[0, file_number], YSTYLE = 6,$
      XTICKNAME=REPLICATE(' ', file_number+1), YRANGE=[down,up], /NOERASE, THICK=2, /NODATA       
      
      cgOPlot, time, new_dH, color = 'black', thick=3, linestyle=0
@@ -430,7 +426,7 @@ PRO make_psfig, f_k, fn, pws, new_dst, new_dH, new_idiff, new_ddyn, new_dp2, pcT
     l = (28.1 * !PI)/180
     dst_l = (new_dst * cos(l)) + new_dp2 +new_ddyn
 
-    cgOPlot, time, dst_l, color = 'red', thick=3, linestyle=0     
+   ; cgOPlot, time, dst_l, color = 'red', thick=3, linestyle=0     
 
    
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
@@ -527,23 +523,23 @@ days = [24, 25, 26, 27, 28, 29, 30]
                     CHARTHICK=1.6                 
 
     H_recons = Textoidl('\DeltaH_{R}')
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.404,0.404,0.407,0.407], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.367,0.367,0.370,0.370], color = 'GRN5', /NORMAL , /FILL  
-        cgPolygon, [0.90,0.93,0.93,0.90], [0.330,0.330,0.333,0.333], color = 'red', /NORMAL , /FILL  
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.794,0.794,0.797,0.797], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.90,0.93,0.93,0.90], [0.757,0.757,0.760,0.760], color = 'GRN5', /NORMAL , /FILL  
+        ;cgPolygon, [0.90,0.93,0.93,0.90], [0.720,0.720,0.723,0.723], color = 'red', /NORMAL , /FILL  
 
-        XYOUTS, 0.85, 0.4 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.85, 0.79 , /NORMAL, d_H, CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.85, 0.36 , /NORMAL, 'Sym-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+        XYOUTS, 0.85, 0.75 , /NORMAL, 'Sym-H', CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 
-        XYOUTS, 0.85, 0.325 , /NORMAL, H_recons, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
+       ; XYOUTS, 0.85, 0.718 , /NORMAL, H_recons, CHARSIZE = 1.2, CHARTHICK=chr_thick1  
 ;###############################################################################                     
 ;second panel legend                   
-        cgPolygon, [0.91,0.94,0.94,0.91], [0.661,0.661,0.664,0.664], color = 'black', /NORMAL, /FILL    
-        cgPolygon, [0.91,0.94,0.94,0.91], [0.624,0.624,0.627,0.627], color = 'red', /NORMAL , /FILL  
+        cgPolygon, [0.91,0.94,0.94,0.91], [0.461,0.461,0.464,0.464], color = 'black', /NORMAL, /FILL    
+        cgPolygon, [0.91,0.94,0.94,0.91], [0.424,0.424,0.427,0.427], color = 'red', /NORMAL , /FILL  
         
-        XYOUTS, 0.87, 0.656 , /NORMAL, 'Ddyn', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
+        XYOUTS, 0.87, 0.458 , /NORMAL, 'Ddyn', CHARSIZE = 1.2, CHARTHICK=chr_thick1                 
                 
-        XYOUTS, 0.87, 0.62 , /NORMAL, 'DP2', CHARSIZE = 1.2, CHARTHICK=chr_thick1     
+        XYOUTS, 0.87, 0.42 , /NORMAL, 'DP2', CHARSIZE = 1.2, CHARTHICK=chr_thick1     
                 
 ;###############################################################################                                                            
   !P.Font = 1

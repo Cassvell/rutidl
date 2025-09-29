@@ -63,6 +63,9 @@ function mlt, station_code, ut
     mlt = ut_h + (fix(mlon_tmp) / 15)    
     mlt = mlt mod 24 ; mlt forced to be in 0-24 range
 
+    glt = ut_h + (fix(glon_tmp) / 15)    
+    glt = glt mod 24 ; lt forced to be in 0-24 range
+    
     for i = 0, n_elements(mlt) - 1 do begin
         if mlt[i] LT 0 then mlt[i] = mlt[i] + 24
         if mlt[i] GE 24 then mlt[i] = mlt[i] - 24
@@ -75,13 +78,38 @@ function mlt, station_code, ut
         mlt_julday = JULDAY(mh, dy, yr, mlt, mn)
     endif else begin
         mlt_julday = JULDAY(mh, dy-1, yr, mlt, mn)
-    endelse
-
+    endelse    
 
     utc_mlt  = 0
     if mlt[0] LE 12 then utc_mlt = mlt[0] else utc_mlt = mlt[0] - 24
     
-    info = {mlt : mlt, utc_mlt : utc_mlt}
+
+
+
+    for i = 0, n_elements(glt) - 1 do begin
+        if glt[i] LT 0 then glt[i] = glt[i] + 24
+        if glt[i] GE 24 then glt[i] = glt[i] - 24
+
+    endfor    
+
+    ;get glt julday array
+
+    if glt[0] LE 12 then begin
+        lt_julday = JULDAY(mh, dy, yr, glt, mn)
+    endif else begin
+        lt_julday = JULDAY(mh, dy-1, yr, glt, mn)
+    endelse    
+
+    utc_lt  = 0
+    if glt[0] LE 12 then utc_lt = glt[0] else utc_lt = glt[0] - 24
+    
+
+
+
+
+
+
+    info = {mlt : mlt, utc_mlt : utc_mlt, glt : glt, utc_lt : utc_lt}
 
     return, info
 end
