@@ -135,7 +135,7 @@ pro diono_figures, date_time, local_time, asymH, diono, H, date_i, date_f, utc, 
     charsize = 1.0, $
     charthick = 1.5, $
     ticklen = 0.08
-  obs = Textoidl('D_I')
+  obs = Textoidl('H_I')
   ytittle = string(obs, strupcase(station_code), format = '(A, " (",A,")", " [nT]")')
   cgAxis, yaxis = 0, $
     ytitle = ytittle, $

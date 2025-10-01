@@ -1,4 +1,4 @@
-pro dp2vsQ, prc, diono, asymH, dp2, H, ppef, station_code, tw, tw_lt, sector
+pro dp2vsQ, prc, diono, asymH, dp2, H, station_code, tw, tw_lt, sector
   on_error, 2
   compile_opt idl2, hidden
   ; ###############################################################################
@@ -32,12 +32,12 @@ pro dp2vsQ, prc, diono, asymH, dp2, H, ppef, station_code, tw, tw_lt, sector
   outfile = dir + 'pca/' + station_code + '_' + date + '_TW' + sector + '.dat'
   openw, LUN, outfile, /get_lun
   for i = 0, ndata - 1 do begin
-    printf, LUN, asymH[i], diono[i], dp2[i], ppef[i], format = '(F8.4,X,F10.4,X,F10.4,X,F10.4,X,F20.10)'
+    printf, LUN, asymH[i], diono[i], dp2[i], format = '(F8.4,X,F10.4,X,F10.4,X,F10.4,X,F20.10)'
     ; Get the corresponding data for the day
   endfor
   close, LUN
   free_lun, LUN
-  stop, 'end of process'
+  ; stop, 'end of process'
   ; ###############################################################################
   ; ###############################################################################
   ; ###############################################################################

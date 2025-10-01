@@ -117,16 +117,16 @@ function sym_array, date_i, date_f, res, help = help
     caldat, tmp_julday + i, tmp_month, tmp_day, tmp_year
     string_date_2[i] = string(tmp_year, tmp_month, tmp_day, format = '(I4,"-",I02,"-",I02)')
 
-    data_file_name_sym[i] = data_path + '/sym/daily/sym_' + string_date_2[i] + res + '_D.dat'
+    data_file_name_sym[i] = data_path + 'sym/daily/sym_' + string_date_2[i] + res + '_D.dat'
 
     file_sym = file_search(data_file_name_sym[i], count = opened_files)
     if opened_files ne n_elements(file_sym) then begin
-      data_file_name_sym[i] = data_path + '/sym/daily/sym_' + string_date_2[i] + res + '_P.dat'
+      data_file_name_sym[i] = data_path + 'sym/daily/sym_' + string_date_2[i] + res + '_P.dat'
     endif
 
     file_sym = file_search(data_file_name_sym[i], count = opened_files)
     if opened_files ne n_elements(file_sym) then begin
-      data_file_name_sym[i] = data_path + '/sym/daily/sym_' + string_date_2[i] + res + '_Q.dat'
+      data_file_name_sym[i] = data_path + 'sym/daily/sym_' + string_date_2[i] + res + '_Q.dat'
     endif
     print, data_file_name_sym
   endfor

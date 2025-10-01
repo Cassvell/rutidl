@@ -162,6 +162,7 @@ pro diono_recons, date_i, date_f, station_code
   ; window2 = [1140, 1500]
   ; window = [1380, 1520]
   window2 = [1140, 1500]
+  window3 = [781, 1500]
   ; case str_date of
   ; '20150317': window = [780, 960] ; primer pico
   ; '20150317': window = [960, 1080] ; segundo pico
@@ -230,12 +231,15 @@ pro diono_recons, date_i, date_f, station_code
 
   tw = local_time[WindowI : windowF]
 
-  ; dp2vsQ, prc[WindowI : windowF], diono[WindowI : windowF], asymH[WindowI : windowF], dp2[WindowI : windowF], $
-  ; H[WindowI : windowF], station_code, date_time[WindowI : windowF], local_time[WindowI : windowF], '1'
+  dp2vsQ, prc[WindowI : windowF], diono[WindowI : windowF], asymH[WindowI : windowF], dp2[WindowI : windowF], $
+    H[WindowI : windowF], station_code, date_time[WindowI : windowF], local_time[WindowI : windowF], '1'
 
-  ; dp2vsQ, prc[WindowI2 : windowF2], diono[WindowI2 : windowF2], asymH[WindowI2 : windowF2], dp2[WindowI2 : windowF2], $
-  ; H[WindowI2 : windowF2], station_code, date_time[WindowI2 : windowF2], local_time[WindowI2 : windowF2], '2'
+  dp2vsQ, prc[WindowI2 : windowF2], diono[WindowI2 : windowF2], asymH[WindowI2 : windowF2], dp2[WindowI2 : windowF2], $
+    H[WindowI2 : windowF2], station_code, date_time[WindowI2 : windowF2], local_time[WindowI2 : windowF2], '2'
 
+  ; dp2vsQ, prc, diono, asymH, dp2, $
+  ; H, station_code, date_time, local_time, 'tot'
+  stop, 'end of process'
   ; ###############################################################################
   ; ###############################################################################
   ; ###############################################################################
@@ -303,6 +307,8 @@ pro diono_recons, date_i, date_f, station_code
   caldat, date_time, mh_lt, dy_lt, yr_lt, hr_lt, min_lt
 
   ; diono_figures, date_time, local_time, asymH, diono, H, date_i, date_f, utc, station_code, window, window2
+
+  ; stop, 'end of child process'
   midsample = sample / 2
 
   midday = fltarr(n_elements(local_time) / midsample)
