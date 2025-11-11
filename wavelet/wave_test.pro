@@ -1,5 +1,4 @@
-
-pro wave_test, asymH, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
+pro wave_test, AE, H_loc, Bdiono_hr, SQ, date_i, date_f, station_code, ps = ps
   on_error, 2
   compile_opt idl2, hidden
   yr_i = date_i[0]
@@ -13,7 +12,7 @@ pro wave_test, asymH, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
   @set_up_commons
   set_up
 
-  bfield = H
+  bfield = Bdiono_hr
 
   arr = n_elements(bfield)
   times = findgen(arr) ; arreglo de tiempo arbitrario
@@ -27,7 +26,7 @@ pro wave_test, asymH, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
   mother = 'Morlet'
 
   aa = bfield
-  time1 = findgen(n_elements(H))
+  time1 = findgen(n_elements(Bdiono_hr))
   time2 = findgen(n_elements(SQ))
   ; Note: for accurate reconstruction and variance computation, set:
   ; s0 = dt    for Morlet
@@ -69,19 +68,19 @@ pro wave_test, asymH, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
   variance = (moment(sst))[1]
   recon_variance = dj * dt / (Cdelta * n) * total(power_norm) ; [Eqn(14)]
 
-;  if (n_elements(recon_sst) gt 1) then begin
-;    recon_variance = (moment(recon_sst))[1]
-;    ; RMS of Reconstruction [Eqn(11)]
-;    rms_error = sqrt(total((sst - recon_sst) ^ 2) / n)
+  ; if (n_elements(recon_sst) gt 1) then begin
+  ; recon_variance = (moment(recon_sst))[1]
+  ; ; RMS of Reconstruction [Eqn(11)]
+  ; rms_error = sqrt(total((sst - recon_sst) ^ 2) / n)
 
-    ; Scale-average
-;    avg = where((scale ge 0.5) and (scale lt 3.3))
-;    print, 'avg: ',avg
-;    scale_avg = dj * dt / Cdelta * total(power_norm[*, avg], 2) ; [Eqn(24)]
-;    scaleavg_signif = wave_signif(sst, dt, scale, 2, $
-      ; GWS=global_ws,SIGLVL=SIGLVL,DOF=[0.3,50.0],MOTHER=mother)
-;      gws = global_ws, siglvl = SIGLVL, dof = [.5, 3.3], mother = mother)
-;  endif
+  ; Scale-average
+  ; avg = where((scale ge 0.5) and (scale lt 3.3))
+  ; print, 'avg: ',avg
+  ; scale_avg = dj * dt / Cdelta * total(power_norm[*, avg], 2) ; [Eqn(24)]
+  ; scaleavg_signif = wave_signif(sst, dt, scale, 2, $
+  ; GWS=global_ws,SIGLVL=SIGLVL,DOF=[0.3,50.0],MOTHER=mother)
+  ; gws = global_ws, siglvl = SIGLVL, dof = [.5, 3.3], mother = mother)
+  ; endif
 
   ; ==============================================================================
   ; ==============================================================================
@@ -98,7 +97,7 @@ pro wave_test, asymH, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
     cross_wavelet = cross_wavelet, power1 = power1, power2 = power2, nosmooth = nosmooth, verbose = verbose
 
   n = 5
-  semblance = cos(wave_phase)^n;(10 * cos(wave_phase) + 5 * cos(3*wave_phase) + cos(5*wave_phase)) / 16.0
+  semblance = cos(wave_phase) ^ n ; (10 * cos(wave_phase) + 5 * cos(3*wave_phase) + cos(5*wave_phase)) / 16.0
   ddyn = wave_coher * semblance
 
   ; ==============================================================================
@@ -113,7 +112,8 @@ pro wave_test, asymH, H_loc, H, SQ, date_i, date_f, station_code, ps = ps
     endif else begin
       print, ''
     endelse
-     make_psfig_composed, asymH, H, H_loc,SQ, wave2, power, cross_wavelet, ddyn, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code
+
+    make_psfig_composed, AE, Bdiono_hr, H_loc, SQ, wave2, power, cross_wavelet, ddyn, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code
     ; make_psfig1, power, period, coi, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path,  station_code
     ; make_psfig2, real_part(cross_wavelet), period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
     ; make_psfig3, ddyn, period, coi_out, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code

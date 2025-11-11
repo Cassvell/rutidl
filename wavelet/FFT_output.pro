@@ -102,7 +102,6 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
   idx = sym_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'm')
   symH = idx.symH
   asymH = idx.asyH
-  print, asymH
 
   ; idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
 
@@ -159,27 +158,19 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
     H_hr[i] = median(H[i * 60 : (i + 1) * 60 - 1])
   endfor
 
-  if res eq 'm' then begin
-    l = mlat
-    mlat = l * !pi
-    ld = cos(mlat / 180)
-    p_a = symH * ld
-    baseline = p_a
-    Bdiono = H - baseline
+  l = mlat
+  mlat = l * !pi
+  ld = cos(mlat / 180)
+  p_a = symH * ld
+  baseline = p_a
+  Bdiono = H - baseline
 
-    Bdiono_hr = fltarr(n_elements(H) / 60)
+  Bdiono_hr = fltarr(n_elements(H) / 60)
 
-    for i = 0, n_elements(Bdiono_hr) - 1 do begin
-      Bdiono_hr[i] = median(Bdiono[i * 60 : (i + 1) * 60 - 1])
-    endfor
-  endif else begin
-    l = mlat
-    mlat = l * !pi
-    ld = cos(mlat / 180)
-    p_a = symH * ld
-    baseline = p_a
-    Bdiono = H_hr - baseline
-  endelse
+  for i = 0, n_elements(Bdiono_hr) - 1 do begin
+    Bdiono_hr[i] = median(Bdiono[i * 60 : (i + 1) * 60 - 1])
+  endfor
+  H = fillnan(H)
   ; ###############################################################################
   ; ###############################################################################
   ; print, Q
@@ -198,8 +189,8 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
   tmp = findgen(n_elements(H_hr))
   ; plot, tmp[n:*], H_hr[n:*], title='H hourly median'
   ; print, min(H_hr[n:*])
-
-  ; wave_test, AE, H_hr, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, PS='ps'
+  Bdiono_hr = fillnan(Bdiono_hr)
+  wave_test, AE, H, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, ps = 'ps'
   ; ts_plots, asymH,symH, H_hr, SQ, Bdiono,res, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
-  ip_plots, symH, P, V, T, E, Bz, Bt, asymH, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
+  ; ip_plots, symH, P, V, T, E, Bz, Bt, asymH, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
 end

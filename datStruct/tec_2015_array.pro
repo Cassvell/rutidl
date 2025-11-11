@@ -1,4 +1,4 @@
-function tec_2015data, date, stat
+function tec_2015data, date, station_code
   on_error, 2
   compile_opt idl2, hidden
   @set_up_commons
@@ -8,14 +8,24 @@ function tec_2015data, date, stat
   month = date[1]
   day = date[2]
 
-  path = set_var.mega_dir + 'tec/' + stat + '2015/'
+  path = set_var.mega_dir + 'tec/' + station_code + '2015/'
+
+  station = 0
+
+  case station_code of
+    'teo': station = 'ucoe'
+    'gui': station = 'lpal'
+    'jai': station = 'npgj'
+    'kak': station = 'tsk2'
+    else: print, 'use valid station'
+  endcase
 
   date_string = strmid(string(year, format = '(i4)'), 2, 2) + string(month, format = '(i2)') + string(day, format = '(i2)')
 
   doy = Date2DOY(date_string)
 
-  file_name = path + 'u' + stat + '_' + string(doy, format = '(I03)') + '_' + string(year, format = '(I4)') + '.dat'
-  ; print, file_name
+  file_name = path + station + '_' + string(doy, format = '(I03)') + '_' + string(year, format = '(I4)') + '.dat'
+  print, file_name
 
   file = file_search(file_name, count = opened_files)
 
@@ -23,22 +33,28 @@ function tec_2015data, date, stat
   number_of_lines = file_lines(file)
   data = strarr(number_of_lines)
 
-  if opened_files ne n_elements(file) then message, file_name + ' not found'
+  if station_code ne 'jai' then begin
+    if opened_files ne n_elements(file) then message, file_name + ' not found'
 
-  openr, lun, file, /get_lun, error = err
-  readf, lun, data, format = '(A)'
-  close, lun
-  free_lun, lun
+    openr, lun, file, /get_lun, error = err
+    readf, lun, data, format = '(A)'
+    close, lun
+    free_lun, lun
 
-  DStruct = {ut: 0.0, tec: 0.0, lon_grad: 0.0, lat_grad: 0.0, lon_grad_q: 0.0, lat_grad_q: 0.0, gradt: 0.0, gradt_q: 0.0}
-  r_tec = replicate(DStruct, number_of_lines - header)
-  reads, data[header : number_of_lines - 1], r_tec, $
-    format = '(F7, F11, F11, F11, F11, F10, F11, F11)'
+    DStruct = {ut: 0.0, tec: 0.0, lon_grad: 0.0, lat_grad: 0.0, lon_grad_q: 0.0, lat_grad_q: 0.0, gradt: 0.0, gradt_q: 0.0}
+    r_tec = replicate(DStruct, number_of_lines - header)
+    reads, data[header : number_of_lines - 1], r_tec, $
+      format = '(F7, F11, F11, F11, F11, F10, F11, F11)'
+  endif else begin
+    readcol, file_name, ut, tec, lon_grad, lat_grad, lon_grad_q, lat_grad_q, gradt, gradt_q, format = ('F,F,F,F,F,F,F,F'), /nan
 
+    r_tec = {ut: ut, tec: tec, lon_grad: lon_grad, lat_grad: lat_grad, lon_grad_q: lon_grad_q, lat_grad_q: lat_grad_q, $
+      gradt: gradt, gradt_q: gradt_q}
+  endelse
   RETURN, r_tec
 end
 
-function tec_2015_array, idate, fdate, station
+function tec_2015_array, idate, fdate, station_code
   on_error, 2
   compile_opt idl2, hidden
 
@@ -55,7 +71,18 @@ function tec_2015_array, idate, fdate, station
 
   file_number = (julday(mh_f, dy_f, yr_f) - julday(mh_i, dy_i, yr_i)) + 1
   ; define DH variables
-  path = set_var.mega_dir + 'tec/' + station + '2015/'
+
+  station = 0
+
+  case station_code of
+    'teo': station = 'ucoe'
+    'gui': station = 'lpal'
+    'jai': station = 'npgj'
+    'kak': station = 'tsk2'
+    else: print, 'use valid station'
+  endcase
+
+  path = set_var.mega_dir + 'tec/' + station_code + '2015/'
 
   ; date_string = strmid(string(year, format = '(i4)'), 2, 2) + string(month, format = '(i2)') + string(day, format = '(i2)')
 
@@ -77,7 +104,7 @@ function tec_2015_array, idate, fdate, station
       string(tmp_month, format = '(i2)') + string(tmp_day, format = '(i2)')
     doy[i] = Date2DOY(string_date[i])
 
-    data_file_name[i] = path + 'u' + station + '_' + string(doy[i], format = '(I03)') + '_' + $
+    data_file_name[i] = path + station + '_' + string(doy[i], format = '(I03)') + '_' + $
       string(tmp_year, format = '(I4)') + '.dat'
 
     ; print, data_file_name[i]
@@ -88,7 +115,13 @@ function tec_2015_array, idate, fdate, station
   exist_data_file = file_test(data_file_name)
   capable_to_plot = n_elements(where(exist_data_file eq 1))
 
-  sample = 48
+  sample = 0
+  if station_code eq 'teo' or station_code eq 'kak' then begin
+    sample = 48
+  endif else begin
+    sample = 24
+  endelse
+
   ; if res eq 'm' then sample = 1440 else sample = 24
   tmp_UT = fltarr(file_number * sample)
   tmp_tec = fltarr(file_number * sample)
@@ -108,7 +141,7 @@ function tec_2015_array, idate, fdate, station
 
       caldat, tmp_julday + i, tmp_month, tmp_day, tmp_year
       string_date2[i] = string(tmp_year, tmp_month, tmp_day, format = '(I4,I02,I02)')
-      dat = tec_2015data([tmp_year, tmp_month, tmp_day], station)
+      dat = tec_2015data([tmp_year, tmp_month, tmp_day], station_code)
 
       tmp_UT[i * sample : (i + 1) * sample - 1] = dat.ut[*]
       tmp_tec[i * sample : (i + 1) * sample - 1] = dat.tec[*]
@@ -119,16 +152,18 @@ function tec_2015_array, idate, fdate, station
       tmp_grad_t[i * sample : (i + 1) * sample - 1] = dat.gradt[*]
       tmp_grad_qt[i * sample : (i + 1) * sample - 1] = dat.gradt_q[*]
     endif else begin
-      tmp_UT[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_tec[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_gradlon[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_gradlat[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_grad_qlat[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_grad_qlon[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_grad_t[i * sample : (i + 1) * sample - 1] = 9999
-      tmp_grad_qt[i * sample : (i + 1) * sample - 1] = 9999
+      tmp_UT[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_tec[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_gradlon[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_gradlat[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_grad_qlat[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_grad_qlon[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_grad_t[i * sample : (i + 1) * sample - 1] = 999.999
+      tmp_grad_qt[i * sample : (i + 1) * sample - 1] = 999.999
     endelse
   endfor
+  tmp_tec = add_nan(tmp_tec, 999.999, 'equal')
+  print, tmp_tec
 
   variable = {ut: tmp_UT, tec: tmp_tec, lon_grad: tmp_gradlon, lat_grad: tmp_gradlat, $
     lon_grad_q: tmp_grad_qlon, lat_grad_q: tmp_grad_qlat, gradt: tmp_grad_t, gradt_q: tmp_grad_qt}
@@ -155,7 +190,15 @@ function med_tec, idate, fdate, station_code
   file_number = (27)
   ; define DH variables
   path = set_var.mega_dir + 'tec/' + station_code + '2015/'
+  station = 0
 
+  case station_code of
+    'teo': station = 'ucoe'
+    'gui': station = 'lpal'
+    'jai': station = 'npgj'
+    'kak': station = 'tsk2'
+    else: print, 'use valid station'
+  endcase
   ; date_string = strmid(string(year, format = '(i4)'), 2, 2) + string(month, format = '(i2)') + string(day, format = '(i2)')
 
   ; doy = Date2DOY(date_string)
@@ -177,7 +220,7 @@ function med_tec, idate, fdate, station_code
       string(tmp_month, format = '(i2)') + string(tmp_day, format = '(i2)')
     doy[i] = Date2DOY(string_date[i])
     prev_doy[i] = fix(doy[i]) - 27
-    data_file_name[i] = path + 'u' + station_code + '_' + string(prev_doy[i], format = '(I03)') + '_' + $
+    data_file_name[i] = path + station + '_' + string(prev_doy[i], format = '(I03)') + '_' + $
       string(tmp_year, format = '(I4)') + '.dat'
 
     ; print, data_file_name[i]
@@ -187,7 +230,13 @@ function med_tec, idate, fdate, station_code
   exist_data_file = file_test(data_file_name)
   capable_to_plot = n_elements(where(exist_data_file eq 1))
 
-  sample = 48
+  sample = 0 ; 048
+  if station_code eq 'teo' or station_code eq 'kak' then begin
+    sample = 48
+  endif else begin
+    sample = 24
+  endelse
+
   tmp_tec = fltarr(file_number, sample)
 
   date_27dprev = daytodoy(prev_doy[0], yr_i)
@@ -211,8 +260,10 @@ function med_tec, idate, fdate, station_code
     ; tmp_tec[i * sample : (i + 1) * sample - 1] = 9999
     ; endelse
   endfor
+
+  tmp_tec = add_nan(tmp_tec, 999.999, 'equal')
   tec_med = fltarr(sample)
-  for j = 0, 47 do begin
+  for j = 0, sample - 1 do begin
     tec_med[j] = median(tmp_tec[*, j])
   endfor
 

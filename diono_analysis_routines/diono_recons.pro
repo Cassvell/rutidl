@@ -108,13 +108,8 @@ pro diono_recons, date_i, date_f, station_code
   ; symH0 = fillnan(symH0)
   H = fillnan(H)
 
-  if station_code eq 'teo' then begin
-    df = tec_2015_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'coe')
-    med_tec = med_tec([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], 'coe')
-  endif else begin
-    df = tec_2015_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
-    med_tec = med_tec([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
-  endelse
+  df = tec_2015_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
+  med_tec = med_tec([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
 
   tec = df.tec
   tec = add_nan(tec, 9999.0, 'equal')
@@ -190,7 +185,6 @@ pro diono_recons, date_i, date_f, station_code
   ; '20180825': window = [2360, 2450] ; tercer pico
   ; else: print, 'agregar evento'
   ; endcase
-  ; panel a
   WindowI = window[0]
   windowF = window[1]
 
@@ -231,23 +225,23 @@ pro diono_recons, date_i, date_f, station_code
 
   tw = local_time[WindowI : windowF]
 
-  dp2vsQ, prc[WindowI : windowF], diono[WindowI : windowF], asymH[WindowI : windowF], dp2[WindowI : windowF], $
-    H[WindowI : windowF], station_code, date_time[WindowI : windowF], local_time[WindowI : windowF], '1'
+  ; dp2vsQ, prc[WindowI : windowF], diono[WindowI : windowF], asymH[WindowI : windowF], dp2[WindowI : windowF], $
+  ; H[WindowI : windowF], station_code, date_time[WindowI : windowF], local_time[WindowI : windowF], '1'
 
-  dp2vsQ, prc[WindowI2 : windowF2], diono[WindowI2 : windowF2], asymH[WindowI2 : windowF2], dp2[WindowI2 : windowF2], $
-    H[WindowI2 : windowF2], station_code, date_time[WindowI2 : windowF2], local_time[WindowI2 : windowF2], '2'
+  ; dp2vsQ, prc[WindowI2 : windowF2], diono[WindowI2 : windowF2], asymH[WindowI2 : windowF2], dp2[WindowI2 : windowF2], $
+  ; H[WindowI2 : windowF2], station_code, date_time[WindowI2 : windowF2], local_time[WindowI2 : windowF2], '2'
 
   ; dp2vsQ, prc, diono, asymH, dp2, $
   ; H, station_code, date_time, local_time, 'tot'
-  stop, 'end of process'
+
   ; ###############################################################################
   ; ###############################################################################
   ; ###############################################################################
   path = '/home/isaac/longitudinal_studio/fig/diono_recons/'
-  psfile = path + station_code + '_' + Date + res + '.eps'
+  psfile = path + station_code + '_' + Date + '.eps'
 
   cgPS_Open, psfile, xoffset = 0., yoffset = 0., default_thickness = 1., font = 0, /encapsulated, $
-    /nomatch, xsize = 10, ysize = 6
+    /nomatch, xsize = 10, ysize = 8
   X_label = xlabel([yr_i, mh_i, dy_i], file_number)
   old_month = month_name(mh_i, 'english')
 
@@ -271,30 +265,9 @@ pro diono_recons, date_i, date_f, station_code
   print, 'max PPEF: ', max(dp2), 'nT   at: ', string(hr_lt[i], min_lt[i], format = '(I02,":",I02)')
   print, 'min PPEF: ', min(dp2), 'nT   at: ', string(hr_lt[j], min_lt[j], format = '(I02,":",I02)')
   ; ###############################################################################
-  up = 60
-  down = -60
-  ; IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2
-
-  cgPlot, date_time, dp2, xticks = file_number, xminor = 8, background = 'white', $
-    color = 'black', charsize = chr_size1, charthick = chr_thick1, $
-    position = [0.1, 0.51, 0.99, 0.9], xstyle = 5, ystyle = 5, xtickformat = ['LABEL_DATE'], xtickunits = ['day'], $
-    xticklayout = 1, xtickinterval = 1, yrange = [down, up], /noerase, /nodata
-
-  x = (date_time[window[1]] - date_time[window[0]]) / 2. + date_time[window[0]]
-  y = 68
-  cgText, x, y, 'TW 1', $
-    alignment = 0.5, charsize = 1.2
-
-  x = (date_time[window2[1]] - date_time[window2[0]]) / 2. + date_time[window2[0]]
-  y = 68
-  xyouts, x, y, 'TW 2', $
-    alignment = 0.5, charsize = 1.2
-
-  cgPolygon, [date_time[window[0]], date_time[window[1]], date_time[window[1]], date_time[window[0]]], $
-    [62, 62, 65, 65], color = 'blue', /fill
-  cgPolygon, [date_time[window2[0]], date_time[window2[1]], date_time[window2[1]], date_time[window2[0]]], $
-    [62, 62, 65, 65], color = 'green', /fill
-
+  ; ###############################################################################
+  ; ###############################################################################
+  ; panel a
   if utc lt 0 then begin
     local_ini = date_time[0] + (jul_conv)
     local_fin = date_time[n_elements(date_time) - 1] + jul_conv
@@ -306,14 +279,158 @@ pro diono_recons, date_i, date_f, station_code
   local_time = timegen(start = local_ini, final = local_fin, units = resolution)
   caldat, date_time, mh_lt, dy_lt, yr_lt, hr_lt, min_lt
 
-  ; diono_figures, date_time, local_time, asymH, diono, H, date_i, date_f, utc, station_code, window, window2
+  ; diono_figures, date_time, local_time, asymH, diono, H, tec, med_tec, date_i, date_f, utc, station_code, window, window2
 
-  ; stop, 'end of child process'
   midsample = sample / 2
 
   midday = fltarr(n_elements(local_time) / midsample)
 
   midddays = n_elements(symH) / midsample
+  ; ###############################################################################
+  ; ###############################################################################
+  ; ###############################################################################
+  ; ###############################################################################
+  cgPlot, date_time, diono, xticks = file_number, xminor = 8, background = 'white', $
+    color = 'black', charsize = 1, charthick = 1, $
+    position = [0.1, 0.65, 0.99, 0.92], xstyle = 5, ystyle = 5, xtickformat = ['LABEL_DATE'], xtickunits = ['day'], $
+    xticklayout = 1, xtickinterval = 1, yrange = [down, up], /noerase, /nodata
+
+  midsample = sample / 2
+
+  midday = fltarr(n_elements(local_time) / midsample)
+
+  midddays = n_elements(diono) / midsample
+
+  if utc lt 0 then begin
+    if local_time[(0 * midsample)] - 0.25 ge date_time[0] then begin
+      cgPolygon, [local_time[(0 * midsample)] - 0.25, local_time[((1) * midsample)] - 0.25, local_time[((1) * midsample)] - 0.25, local_time[(0 * midsample)] - 0.25], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endif else begin
+      cgPolygon, [date_time[0], local_time[((1) * midsample)] - 0.25, local_time[((1) * midsample)] - 0.25, date_time[0]], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endelse
+
+    if date_time[ndata] - (local_time[(midddays * (midsample - 1))] - 0.25) le 0.5 and date_time[ndata] - (local_time[(midddays * (midsample - 1))] - 0.25) ge 0 then begin
+      cgPolygon, [local_time[(midddays * (midsample - 1))] - 0.25, date_time[ndata], date_time[ndata], local_time[(midddays * (midsample - 1))] - 0.25], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endif
+  endif else begin
+    if local_time[(0 * midsample)] - 0.25 ge date_time[0] then begin
+      cgPolygon, [local_time[(0 * midsample)] + 0.25, local_time[((1) * midsample)] + 0.25, local_time[((1) * midsample)] + 0.25, local_time[(0 * midsample)] + 0.25], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endif else begin
+      cgPolygon, [date_time[0], local_time[((1) * midsample)] + 0.25, local_time[((1) * midsample)] + 0.25, date_time[0]], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endelse
+
+    if date_time[ndata] - (local_time[(midddays * (midsample - 1))] - 0.25) le 0 then begin
+      cgPolygon, [local_time[((midddays - 1) * midsample)] + 0.25, date_time[ndata], date_time[ndata], local_time[((midddays - 1) * midsample)] + 0.25], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endif else begin
+      cgPolygon, [local_time[((midddays - 1) * midsample)] + 0.25, local_time[(midddays * (midsample - 1))] + 0.25, local_time[(midddays * (midsample - 1))] + 0.25, local_time[((midddays - 1) * midsample)] + 0.25], $
+        [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'light gray', /fill
+    endelse
+  endelse
+
+  for i = 0, n_elements(midday) - 1 do begin
+    ; Define color based on even/odd index
+    if utc lt 0 then begin
+      if (i mod 2) eq 0 then color_shade = 'white' else color_shade = 'light gray'
+
+      if i lt n_elements(midday) - 1 and i gt 0 then begin
+        cgPolygon, [local_time[(i * midsample)] + 0.25, local_time[((i + 1) * midsample)] + 0.25, local_time[((i + 1) * midsample)] + 0.25, local_time[(i * midsample)] + 0.25], $
+          [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = color_shade, /fill
+      endif
+    endif else begin
+      if (i mod 2) eq 0 then color_shade = 'light gray' else color_shade = 'white'
+      if i lt n_elements(midday) - 1 and i gt 0 then begin
+        cgPolygon, [local_time[(i * midsample)] - 0.25, local_time[((i + 1) * midsample)] - 0.25, local_time[((i + 1) * midsample)] - 0.25, local_time[(i * midsample)] - 0.25], $
+          [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = color_shade, /fill
+      endif
+    endelse
+  endfor
+
+  ; ###############################################################################
+  ; ###############################################################################
+  ; ###############################################################################
+  cgOPlot, date_time, asymH, color = 'orange', thick = 3
+  cgOPlot, date_time, diono, color = 'red', linestyle = 0, thick = 3
+  cgOPlot, date_time, H, color = 'black', thick = 3
+
+  ; cgOPlot, [!x.crange[0], !x.crange[1]], [0., 0.], linestyle = 1, thick = 4, color = 'black'
+  cgOPlot, [date_time[window[0]], date_time[window[0]]], [!y.crange[0], !y.crange[1]], linestyle = 1, thick = 4, color = 'black'
+  cgOPlot, [date_time[window[1]], date_time[window[1]]], [!y.crange[0], !y.crange[1]], linestyle = 1, thick = 4, color = 'black'
+  cgOPlot, [date_time[window2[1]], date_time[window2[1]]], [!y.crange[0], !y.crange[1]], linestyle = 1, thick = 4, color = 'black'
+  month = month_name(mh_i, 'english')
+  xtitle = Textoidl('Universal Time[m], ' + month + ' ' + string(yr_i, format = '(I04)'))
+
+  cgAxis, xaxis = 0, xrange = [date_time[0], date_time[n_elements(date_time) - 1]], $
+    xminor = 24, $
+    ; xtitle = xtitle, $
+    xstyle = 1, $
+    xtickunits = ['day'], $
+    xticklayout = 0, $
+    xtickinterval = 1, $
+    xtickformat = '(A1)', $
+    ; COLOR=negro, $
+    charsize = 1.4, $
+    ticklen = 0.08, $
+    charthick = 3.5
+
+  cgAxis, xaxis = 1, xrange = [date_time[0], date_time[n_elements(date_time) - 1]], $
+    xminor = 24, $
+    xtickunits = ['day'], $
+    xticklayout = 0, $
+    xtickinterval = 1, $
+    xtickformat = '(A1)', $
+    ; COLOR=negro, $
+    charsize = 1.0, $
+    charthick = 1.5, $
+    ticklen = 0.08
+
+  ytittle = string(strupcase(station_code), format = '(A, " local response [nT]")')
+  cgAxis, yaxis = 0, $
+    ytitle = ytittle, $
+    ; COLOR=negro, $
+    ystyle = 1, $
+    charsize = 1.2, $
+    charthick = 1.6
+
+  cgAxis, yaxis = 1, $
+    ; COLOR=negro, $
+    ystyle = 1, $
+    ytickformat = '(A1)', $
+    charsize = 1.2, $
+    charthick = 1.6
+  ; ###############################################################################
+  ; ###############################################################################
+
+  x = (date_time[window[1]] - date_time[window[0]]) / 2. + date_time[window[0]]
+  y = 298
+  xyouts, x, y, 'TW 1', $
+    alignment = 0.5, charsize = 1.2
+
+  x = (date_time[window2[1]] - date_time[window2[0]]) / 2. + date_time[window2[0]]
+  y = 298
+  xyouts, x, y, 'TW 2', $
+    alignment = 0.5, charsize = 1.2
+
+  cgPolygon, [date_time[window[0]], date_time[window[1]], date_time[window[1]], date_time[window[0]]], $
+    [287, 287, 292, 292], color = 'blue', /fill
+  cgPolygon, [date_time[window2[0]], date_time[window2[1]], date_time[window2[1]], date_time[window2[0]]], $
+    [287, 287, 292, 292], color = 'green', /fill
+
+  ; ###############################################################################
+
+  ; ###############################################################################
+  up = 60
+  down = -60
+  ; IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2
+  ; panel b
+  cgPlot, date_time, dp2, xticks = file_number, xminor = 8, background = 'white', $
+    color = 'black', charsize = chr_size1, charthick = chr_thick1, $
+    position = [0.1, 0.37, 0.99, 0.64], xstyle = 5, ystyle = 5, xtickformat = ['LABEL_DATE'], xtickunits = ['day'], $
+    xticklayout = 1, xtickinterval = 1, yrange = [down, up], /noerase, /nodata
 
   if utc lt 0 then begin
     if local_time[(0 * midsample)] - 0.25 ge date_time[0] then begin
@@ -434,13 +551,14 @@ pro diono_recons, date_i, date_f, station_code
   new_med = fltarr(n_elements(dp2))
   tmp_med = interpol(med_tec, n_elements(dp2))
   new_med = tmp_med
+  tec_index = ((new_tec - new_med) / new_med) * 100
+  if max(tec) gt max(med_tec) then up = max(tec) else up = max(med_tec)
+  if min(tec) lt min(med_tec) then down = min(tec) else down = min(med_tec)
 
-  down = 0
-  up = 1
-  ; panel b
+  ; panel c
   cgPlot, date_time, new_tec, xticks = file_number, xminor = 8, background = 'white', $
     color = 'black', charsize = chr_size1, charthick = chr_thick1, $
-    position = [0.1, 0.06, 0.99, 0.49], xstyle = 5, ystyle = 5, xtickformat = ['LABEL_DATE'], xtickunits = ['day'], $
+    position = [0.1, 0.09, 0.99, 0.36], xstyle = 5, ystyle = 5, xtickformat = ['LABEL_DATE'], xtickunits = ['day'], $
     xticklayout = 1, xtickinterval = 1, yrange = [down, up], /noerase, /nodata
 
   if utc lt 0 then begin
@@ -492,10 +610,8 @@ pro diono_recons, date_i, date_f, station_code
     endelse
   endfor
 
-  tec_index = sqrt(((new_tec - new_med) / new_med) ^ 2)
-
-  cgOPlot, date_time, tec_index, color = 'blue', thick = 4
-  ; cgOPlot, date_time, new_med, color = 'orange', thick = 4
+  cgOPlot, date_time, new_tec, color = 'ORG4', thick = 4
+  cgOPlot, date_time, new_med, color = 'blue', thick = 4
 
   cgOPlot, [date_time[window[0]], date_time[window[0]]], [!y.crange[0], !y.crange[1]], linestyle = 1, thick = 4, color = 'black'
   cgOPlot, [date_time[window[1]], date_time[window[1]]], [!y.crange[0], !y.crange[1]], linestyle = 1, thick = 4, color = 'black'
@@ -526,9 +642,9 @@ pro diono_recons, date_i, date_f, station_code
     charsize = 1.2, $
     charthick = 1.5, $
     ticklen = 0.08
-  ppef = Textoidl('TEC index')
+  ppef = Textoidl('TEC')
   cgAxis, yaxis = 0, $
-    ytitle = string(ppef, strupcase(station_code), format = '(A, " (",A,")", " [A]")'), $
+    ytitle = string(ppef, strupcase(station_code), format = '(A, " (",A,")", " [TECu]")'), $
     ; COLOR=negro, $
     ystyle = 1, $
     charsize = 1.6, $

@@ -128,7 +128,6 @@ function sym_array, date_i, date_f, res, help = help
     if opened_files ne n_elements(file_sym) then begin
       data_file_name_sym[i] = data_path + 'sym/daily/sym_' + string_date_2[i] + res + '_Q.dat'
     endif
-    print, data_file_name_sym
   endfor
   exist_data_file_sym = file_test(data_file_name_sym)
   capable_to_plot_sym = n_elements(where(exist_data_file_sym eq 1))
