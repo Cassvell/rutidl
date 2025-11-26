@@ -429,7 +429,7 @@ pro ts_plots, asymH, symH, H, SQ, Bdiono, res, date_i, date_f, path, station_cod
   cgPS_Close, density = 300, width = 1600 ; , /PNG
 end
 
-pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
+pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, PCN, date_i, date_f, path
   on_error, 2
   compile_opt idl2, hidden
   yr_i = date_i[0]
@@ -528,13 +528,12 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
   ; ##################################################################################################################
   ; ##################################################################################################################
 
-  cgPlot, date_time, V * (-1), background = 'white', color = 'black', position = [.1, .53, .92, .75], xtickformat = ['LABEL_DATE'], $
-    xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, /noerase, /nodata
+  cgPlot, date_time, E, background = 'white', color = 'black', position = [.1, .53, .92, .75], xtickformat = ['LABEL_DATE'], $
+    xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, yrange = [min(E), max(E)], $
+    /noerase, /nodata
 
   cgText, 0.12, 0.72, '(b)', charthick = 3, charsize = 2, /normal, font = 1, tt_font = 'Helvetica Bold'
 
-  cgOPlot, date_time, V * (-1), color = 'black', thick = 4
-
   cgOPlot, [date_time[3150], date_time[3150]], [!y.crange[0], !y.crange[1]], $
     linestyle = 2, thick = 2, color = 'black' ; IP shock
 
@@ -543,6 +542,14 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
 
   cgOPlot, [date_time[4320], date_time[4320]], [!y.crange[0], !y.crange[1]], $
     linestyle = 2, thick = 2, color = 'black' ; IP shock
+
+  cgPolygon, [date_time[3660], date_time[3960], date_time[3960], date_time[3660]], $
+    [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'violet', /fill
+
+  cgOPlot, date_time, E, color = 'black', thick = 4
+  cgOPlot, date_time, PCN, color = 'GRN6', thick = 3
+  cgOPlot, [!x.crange[0], !x.crange[1]], [5, 5], $
+    linestyle = 2, thick = 2, color = 'blue' ; IP shock
 
   cgAxis, xaxis = 0, xrange = [date_time[0], date_time[n_elements(date_time) - 1]], $
     xtitle = '', $
@@ -567,42 +574,45 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
     charsize = 1.0, $
     charthick = 1.5, $
     ticklen = 0.04
+  E_Y = Textoidl('E & PCN [mV m^{-1}] ')
 
-  V_x = Textoidl('V_X [km s^{-1}]')
-
-  cgAxis, yaxis = 0, $
-    ytitle = V_x, $
+  cgAxis, yaxis = 0, yrange = [min(E), max(E)], $
+    ytitle = E_Y, $
     ; COLOR=negro, $
     ystyle = 1, $
     charsize = 1.2, $
     charthick = 1.6
 
-  ; ##################################################################################################################
-  ; ##################################################################################################################
-  ; ##################################################################################################################
-
-  cgPlot, date_time, E, background = 'white', color = 'black', position = [.1, .53, .92, .75], xtickformat = ['LABEL_DATE'], $
-    xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, /noerase, /nodata
-  cgOPlot, [!x.crange[0], !x.crange[1]], [0., 0.], linestyle = 1, thick = 2, color = 'black'
-  cgOPlot, date_time, E, color = 'YGB5', thick = 1
-  E_Y = Textoidl('E [mV m^{-1}]')
-  cgAxis, yaxis = 1, $
-    ytitle = E_Y, $
-    color = 'YGB5', $
+  cgAxis, yaxis = 1, yrange = [min(E), max(E)], $
+    ; ytitle = 'PCN [mV/m]', $
+    ytickformat = '(A1)', $
     ystyle = 1, $
     charsize = 1.2, $
     charthick = 1.8
+
+  ; ##################################################################################################################
+  ; ##################################################################################################################
+  ; cgPlot, date_time, PCN, background = 'white', color = 'black', position = [.1, .53, .92, .75], xtickformat = ['LABEL_DATE'], $
+  ; xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, yrange = [min(PCN), max(PCN)], $
+  ; /noerase, /nodata
+
+  ; cgAxis, yaxis = 1, yrange = [min(PCN), max(PCN)], $
+  ; ytitle = 'PCN [mV/m]', $
+  ; ytickformat = '(A1)', $
+  ; ystyle = 1, $
+  ; charsize = 1.2, $
+  ; charthick = 1.8
+
   ; ##################################################################################################################
   ; ##################################################################################################################
   ; ##################################################################################################################
 
-  cgPlot, date_time, T, background = 'white', color = 'black', position = [.1, .30, .92, .52], xtickformat = ['LABEL_DATE'], $
+  cgPlot, date_time, P, background = 'white', color = 'black', position = [.1, .30, .92, .52], xtickformat = ['LABEL_DATE'], $
     xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, /noerase, /nodata
 
+  t_p = acc_threshold(P, 0.95)
   cgText, 0.12, 0.49, '(c)', charthick = 3, charsize = 2, /normal, font = 1, tt_font = 'Helvetica Bold'
 
-  cgOPlot, date_time, T, color = 'blue', thick = 2
-
   cgOPlot, [date_time[3150], date_time[3150]], [!y.crange[0], !y.crange[1]], $
     linestyle = 2, thick = 2, color = 'black' ; IP shock
 
@@ -611,6 +621,14 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
 
   cgOPlot, [date_time[4320], date_time[4320]], [!y.crange[0], !y.crange[1]], $
     linestyle = 2, thick = 2, color = 'black' ; IP shock
+
+  cgPolygon, [date_time[3660], date_time[3960], date_time[3960], date_time[3660]], $
+    [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'violet', /fill
+
+  cgOPlot, date_time, P, color = 'black', thick = 4
+
+  cgOPlot, [!x.crange[0], !x.crange[1]], [t_p, t_p], $
+    linestyle = 2, thick = 2, color = 'blue' ; IP shock
 
   cgAxis, xaxis = 0, xrange = [date_time[0], date_time[n_elements(date_time) - 1]], $
     xtitle = '', $
@@ -636,42 +654,49 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
     charthick = 1.5, $
     ticklen = 0.04
 
-  T_p = Textoidl('T_P')
-  cgAxis, yaxis = 0, yrange = [min(T), max(T)], $
-    /ylog, $
-    ytitle = T_p + ' [K]', $
-    color = 'blue', $
+  cgAxis, yaxis = 0, yrange = [min(P), max(P)], $
+    ; /ylog, $
+    ytitle = 'P [nPa]', $
+    color = 'black', $
     ystyle = 1, $
     charsize = 1.2, $
     charthick = 1.6
 
-  ; ##################################################################################################################
-  ; ##################################################################################################################
-  ; ##################################################################################################################
-  ; ##################################################################################################################
-
-  cgPlot, date_time, P, background = 'white', color = 'black', position = [.1, .3, .92, .52], xtickformat = ['LABEL_DATE'], $
-    xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, /noerase, /nodata
-
-  cgOPlot, date_time, P, color = 'ORG4', thick = 1
-  proton = Textoidl('n_P [cm^{-1}]')
   cgAxis, yaxis = 1, yrange = [min(P), max(P)], $
-    /ylog, $
-    ytitle = proton, $
-    color = 'ORG4', $
+    ; /ylog, $
+    ; ytitle = T_p + ' [nT]', $
+    ytickformat = '(A1)', $
     ystyle = 1, $
-    ; YTICKFORMAT='(A1)',$
     charsize = 1.2, $
-    charthick = 1.8
-  ; ##################################################################################################################
-  ; ##################################################################################################################
+    charthick = 1.6
   ; ##################################################################################################################
   ; ##################################################################################################################
   ; ##################################################################################################################
   ; ##################################################################################################################
 
+  ; cgPlot, date_time, P, background = 'white', color = 'black', position = [.1, .3, .92, .52], xtickformat = ['LABEL_DATE'], $
+  ; xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, /noerase, /nodata
+
+  ; cgOPlot, date_time, P, color = 'blue', thick = 1
+  ; proton = Textoidl('P_{din} [nPa]')
+  ; cgAxis, yaxis = 1, yrange = [min(P), max(P)], $
+  ; /ylog, $
+  ; ytitle = proton, $
+  ; color = 'blue', $
+  ; ystyle = 1, $
+  ; YTICKFORMAT='(A1)',$
+  ; charsize = 1.2, $
+  ; charthick = 1.8
+  ; ##################################################################################################################
+  ; ##################################################################################################################
+  ; ##################################################################################################################
+  ; ##################################################################################################################
+  ; ##################################################################################################################
+  ; ##################################################################################################################
+  up = max(AE)
+  down = min(symH)
   cgPlot, date_time, symH, background = 'white', color = 'black', position = [.1, .07, .92, .29], xtickformat = ['LABEL_DATE'], $
-    xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, /noerase, /nodata
+    xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, yrange = [down, up], /noerase, /nodata
 
   cgText, 0.12, 0.1, '(e)', charthick = 3, charsize = 2, /normal, font = 1, tt_font = 'Helvetica Bold'
 
@@ -687,8 +712,12 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
 
   cgPolygon, [date_time[3600], date_time[4260], date_time[4260], date_time[3600]], $
     [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'gray', /fill
-  cgOPlot, date_time, symH, color = 'GRN5', thick = 3
 
+  cgPolygon, [date_time[3660], date_time[3960], date_time[3960], date_time[3660]], $
+    [!y.crange[0], !y.crange[0], !y.crange[1], !y.crange[1]], color = 'violet', /fill
+
+  cgOPlot, date_time, symH, color = 'GRN5', thick = 3
+  cgOPlot, date_time, AE, color = 'orange', thick = 3
   cgAxis, xaxis = 0, xrange = [date_time[0], date_time[n_elements(date_time) - 1]], $
     xminor = 8, $
     xtitle = 'Universal Time [days], March 2015', $
@@ -713,14 +742,14 @@ pro ip_plots, symH, P, V, T, E, Bz, Bt, AE, date_i, date_f, path
     charthick = 1.5, $
     ticklen = 0.04
 
-  cgAxis, yaxis = 0, $
-    ytitle = 'SYM-H [nT]', $
+  cgAxis, yaxis = 0, yrange = [down, up], $
+    ytitle = 'SYMH / ASYH [nT]', $
     ; COLOR=negro, $
     ystyle = 1, $
     charsize = 1.2, $
     charthick = 1.6
 
-  cgAxis, yaxis = 1, $
+  cgAxis, yaxis = 1, yrange = [down, up], $
     ; COLOR=negro, $
     ystyle = 1, $
     ytickformat = '(A1)', $

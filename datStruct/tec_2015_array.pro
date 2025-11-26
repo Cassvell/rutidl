@@ -163,7 +163,7 @@ function tec_2015_array, idate, fdate, station_code
     endelse
   endfor
   tmp_tec = add_nan(tmp_tec, 999.999, 'equal')
-  print, tmp_tec
+  ; print, tmp_tec
 
   variable = {ut: tmp_UT, tec: tmp_tec, lon_grad: tmp_gradlon, lat_grad: tmp_gradlat, $
     lon_grad_q: tmp_grad_qlon, lat_grad_q: tmp_grad_qlat, gradt: tmp_grad_t, gradt_q: tmp_grad_qt}

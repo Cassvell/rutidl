@@ -103,10 +103,10 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
   symH = idx.symH
   asymH = idx.asyH
 
-  ; idx2 = sym0_array([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
+  ; idx2 = sym0_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
 
-  ; rc = dst_0([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
-  ; Q = rc.Q
+  rc = dst_0([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
+  Q = rc.q
   ; symH0 = idx2.symH0
   ip = ip_arraym([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
   Bt = ip.bt
@@ -121,6 +121,7 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
   E = ip.ey
   a = ae_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
   AE = a.ae
+  PCN = pc_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f])
 
   ; ###############################################################################
   ; identifying NAN percentage values in the Time Series
@@ -171,6 +172,21 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
     Bdiono_hr[i] = median(Bdiono[i * 60 : (i + 1) * 60 - 1])
   endfor
   H = fillnan(H)
+
+  df = tec_2015_array([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
+  med_tec = med_tec([yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code)
+
+  tec = df.tec
+  tec = add_nan(tec, 9999.0, 'equal')
+
+  new_tec = fltarr(n_elements(Bdiono))
+  tmp_tec = interpol(tec, n_elements(Bdiono))
+  new_tec = tmp_tec
+
+  new_med = fltarr(n_elements(Bdiono))
+  tmp_med = interpol(med_tec, n_elements(Bdiono))
+  new_med = tmp_med
+
   ; ###############################################################################
   ; ###############################################################################
   ; print, Q
@@ -190,7 +206,8 @@ pro FFT_output, date_i, date_f, station_code, ps = ps, bsq = Bsq
   ; plot, tmp[n:*], H_hr[n:*], title='H hourly median'
   ; print, min(H_hr[n:*])
   Bdiono_hr = fillnan(Bdiono_hr)
-  wave_test, AE, H, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, ps = 'ps'
+  ; wave_test, AE, H, Bdiono_hr, SQ_hr, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], station_code, ps = 'ps'
   ; ts_plots, asymH,symH, H_hr, SQ, Bdiono,res, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path, station_code
-  ; ip_plots, symH, P, V, T, E, Bz, Bt, asymH, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
+  ; ip_plots, symH, P, V, Q, E, Bz, Bt, asymH, PCN, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2
+  iono_ts, new_tec, new_med, [yr_i, mh_i, dy_i], [yr_f, mh_f, dy_f], path2, station_code
 end
