@@ -43,7 +43,7 @@ pro iono_ts, tec, med, date_i, date_f, path, station_code
 
   if max(tec) gt max(med) then up = max(tec) else up = max(med)
   if min(tec) lt min(med) then down = min(tec) else down = min(med) ; panel a
-  cgPlot, date_time, tec, background = 'white', color = 'black', position = [.07, .15, .97, .91], xtickformat = ['LABEL_DATE'], $
+  cgPlot, date_time, tec, background = 'white', color = 'black', position = [.1, .18, .97, .91], xtickformat = ['LABEL_DATE'], $
     xtickunits = ['day'], xticklayout = 1, xtickinterval = 1, charsize = 1.1, xstyle = 5, ystyle = 5, yrange = [down, up], /nodata
 
   ; cgOPlot, [!x.crange[0], !x.crange[1]], [0., 0.], linestyle = 1, thick = 2, color = 'black'
@@ -64,7 +64,7 @@ pro iono_ts, tec, med, date_i, date_f, path, station_code
     xtickinterval = 1, $
     ; XTICKFORMAT='(A1)',$
     ; COLOR=negro, $
-    charsize = 1.2, $
+    charsize = 1.6, $
     ticklen = 0.04, $
     charthick = 3.5
 
@@ -80,10 +80,10 @@ pro iono_ts, tec, med, date_i, date_f, path, station_code
     ticklen = 0.04
 
   cgAxis, yaxis = 0, yrange = [down, up], $
-    ytitle = 'TEC [TECu]', $
+    ytitle = 'VTEC [TECU]', $
     ; COLOR=negro, $
     ystyle = 1, $
-    charsize = 1.2, $
+    charsize = 1.6, $
     charthick = 1.6
 
   cgAxis, yaxis = 1, yrange = [down, up], $

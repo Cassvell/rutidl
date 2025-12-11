@@ -1,4 +1,4 @@
-pro dp2vsQ, prc, diono, asymH, dp2, H, station_code, tw, tw_lt, sector
+pro dp2vsQ, diono, asymH, dp2, H, station_code, tw, tw_lt, sector
   on_error, 2
   compile_opt idl2, hidden
   ; ###############################################################################
@@ -30,13 +30,13 @@ pro dp2vsQ, prc, diono, asymH, dp2, H, station_code, tw, tw_lt, sector
   ndata = (n_elements(asymH))
   dir = set_var.mega_dir
   outfile = dir + 'pca/' + station_code + '_' + date + '_TW' + sector + '.dat'
-  openw, LUN, outfile, /get_lun
-  for i = 0, ndata - 1 do begin
-    printf, LUN, asymH[i], diono[i], dp2[i], format = '(F8.4,X,F10.4,X,F10.4,X,F10.4,X,F20.10)'
-    ; Get the corresponding data for the day
-  endfor
-  close, LUN
-  free_lun, LUN
+  ; openw, LUN, outfile, /get_lun
+  ; for i = 0, ndata - 1 do begin
+  ; printf, LUN, asymH[i], diono[i], dp2[i], format = '(F8.4,X,F10.4,X,F10.4,X,F10.4,X,F20.10)'
+  ; Get the corresponding data for the day
+  ; endfor
+  ; close, LUN
+  ; free_lun, LUN
   ; stop, 'end of process'
   ; ###############################################################################
   ; ###############################################################################
@@ -63,7 +63,7 @@ pro dp2vsQ, prc, diono, asymH, dp2, H, station_code, tw, tw_lt, sector
   ; Load the symbol into IDL
   usersym, x, y, /fill
 
-  cgOPlot, asymH, prc, psym = 8, color = 'gray', symsize = 2
+  ; cgOPlot, asymH, prc, psym = 8, color = 'gray', symsize = 2
   cgOPlot, asymH, diono, psym = 8, color = 'red', symsize = 2
   cgAxis, xaxis = 0, $
     xminor = 8, $
@@ -99,15 +99,14 @@ pro dp2vsQ, prc, diono, asymH, dp2, H, station_code, tw, tw_lt, sector
     charthick = 1.6
 
   corr5 = correlate(asymH, diono)
-  corr = correlate(asymH, prc)
   P = Textoidl('\rho_1')
   P2 = Textoidl('\rho_2')
 
   cgText, 0.7, 0.8, string(P, corr5, format = '(A, ": ", F6.2)'), /normal, $
     alignment = 0.5, charsize = 1.65, color = 'black'
 
-  cgText, 0.7, 0.7, string(P2, corr, format = '(A, ": ", F6.2)'), /normal, $
-    alignment = 0.5, charsize = 1.65, color = 'black'
+  ; cgText, 0.7, 0.7, string(P2, corr, format = '(A, ": ", F6.2)'), /normal, $
+  ; alignment = 0.5, charsize = 1.65, color = 'black'
 
   caldat, tw_lt, month_lt, day_lt, year_lt, hour_lt, minute_lt
   yr_i = year_lt[0]

@@ -31,7 +31,7 @@ pro export_dp2files, asymH, diono, dp2, dp2_2, station_code, tw
   outfile = dir + 'pca/' + station_code + '_' + date + '.dat'
   openw, LUN, outfile, /get_lun
   for i = 0, ndata - 1 do begin
-    printf, LUN, asymH[i], diono[i], dp2[i], dp2_2[i], format = '(F8.4,X,F10.4,X,F10.4,X,F10.4,X,F20.10,X,F20.10)'
+    printf, LUN, asymH[i], diono[i], dp2[i], dp2_2[i], format = '(F9.4,X,F10.4,X,F10.4,X,F10.4,X,F20.10,X,F20.10)'
     ; Get the corresponding data for the day
   endfor
   close, LUN
